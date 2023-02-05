@@ -9,6 +9,7 @@ const config: DocsThemeConfig = {
   docsRepositoryBase: "https://github.com/spin-glass/resume",
   footer: {
     text: "Repository of my resume",
+    link: "https://github.com/spin-glass/resume",
   },
 };
 
