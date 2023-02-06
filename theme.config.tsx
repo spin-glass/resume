@@ -6,11 +6,6 @@ const config: DocsThemeConfig = {
   project: {
     link: "https://github.com/spin-glass/resume",
   },
-  docsRepositoryBase: "https://github.com/spin-glass/resume",
-  footer: {
-    text: "Repository of my resume",
-    link: "https://github.com/spin-glass/resume",
-  },
 };
 
 export default config;
