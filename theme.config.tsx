@@ -6,6 +6,7 @@ const config: DocsThemeConfig = {
   project: {
     link: "https://github.com/spin-glass/resume",
   },
+  docsRepositoryBase: "https://github.com/spin-glass/resume/blob/main",
 };
 
 export default config;
