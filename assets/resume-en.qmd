@@ -1,7 +1,11 @@
-import Downloads from '../components/downloads'
+---
+date: 2023-02-06
+format: pdf
+pdf-engine: lualatex
+---
 
-<br></br>
-<Downloads></Downloads>
+Toshihiro Yamaguchi 1987/06/10
+
 # Resume
 
 ## Job Summary
@@ -9,12 +13,12 @@ import Downloads from '../components/downloads'
 For the past five years, I have worked mainly as a data scientist, considering and implementing appropriate on-the-spot approaches to various issues.
 
 Currently, I am working for a consulting firm, where I am learning consulting skills such as problem organization and documentation.
-I am currently working for a consulting firm, where I am learning consulting skills such as organizing issues and preparing documents, as well as learning how to improve business by linking data science to KPIs.
+I am learning how to improve business by linking data science with KPI.
 
 I have worked in a variety of fields and have found that the common problems are
 
 - It takes a lot of time and effort to link data science knowledge to system development.
-- The lack of reviews and other review activities makes the analytical tasks mundane to the data scientist, making it difficult to make improvements to the analysis.
+- The lack of reviews and other reviews makes the analytical tasks mundane to the data scientist, making it difficult to make improvements to the analysis.
   I myself have experienced difficulties in this regard.
 
 I myself have experienced difficulties in this regard, so I would like to contribute by making use of my experience and skills.
@@ -52,7 +56,7 @@ I am learning about data analysis and MLOps on a daily basis, and I would like t
 - M&A Data Analysis
 
   - Period: 01/01/2023 - Summary: Mergers and Acquisitions
-  - Summary: Created a recommendation system to support the M&A department in their search for companies to invest in.
+  - Summary: Created a recommendation system to assist M&A departments in their search for companies to invest in.
   - Responsibility: Front-end development Algorithm development
   - Environment/Methodology: Python VBA FastAPI
   - Number of projects: 5
@@ -99,12 +103,12 @@ I am learning about data analysis and MLOps on a daily basis, and I would like t
   - Environment/methodology: AWS, Databricks, GCP A/B testing, CI/CD
   - Number of projects: 7
 
-### aiforce solutions (2019/02/01 - 2022/07/31)
+### aiforce solutions inc (2019/02/01 - 2019/07/31)
 
 - Analysis of Supermarket Buying Trends
 
-  - Period: 2019/04/01 - 2019/07/31
-  - Summary: Resident in the DX division of a major trading company, receiving consultations from each business unit and subsidiary regarding AI utilization.
+  - Duration: 2019/04/01 - 2019/07/31
+  - Summary: Resident in the DX division of a major trading company, receiving consultation from each business unit and subsidiary on AI utilization.
   - Responsibilities: Data Scientist
   - Environment/methodology: R, association analysis
   - Number of projects: 3
@@ -113,11 +117,11 @@ I am learning about data analysis and MLOps on a daily basis, and I would like t
 
   - Period: 2019/02/01 - 2019/07/31
   - Summary: Develop a platform for AI education
-  - Responsibilities: Back-end development, front-end development
+  - Responsible for: backend development, frontend development
   - Environment/methodology: AWS, Bottle, Python, React
   - Number of projects: 5
 
-### Grid Corporation (04/01/2017 - 12/31/2018)
+### Grid Corporation (04/01/2017 - 01/31/2019)
 
 - Research paper and study of DL library image module
 
@@ -188,3 +192,6 @@ I am learning about data analysis and MLOps on a daily basis, and I would like t
   - Responsibility: Design, Construction
   - Environment/Methodology: Apache,Linux,MySQL,PHP
   - Number of Project Members: 2
+
+
+Translated with www.DeepL.com/Translator (free version)

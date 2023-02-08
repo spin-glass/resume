@@ -1,8 +1,14 @@
-import Downloads from '../components/downloads'
+---
+date: 2023-02-06
+format: pdf
+pdf-engine: lualatex
+documentclass: ltjsarticle 
+editor: visual
+---
 
-<br></br>
-<Downloads></Downloads>
-# 職務経歴
+山口敏弘　1987/06/10
+
+# 職務経歴書
 
 ## 職務要約
 
@@ -60,7 +66,7 @@ import Downloads from '../components/downloads'
 - 中古車ディーラーが販売先の中進国に与える経済効果を算出
 
   - 期間: 2022/12/01 - 2022/01/31
-  - 概要: 中古車ディーラーが販売先の中進国に与える経済効果を貿易データや国勢調査データを利用して算出
+  - 概要: 中古車ディーラーが販売先の中進国に与える経済効果を貿易データや国勢調査データを利用して算出
   - 担当: データエンジニア　データサイエンティスト
   - 環境・手法: 課題整理・プレゼン資料作成・統計的因果推論
   - プロジェクト人数: 7
@@ -117,7 +123,7 @@ import Downloads from '../components/downloads'
   - 環境・手法: AWS,Bottle,Python,React
   - プロジェクト人数: 5
 
-### 株式会社グリッド（2017/04/01 - 2018/12/31）
+### 株式会社グリッド（2017/04/01 - 2019/01/31）
 
 - DL ライブラリの画像モジュールの論文調査と学習
 
