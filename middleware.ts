@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withLocales } from 'nextra/locales'
 
 export const config = {
   matcher: ["/", "/index"],
 };
 
-export function middleware(req: NextRequest) {
+const middleware = function middleware(req: NextRequest) {
   const basicAuth = req.headers.get("authorization");
   const url = req.nextUrl;
 
@@ -20,3 +21,5 @@ export function middleware(req: NextRequest) {
 
   return NextResponse.rewrite(url);
 }
+
+export default withLocales(middleware)
