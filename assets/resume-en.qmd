@@ -77,7 +77,7 @@ I am learning about data analysis and MLOps on a daily basis, and I would like t
   - Environment/Methodology: Excel VBA
   - Number of projects: 7
 
-### (Contract term: 3 years, 08/01/2019 - 07/31/2022)
+### (Contract term: 3 years, 2019/08/01 - 2022/07/31)
 
 - Design and construction of data analysis infrastructure
 
@@ -121,7 +121,7 @@ I am learning about data analysis and MLOps on a daily basis, and I would like t
   - Environment/methodology: AWS, Bottle, Python, React
   - Number of projects: 5
 
-### Grid Corporation (04/01/2017 - 01/31/2019)
+### Grid Corporation (2017/04/01/ - 2019/01/31)
 
 - Research paper and study of DL library image module
 
@@ -155,7 +155,7 @@ I am learning about data analysis and MLOps on a daily basis, and I would like t
   - Environment/methodology: OpenCV, Python, VAE, VGG
   - Number of projects: 2
 
-### Cuon Corporation (01/01/2016 - 31/03/2017)
+### Cuon Corporation (2016/01/01/ - 2017/03/31)
 
 - Internal Portal Site Creation
 
