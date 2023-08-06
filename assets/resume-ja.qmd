@@ -1,12 +1,10 @@
 ---
-date: 2023-02-06
-format: pdf
-pdf-engine: lualatex
-documentclass: ltjsarticle 
-editor: visual
+date: 2023-02-13
+date-format: "YYYY/MM/DD"
+format: docx
 ---
 
-山口敏弘　1987/06/10
+氏名：山口敏弘
 
 # 職務経歴書
 
@@ -24,6 +22,7 @@ editor: visual
   といったものがあります。
 
 私自身、この点で苦労した経験があるためこれまでの経験やスキルを活かして貢献できないかと思っています。
+
 日々データ分析や MLOps について学んでいますので、もし同じような考えをお持ちの方がいらっしゃいましたら一緒に働かせて頂きたいです。
 
 ## スキル
