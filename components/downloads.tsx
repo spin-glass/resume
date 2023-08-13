@@ -1,6 +1,7 @@
 function DownloadButton() {
   return (
-    <div className="mt-20">
+    <div className="flex justify-end mt-20">
+    <div>
     <a
       href="/resume-ja.pdf"
       download
@@ -8,6 +9,7 @@ function DownloadButton() {
     >
       pdf
     </a>
+    </div>
     </div>
   );
 }
