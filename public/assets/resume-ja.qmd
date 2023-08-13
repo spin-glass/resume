@@ -46,6 +46,12 @@ header-includes:
 - [MLOps 勉強会登壇](https://mlops.connpass.com/event/218772/)
 - Databricks ウェビナー 登壇
 
+## ポートフォリオ
+[職務経歴書](https://resume.spin-glass.dev/)
+
+- フレームワーク: Next.js(Nextra)
+- ホスティング: Vercel
+
 ## 職務経歴
 ### 株式会社JMDC (2023/06/01 - )
 
@@ -204,4 +210,3 @@ header-includes:
   - 担当: 設計,構築
   - 環境・手法: Apache,Linux,MySQL,PHP
   - プロジェクト人数: 2
-  
