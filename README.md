@@ -7,3 +7,8 @@ This is the repository for my [resume](https://resume.spin-glass.dev/). This res
 - assets/*.qmd
 - pages/index
 - public (apply quarto to assets)
+
+# Development Environment
+```
+pnpm run dev
+```
