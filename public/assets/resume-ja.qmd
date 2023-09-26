@@ -3,7 +3,7 @@ date: 2023-08-13
 date-format: "YYYY/MM/DD"
 format: pdf
 pdf-engine: lualatex
-documentclass: ltjsarticle 
+documentclass: ltjsarticle
 editor: visual
 header-includes:
   - "\\usepackage{scrlayer-scrpage}"
@@ -39,6 +39,8 @@ header-includes:
 - 情報セキュリティ安全確保支援士試験合格
 - Google Cloud Professional Data Engineer
 - Google Cloud Professional Machine Learning Engineer
+- IELTS 6.0
+- TOEIC 905
 
 ## イベント
 
@@ -121,10 +123,10 @@ header-includes:
 - **担当**: データ基盤設計・データ基盤構築
 - **環境・手法**: Databricks, AWS, GCP, Python, Scala, Spark, PySpark
 - **プロジェクト人数**: 7
-- **概要と成果**: 
+- **概要と成果**:
   - Databricksと協力してデータ分析基盤を構築。
-  - 効率的なデータ活用と高度な分析が可能になり、日経アプリのパーソナライズ機能も高度化。
-- **詳細**: 
+  - 効率的なデータ活用と高度な分析が可能になり、ニュースアプリ日経Waveのパーソナライズ機能も高度化。
+- **詳細**:
   - 環境の制約と目標を考慮して7人のチームで基盤の設計・構築を担当。
   - AWS, GCP, Python, Scala, Spark, PySparkなどを活用し、特にDatabricksでMLOpsを一元管理。
   - このプロジェクトにより、データ分析、モデル構築、デプロイの効率が大幅に向上。
@@ -133,9 +135,9 @@ header-includes:
 - **期間**: 2020/02/01 - 2022/07/31
 - **担当**: アルゴリズム開発
 - **環境・手法**: Jupyter Notebook, TensorFlow, Pytorch, BERT, 協調フィルタリング
-- **成果**: 
+- **成果**:
   - アプリのCTRを約5%向上
-- **詳細**: 
+- **詳細**:
   - 単純な協調フィルタリングでは限界があったため、BERTとTensorFlow, Pytorchを用いて新しい推薦アルゴリズムを開発。
   - このアプローチにより、CTRが約5%向上し、ユーザーエンゲージメントと企業価値に大きく貢献。
 
@@ -143,7 +145,7 @@ header-includes:
 - **期間**: 2020/06/01 - 2022/07/31
 - **担当**: アーキテクチャ設計, クラウド開発, バックエンド開発, フロントエンド開発
 - **環境・手法**: AWS, Databricks, GCP, A/B テスト, CI/CD, Golang, Flutter
-- **詳細**: 
+- **詳細**:
   - 手動運用の限界と効果検証の必要性から、AWS, GCP, Databricksを用いて運用を自動化。
   - CI/CDパイプラインの構築とA/B テストで効果を定量的に評価。
   - GolangとFlutterを用いたフロントエンド・バックエンド開発も担当。
@@ -208,11 +210,19 @@ header-includes:
 
   - 期間: 2016/12/01 - 2017/03/31
   - 概要: サービスサイトの設計・構築及び PM を担当
-  - 担当: データサイエンティスト
-  - 環境・手法: OpenCV,Python, VGG
+  - 担当: Webエンジニア
+  - 環境・手法: PHP
   - プロジェクト人数: 2
 
-### 株式会社 AP コミュニケーションズ(2014/03/01 - 2015/12/31)
+- スタートアップ向け作成Webサイト作成
+
+  - 期間: 2016/12/01 - 2017/03/31
+  - 概要: 要件定義・サービスサイトの設計・構築
+  - 担当: Webエンジニア
+  - 環境・手法: Ruby on Rails
+  - プロジェクト人数: 2
+
+### 株式会社 AP コミュニケーションズ(2014/05/01 - 2015/12/31)
 
 - 社内インフラの運用・保守
 
