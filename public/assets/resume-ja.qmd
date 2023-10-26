@@ -96,7 +96,7 @@ header-includes:
 - **役割**: データエンジニア、データサイエンティスト
 - **成果**: 中進国への中古車流通のポジティブな経済影響の確認
 - **プロジェクト人数**: 8
-- **環境・手法**: UN ComtradeとWorld Bank Dataを用いたデータ収集, DID（Difference in Differences）による統計的因果推論
+- **環境・手法**: UN ComtradeとWorld Bank Dataを用いたデータ収集, 操作変数(instrumental variable)を用いた統計的因果推論
 - **詳細**
   - **Point**: 中進国への中古車流通が経済にポジティブな影響をもたらすことを確認しました。
   - **Reason**: 中古車流通が中進国の経済に与える影響を評価する必要がありました。
