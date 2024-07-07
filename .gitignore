@@ -1,3 +1,7 @@
+# Ignore all .deb files
+*.deb
+
+# Ignore other files or directories as needed
 .next
 node_modules
 .vercel
