@@ -30,6 +30,7 @@ jobs:
 
     - name: Render Quarto to PDF
       run: |
+        quarto install tinytex
         quarto render public/assets/resume-ja.qmd
 
     - name: Convert Quarto to MDX
