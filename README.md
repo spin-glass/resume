@@ -7,11 +7,7 @@ This is the repository for my [resume](https://resume.spin-glass.dev/). This res
 
 1. When updating resume
 
-(Todo: develop workflow for following works)
-
 - update `public/assets/*.qmd`
-- reflect the above change to `pages/index`
-- apply `quarto render` to assets to `public/assets/*.qmd` to create `public/assets/resume-ja` (Todo: develop English resume automatically)
 
 ## Development Environment
 
