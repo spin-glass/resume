@@ -28,9 +28,17 @@ jobs:
         wget https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.53/quarto-1.5.53-linux-amd64.deb
         sudo dpkg -i quarto-1.5.53-linux-amd64.deb
 
-    - name: Render Quarto to PDF
+    - name: Install TinyTeX
       run: |
         quarto install tinytex
+
+    - name: Install Japanese Fonts
+      run: |
+        tlmgr install collection-langjapanese
+        tlmgr install haranoaji
+
+    - name: Render Quarto to PDF
+      run: |
         quarto render public/assets/resume-ja.qmd
 
     - name: Convert Quarto to MDX
