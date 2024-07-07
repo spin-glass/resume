@@ -30,7 +30,7 @@ jobs:
 
     - name: Install TinyTeX
       run: |
-        quarto install tinytex
+        quarto install tinytex --update-path
 
     - name: Install Japanese Fonts
       run: |
