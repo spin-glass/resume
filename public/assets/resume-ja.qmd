@@ -1,5 +1,5 @@
 ---
-date: 2024-07-07
+date: 2024-07-12
 date-format: "YYYY/MM/DD"
 format: pdf
 pdf-engine: lualatex
@@ -9,7 +9,7 @@ header-includes:
   - "\\usepackage{scrlayer-scrpage}"
   - "\\pagestyle{scrheadings}"
   - "\\clearpairofpagestyles"
-  - "\\ohead{2023/09/05 山口敏弘}"
+  - "\\ohead{2024/07/12 山口敏弘}"
 ---
 
 # 職務経歴書
