@@ -34,15 +34,13 @@ cat(format_date)
 - AWS, GCP, Databricks
   - AWS: Sagemaker, ECR, Lambda, Athena, S3
   - GCP: Vertex AI, BigQuery, DataFlow, Cloud Run, Cloud Storage
-- Python, R
+- Python, R, Scala, Golang
 - Pyspark, Pandas, scikit-learn, TensorFlow, PyTorch, MLFlow
 
 ## 資格
 
 - ネットワークスペシャリスト
 - 情報セキュリティ安全確保支援士試験合格
-- Google Cloud Professional Data Engineer
-- Google Cloud Professional Machine Learning Engineer
 - IELTS 6.0
 - TOEIC 905
 
@@ -163,7 +161,7 @@ cat(format_date)
 #### データ分析基盤の設計・構築
 - **期間**: 2019/10 - 2022/07
 - **担当**: データ基盤設計・データ基盤構築
-- **環境・手法**: Databricks, AWS, GCP, Python, Scala, Spark, PySpark
+- **環境・手法**: Databricks, AWS, GCP, Python, Scala, Spark, PySpark, Golang
 - **プロジェクト人数**: 7
 - **概要と成果**:
   - Databricksと協力してデータ分析基盤を構築。
