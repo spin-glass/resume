@@ -5,10 +5,6 @@ format: pdf
 pdf-engine: lualatex
 documentclass: ltjsarticle
 editor: visual
-header-includes:
-  - "\\usepackage{scrlayer-scrpage}"
-  - "\\pagestyle{scrheadings}"
-  - "\\clearpairofpagestyles"
 ---
 
 # 職務経歴書
@@ -72,24 +68,30 @@ cat(format_date)
 - **環境・手法**
 - GCP
   - Vertex AI Pipelines
+  - Vertex AI Experiments
+  - Vertex AI Workbench
   - DataProc
+  - BigQuery
 - 自然言語処理
-  - BERTによるテキスト埋め込み
+  - Transfer Learningを用いて学習したBERTによるテキスト埋め込み
 
 - **プロジェクト人数**: 8
 - **詳細**:
-  - **Point**: 機械学習モデルの学習から推論まで、設計・開発を1人で行っている
+- **Point**: 機械学習モデルの学習から推論まで、設計・開発を1人で行っている
 
 #### 推薦システムの効果検証
 
 - **期間**: 2024/01 - 現在
 - **役割**: 要件定義・分析・レポート
 - **環境・手法**
-- BigQuery
-- 分析
-  - χ二乗検定
-  - ベイズ推論
-- データ可視化
+  - ツール
+    - BigQuery
+    - DataFlow
+    - GCS
+    - Tableau
+  - 分析手法
+    - χ二乗検定
+    - ベイズ推論
 
 - **プロジェクト人数**: 5
 - **詳細**:
