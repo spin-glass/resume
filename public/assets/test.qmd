@@ -1,0 +1,24 @@
+---
+title: "テストドキュメント"
+date: last-modified
+date-format: "YYYY/MM/DD"
+format: pdf
+pdf-engine: lualatex
+documentclass: ltjsarticle
+editor: visual
+---
+
+# テストドキュメント
+
+これは日本語のテストドキュメントです。
+
+## セクション1
+
+今日の日付を表示します：
+
+```{r}
+#| echo: false
+today <- Sys.Date()
+format_date <- format(today, "%Y年%m月%d日")
+cat(format_date)
+```
