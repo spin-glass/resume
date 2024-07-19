@@ -23,21 +23,17 @@ jobs:
         python -m pip install --upgrade pip
         pip install pyyaml
 
-    - name: Set up Quarto
-      uses: quarto-dev/quarto-actions/setup@v2
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tinytex: true
+    - name: Install Quarto
+      run: |
+        wget https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.53/quarto-1.5.53-linux-amd64.deb
+        sudo dpkg -i quarto-1.5.53-linux-amd64.deb
 
-    - name: Setup TeX Live
-      uses: teatimeguest/setup-texlive-action@v3
-      with:
-        packages: scheme-basic
+    - name: Install TinyTeX
+      run: |
+        quarto install tinytex --update-path
 
     - name: Install Japanese Fonts
       run: |
-        tlmgr update --self
         tlmgr install collection-langjapanese
         tlmgr install haranoaji
 
