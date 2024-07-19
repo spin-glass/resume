@@ -37,6 +37,7 @@ jobs:
 
     - name: Install Japanese Fonts
       run: |
+        tlmgr update --self
         tlmgr install collection-langjapanese
         tlmgr install haranoaji
 
