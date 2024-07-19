@@ -42,8 +42,7 @@ jobs:
 
     - name: Render Quarto to PDF
       run: |
-        quarto render public/assets/test.qmd
-        # quarto render public/assets/resume-ja.qmd
+        quarto render public/assets/resume-ja.qmd
 
     - name: Convert Quarto to MDX
       run: |
