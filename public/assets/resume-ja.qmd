@@ -1,15 +1,11 @@
 ---
 date: last-modified
 date-format: "YYYY/MM/DD"
+format: pdf
+pdf-engine: xelatex
+documentclass: bxjsbook
+classoption: xelatex,ja=standard
 editor: visual
-format:
-  pdf:
-    documentclass: bxjsarticle
-    classoption:
-      - pandoc
-      - ja=standard
-      - jafont=haranoaji
-pdf-engine: lualatex
 ---
 
 # 職務経歴書
