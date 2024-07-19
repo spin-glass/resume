@@ -2,9 +2,8 @@
 date: last-modified
 date-format: "YYYY/MM/DD"
 format: pdf
-pdf-engine: xelatex
-documentclass: bxjsbook
-classoption: xelatex,ja=standard
+pdf-engine: lualatex
+documentclass: ltjsarticle
 editor: visual
 ---
 
