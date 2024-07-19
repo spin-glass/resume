@@ -9,13 +9,8 @@ editor: visual
 
 # 職務経歴書
 
-```{r}
-#| echo: false
-today <- Sys.Date()
-format_date <- format(today, "%Y年%m月%d日")
+2024/07/19
 
-cat(format_date)
-```
 山口 敏弘
 
 ## 職務要約
