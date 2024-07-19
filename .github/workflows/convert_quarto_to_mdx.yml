@@ -23,14 +23,23 @@ jobs:
         python -m pip install --upgrade pip
         pip install pyyaml
 
-    - name: Install Quarto
-      run: |
-        wget https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.53/quarto-1.5.53-linux-amd64.deb
-        sudo dpkg -i quarto-1.5.53-linux-amd64.deb
+    - name: Set up Quarto
+      uses: quarto-dev/quarto-actions/setup@v2
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        # To install LaTeX to build PDF book
+        tinytex: true
 
-    - name: Install TinyTeX
-      run: |
-        quarto install tinytex --update-path
+    # - name: Install Quarto
+    #   run: |
+    #     wget https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.53/quarto-1.5.53-linux-amd64.deb
+    #     sudo dpkg -i quarto-1.5.53-linux-amd64.deb
+
+
+    # - name: Install TinyTeX
+    #   run: |
+    #     quarto install tinytex --update-path
 
     - name: Install Japanese Fonts
       run: |
