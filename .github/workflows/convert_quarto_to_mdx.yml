@@ -40,15 +40,15 @@ jobs:
         tlmgr install collection-langjapanese
         tlmgr install haranoaji
 
-    # - uses: r-lib/actions/setup-r@v2
-    #   with:
-    #     r-version: 'release'
+    - uses: r-lib/actions/setup-r@v2
+      with:
+        r-version: 'release'
 
-    # - uses: r-lib/actions/setup-r-dependencies@v2
-    #   with:
-    #     packages:
-    #       any::knitr
-    #       any::rmarkdown
+    - uses: r-lib/actions/setup-r-dependencies@v2
+      with:
+        packages:
+          any::knitr
+          any::rmarkdown
 
     - name: Render Quarto to PDF
       run: |
