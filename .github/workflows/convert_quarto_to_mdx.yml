@@ -37,9 +37,9 @@ jobs:
     #     sudo dpkg -i quarto-1.5.53-linux-amd64.deb
 
 
-    # - name: Install TinyTeX
-    #   run: |
-    #     quarto install tinytex --update-path
+    - name: Install TinyTeX
+      run: |
+        quarto install tinytex --update-path
 
     - name: Install Japanese Fonts
       run: |
