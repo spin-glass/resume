@@ -21,5 +21,4 @@ export function middleware(req: NextRequest) {
   return NextResponse.rewrite(url)
 }
 
-// export default withLocales(middleware); withLocalesが原因
-// export default middleware;
+export default middleware;

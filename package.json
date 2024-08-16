@@ -18,19 +18,19 @@
   },
   "homepage": "https://github.com/spin-glass/resume#README.md",
   "dependencies": {
-    "next": "^13.5.6",
+    "next": "^14.2.5",
     "next-auth": "^4.24.7",
-    "nextra": "2.0.1",
-    "nextra-theme-docs": "2.0.1",
+    "nextra": "3.0.0-alpha.31",
+    "nextra-theme-docs": "3.0.0-alpha.31",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "18.11.10",
     "@types/react": "18.2.18",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.39",
-    "tailwindcss": "^3.4.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.10",
     "typescript": "^4.9.5"
   }
 }
