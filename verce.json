@@ -1,0 +1,5 @@
+{
+  "redirects": [
+    { "source": "/", "dest": "/ja/index.mdx", "permanent": true }
+  ]
+}
