@@ -8,7 +8,7 @@ function DateDisplay() {
 
   return (
     <div className="mt-2 text-right font-bold rounded px-6 py-2 m-1 transition duration-150 ease-in-out">
-        {formattedDate}現在
+        {formattedDate} 現在
     </div>
   );
 }
