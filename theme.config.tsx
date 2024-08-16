@@ -7,6 +7,10 @@ const config: DocsThemeConfig = {
     link: "https://github.com/spin-glass/resume",
   },
   docsRepositoryBase: "https://github.com/spin-glass/resume/blob/main",
+  i18n: [
+    { locale: 'ja', name: '日本語' },
+    { locale: 'en', name: 'English' },
+  ]
 };
 
 export default config;

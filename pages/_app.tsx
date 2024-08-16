@@ -1,12 +1,15 @@
-import 'tailwindcss/tailwind.css'
-import { SessionProvider } from "next-auth/react"
+import 'tailwindcss/tailwind.css';
+import { SessionProvider } from 'next-auth/react';
+import type { AppProps } from 'next/app';
 
-export default function App({
-  Component, pageProps: { session, ...pageProps }
-}) {
+function Resume({ Component, pageProps }: AppProps) {
+  const { session, ...rest } = pageProps;
+
   return (
     <SessionProvider session={session}>
-      <Component {...pageProps}/>
+      <Component {...rest} />
     </SessionProvider>
-  )
+  );
 }
+
+export default Resume;
