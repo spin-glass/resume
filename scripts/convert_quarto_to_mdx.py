@@ -1,6 +1,7 @@
+# Todo: pages/ja/index.mdx -> public/assets/resume-ja.pdfを作成する
 import os
 
-quarto_file_path = 'public/assets/resume-ja.qmd'
+quarto_file_path = 'pages/index/resume-ja.qmd'
 mdx_file_path = 'pages/index.mdx'
 
 with open(quarto_file_path, 'r', encoding='utf-8') as quarto_file:
@@ -15,7 +16,7 @@ for i, line in enumerate(quarto_content):
     if line.strip() == '---':
         content_start = not content_start
 
-mdx_header = """import Downloads from "../components/downloads";
+mdx_header = """
 import DateAndName from "../components/DateAndName";
 
 <DateAndName name="山口 敏弘" />
