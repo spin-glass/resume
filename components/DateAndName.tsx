@@ -6,9 +6,13 @@ function DateDisplay() {
     day: '2-digit'
   }).format(currentDate);
 
+  const language = navigator.language;
+
+  const currentText = language.startsWith('ja') ? '現在' : 'Current';
+
   return (
     <div className="mt-2 text-right font-bold rounded px-6 py-2 m-1 transition duration-150 ease-in-out">
-        {formattedDate} 現在
+        {formattedDate} {currentText}
     </div>
   );
 }

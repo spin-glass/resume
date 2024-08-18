@@ -1,7 +1,7 @@
 name: Crowdin Translation Workflow
 
 on:
-  workflow_dispatch
+  workflow_dispatch:  # 手動トリガー
 
 jobs:
   sync_translations:
@@ -26,3 +26,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
           CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+
+      - name: Auto-merge Crowdin PR
+        uses: pascalgn/automerge-action@v0.14.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
