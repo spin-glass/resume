@@ -1,14 +1,21 @@
+import { useState, useEffect } from 'react';
+
 function DateDisplay() {
+  const [currentText, setCurrentText] = useState('Current');
+
+  useEffect(() => {
+    // クライアントサイドでのみ実行されるため、サーバーサイドレンダリング時のエラーを防ぐ
+    if (navigator.language.startsWith('ja')) {
+      setCurrentText('現在');
+    }
+  }, []); // 空の依存配列で、初回レンダリング時にのみ実行
+
   const currentDate = new Date();
   const formattedDate = new Intl.DateTimeFormat('ja-JP', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
   }).format(currentDate);
-
-  const language = navigator.language;
-
-  const currentText = language.startsWith('ja') ? '現在' : 'Current';
 
   return (
     <div className="mt-2 text-right font-bold rounded px-6 py-2 m-1 transition duration-150 ease-in-out">
@@ -17,19 +24,4 @@ function DateDisplay() {
   );
 }
 
-function NameDisplay({ name }) {
-  return (
-    <div className="mt-2 text-right font-bold rounded px-6 py-2 m-1 transition duration-150 ease-in-out">
-        {name}
-    </div>
-  );
-}
-
-export default function DateAndName({ name }){
-  return (
-    <div className="mt-20">
-      <DateDisplay />
-      <NameDisplay name={name} />
-    </div>
-  );
-}
+export default DateDisplay;
