@@ -1,19 +1,17 @@
 # About this repository
 
-This is the repository for my [resume](https://resume.spin-glass.dev/). This resume is developed by Next.js template [Nextra](https://nextra.site/)
-``
+This is the repository for my [resume](https://resume.spin-glass.dev/)
+This resume is developed by Next.js template [Nextra](https://nextra.site/)
 
-## Update Resume
+## Updating workflow
 
-1. When updating resume
+![workflow](./workflow.drawio.svg)
 
-    - update `pages/ja/index.mdx`
+1. Update `pages/ja/index.mdx` in Japanese
 
-2. Translate in English
+2. Translate into English using [Crowdin](https://crowdin.com/profile/spin-glass)
 
-    - Translate using [Crowdin](https://crowdin.com/profile/spin-glass)
-
-    - After aprroving, execute `crowdin_sync_and_merge` workflow in [GitHub Actions](https://github.com/spin-glass/resume/actions) manually
+3. After aprroving translation, execute `crowdin_sync_and_merge` workflow in [GitHub Actions](https://github.com/spin-glass/resume/actions) manually
 
 ## Development Environment
 
