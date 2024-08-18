@@ -13,7 +13,7 @@ This is the repository for my [resume](https://resume.spin-glass.dev/). This res
 
     - Translate using [Crowdin](https://crowdin.com/profile/spin-glass)
 
-    - After aproving, execute `crowdin_sync_and_merge` workflow in [GitHub Actions](https://github.com/spin-glass/resume/actions) manually
+    - After aprroving, execute `crowdin_sync_and_merge` workflow in [GitHub Actions](https://github.com/spin-glass/resume/actions) manually
 
 ## Development Environment
 
