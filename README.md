@@ -7,17 +7,16 @@ This is the repository for my [resume](https://resume.spin-glass.dev/). This res
 
 1. When updating resume
 
-- update `public/assets/*.qmd`
+    - update `pages/ja/index.mdx`
+
+2. Translate in English
+
+    - Translate using [Crowdin](https://crowdin.com/profile/spin-glass)
+
+    - After aproving, execute `crowdin_sync_and_merge` workflow in [GitHub Actions](https://github.com/spin-glass/resume/actions) manually
 
 ## Development Environment
 
 ```{sh}
 pnpm run dev
-```
-
-## Test GitHub Actions
-
-```{sh}
-export DOCKER_HOST=$(docker context inspect colima | jq -r '.[0].Endpoints.docker.Host')
-act --container-architecture linux/amd64
 ```
