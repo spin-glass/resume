@@ -1,7 +1,3 @@
-import CurrentDate from "../../components/CurrentDate";
-
-<CurrentDate/>
-
 # 職務経歴書
 
 2025年1月27日
