@@ -18,3 +18,21 @@ This resume is developed by Next.js template [Nextra](https://nextra.site/)
 ```{sh}
 pnpm run dev
 ```
+
+## PDF Generation
+
+Generate PDF from the current resume content:
+
+```{sh}
+npm run pdf
+```
+
+Watch for changes and auto-generate PDF:
+
+```{sh}
+npm run pdf:watch
+```
+
+**Requirements**: 
+- `pandoc` with XeLaTeX support
+- Japanese fonts (Hiragino Mincho Pro)
