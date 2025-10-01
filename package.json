@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "pdf": "node scripts/generate-pdf.js",
-    "pdf:watch": "chokidar \"pages/ja/index.mdx\" -c \"npm run pdf\""
+    "pdf:watch": "chokidar \"pages/ja/index.mdx\" -c \"npm run pdf\"",
+    "docx": "node scripts/generate-docx.js",
+    "docx:watch": "chokidar \"pages/ja/index.mdx\" -c \"npm run docx\""
   },
   "repository": {
     "type": "git",

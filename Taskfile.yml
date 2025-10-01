@@ -1,0 +1,41 @@
+version: '3'
+
+tasks:
+  pdf:
+    desc: Generate resume.pdf from MDX
+    cmds:
+      - npm run pdf
+    sources:
+      - pages/ja/index.mdx
+    generates:
+      - resume.pdf
+
+  docx:
+    desc: Generate resume.docx from MDX
+    cmds:
+      - npm run docx
+    sources:
+      - pages/ja/index.mdx
+    generates:
+      - resume.docx
+
+  pdf:watch:
+    desc: Watch MDX and generate PDF on change
+    cmds:
+      - npm run pdf:watch
+
+  docx:watch:
+    desc: Watch MDX and generate DOCX on change
+    cmds:
+      - npm run docx:watch
+
+  all:
+    desc: Generate both PDF and DOCX
+    deps:
+      - pdf
+      - docx
+
+  default:
+    desc: Default task (same as all)
+    cmds:
+      - task: all
