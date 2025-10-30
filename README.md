@@ -11,28 +11,52 @@ This resume is developed by Next.js template [Nextra](https://nextra.site/)
 
 2. Translate into English using [Crowdin](https://crowdin.com/profile/spin-glass)
 
-3. After aprroving translation, execute `crowdin_sync_and_merge` workflow in [GitHub Actions](https://github.com/spin-glass/resume/actions) manually
+3. After approving translation, execute `crowdin_sync_and_merge` workflow in [GitHub Actions](https://github.com/spin-glass/resume/actions) manually
 
-## Development Environment
+## Quick Start
 
-```{sh}
-pnpm run dev
+利用可能なタスク一覧を表示
+
+```sh
+task
 ```
 
-## PDF Generation
+## 主要タスク
 
-Generate PDF from the current resume content:
+### 開発
 
-```{sh}
-npm run pdf
+```sh
+task dev    # 開発サーバーを起動
 ```
 
-Watch for changes and auto-generate PDF:
+### PDF/DOCX生成
 
-```{sh}
-npm run pdf:watch
+```sh
+task generate    # PDF/DOCX両方を生成
+task pdf         # PDFのみ
+task docx        # DOCXのみ
 ```
 
-**Requirements**: 
+### デプロイ
+
+職務経歴を更新してGitHub経由でVercelにデプロイ
+
+```sh
+# デフォルトメッセージでデプロイ
+task update
+
+# カスタムメッセージでデプロイ
+task update MESSAGE="プロジェクト経験を追加"
+```
+
+実行内容
+- PDF/DOCX生成
+- git add
+- git commit
+- git push（Vercelが自動デプロイ）
+
+## Requirements
+
 - `pandoc` with XeLaTeX support
 - Japanese fonts (Hiragino Mincho Pro)
+- Task (タスクランナー) - [インストール](https://taskfile.dev/installation/)

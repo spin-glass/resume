@@ -1,6 +1,13 @@
 version: '3'
 
 tasks:
+  # 開発
+  dev:
+    desc: Start development server
+    cmds:
+      - pnpm run dev
+
+  # PDF/DOCX生成
   pdf:
     desc: Generate resume.pdf from MDX
     cmds:
@@ -19,23 +26,24 @@ tasks:
     generates:
       - resume.docx
 
-  pdf:watch:
-    desc: Watch MDX and generate PDF on change
-    cmds:
-      - npm run pdf:watch
-
-  docx:watch:
-    desc: Watch MDX and generate DOCX on change
-    cmds:
-      - npm run docx:watch
-
-  all:
+  generate:
     desc: Generate both PDF and DOCX
     deps:
       - pdf
       - docx
 
-  default:
-    desc: Default task (same as all)
+  # デプロイワークフロー
+  update:
+    desc: Generate files, commit and push (Usage: task update MESSAGE="your message")
     cmds:
-      - task: all
+      - task: generate
+      - git add pages/ja/index.mdx pages/en/index.mdx resume.pdf resume.docx
+      - git commit -m "{{.MESSAGE | default "Update resume"}}"
+      - git push origin main
+      - echo "✅ Changes pushed to GitHub. Vercel will deploy automatically."
+
+  # デフォルト
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
