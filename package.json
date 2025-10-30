@@ -21,6 +21,9 @@
     "url": "https://github.com/spin-glass/resume/issues"
   },
   "homepage": "https://github.com/spin-glass/resume#README.md",
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "next": "^14.2.5",
     "next-auth": "^4.24.7",
@@ -30,7 +33,9 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/node": "18.11.10",
+    "@types/estree": "^1.0.8",
+    "@types/estree-jsx": "^1.0.5",
+    "@types/node": "^22.0.0",
     "@types/react": "18.2.18",
     "autoprefixer": "^10.4.20",
     "chokidar-cli": "^3.0.0",

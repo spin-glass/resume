@@ -1,6 +1,6 @@
 # About this repository
 
-This is the repository for my [resume](https://resume.spin-glass.dev/)  
+This is the repository for my [resume](https://resume.spin-glass.dev/)
 This resume is developed by Next.js template [Nextra](https://nextra.site/)
 
 ## Updating workflow
@@ -33,6 +33,26 @@ Watch for changes and auto-generate PDF:
 npm run pdf:watch
 ```
 
-**Requirements**: 
+### デプロイ
+
+職務経歴を更新してGitHub経由でVercelにデプロイ
+
+```sh
+# デフォルトメッセージでデプロイ
+task update
+
+# カスタムメッセージでデプロイ
+task update MESSAGE="プロジェクト経験を追加"
+```
+
+実行内容
+
+- PDF/DOCX生成
+- git add
+- git commit
+- git push（Vercelが自動デプロイ）
+
+## Requirements
+
 - `pandoc` with XeLaTeX support
 - Japanese fonts (Hiragino Mincho Pro)
