@@ -3,56 +3,65 @@
 This is the repository for my [resume](https://resume.spin-glass.dev/)
 This resume is developed by Next.js template [Nextra](https://nextra.site/)
 
-## Updating workflow
+## Resume更新フロー
 
-![workflow](./workflow.drawio.svg)
+### 1. QMDファイルを編集
 
-1. Update `pages/ja/index.mdx` in Japanese
+`public/assets/resume-ja.qmd` を編集します。
 
-2. Translate into English using [Crowdin](https://crowdin.com/profile/spin-glass)
+### 2. プレビューで確認
 
-3. After aprroving translation, execute `crowdin_sync_and_merge` workflow in [GitHub Actions](https://github.com/spin-glass/resume/actions) manually
+```bash
+# HTMLプレビュー（推奨）
+npm run quarto:preview:html
+
+# PDFプレビュー
+npm run quarto:preview
+```
+
+ブラウザが開き、ファイル保存時に自動更新されます。
+
+### 3. ビルド（PDF/HTML/MDX生成）
+
+```bash
+npm run resume:build
+```
+
+以下が実行されます：
+- `resume-ja.qmd` → `resume-ja.pdf` / `resume.pdf`
+- `resume-ja.qmd` → `resume-ja.html`
+- `resume-ja.qmd` → `pages/ja/index.mdx`
+
+### 4. デプロイ
+
+```bash
+git add .
+git commit -m "職務経歴を更新"
+git push
+```
+
+Vercelが自動でデプロイします。
+
+## npm scripts一覧
+
+| コマンド | 説明 |
+|---------|------|
+| `npm run quarto:preview` | PDFプレビュー（自動更新） |
+| `npm run quarto:preview:html` | HTMLプレビュー（自動更新） |
+| `npm run quarto:pdf` | PDF生成 |
+| `npm run quarto:html` | HTML生成 |
+| `npm run sync` | QMD → MDX同期 |
+| `npm run resume:build` | 全て生成（PDF/HTML/MDX） |
+| `npm run dev` | Next.js開発サーバー |
 
 ## Development Environment
 
-```{sh}
+```sh
 pnpm run dev
 ```
 
-## PDF Generation
-
-Generate PDF from the current resume content:
-
-```{sh}
-npm run pdf
-```
-
-Watch for changes and auto-generate PDF:
-
-```{sh}
-npm run pdf:watch
-```
-
-### デプロイ
-
-職務経歴を更新してGitHub経由でVercelにデプロイ
-
-```sh
-# デフォルトメッセージでデプロイ
-task update
-
-# カスタムメッセージでデプロイ
-task update MESSAGE="プロジェクト経験を追加"
-```
-
-実行内容
-
-- PDF/DOCX生成
-- git add
-- git commit
-- git push（Vercelが自動デプロイ）
-
 ## Requirements
 
-- `pandoc` with XeLaTeX support
+- Quarto CLI
+- LuaLaTeX (TeX Live)
 - Japanese fonts (Hiragino Mincho Pro)

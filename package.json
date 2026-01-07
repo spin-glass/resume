@@ -6,10 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "pdf": "node scripts/generate-pdf.js",
-    "pdf:watch": "chokidar \"pages/ja/index.mdx\" -c \"npm run pdf\"",
-    "docx": "node scripts/generate-docx.js",
-    "docx:watch": "chokidar \"pages/ja/index.mdx\" -c \"npm run docx\""
+    "quarto:pdf": "cd public/assets && quarto render resume-ja.qmd --to pdf && cp resume-ja.pdf ../../resume.pdf",
+    "quarto:html": "cd public/assets && quarto render resume-ja.qmd --to html",
+    "quarto:preview": "cd public/assets && quarto preview resume-ja.qmd",
+    "quarto:preview:html": "cd public/assets && quarto preview resume-ja.qmd --to html",
+    "sync": "python3 scripts/sync_qmd_to_mdx.py",
+    "resume:build": "npm run quarto:pdf && npm run quarto:html && npm run sync",
+    "review": "cd agents && python -m src.cli review --input ../public/assets/resume-ja.qmd",
+    "review:dry": "cd agents && python -m src.cli review --input ../public/assets/resume-ja.qmd --dry-run --verbose",
+    "review:full": "cd agents && python -m src.cli review --input ../public/assets/resume-ja.qmd --screenshot-url http://localhost:3000/ja --verbose",
+    "review:build": "npm run review && npm run resume:build"
   },
   "repository": {
     "type": "git",
@@ -38,7 +44,6 @@
     "@types/node": "^22.0.0",
     "@types/react": "18.2.18",
     "autoprefixer": "^10.4.20",
-    "chokidar-cli": "^3.0.0",
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.10",
     "typescript": "^4.9.5"
