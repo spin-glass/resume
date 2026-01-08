@@ -28,24 +28,24 @@
   },
   "homepage": "https://github.com/spin-glass/resume#README.md",
   "engines": {
-    "node": "24.x"
+    "node": "22.x"
   },
   "dependencies": {
-    "next": "^16.1.1",
-    "next-auth": "^4.24.13",
-    "nextra": "4.6.1",
-    "nextra-theme-docs": "4.6.1",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "next": "^14.2.5",
+    "next-auth": "^4.24.7",
+    "nextra": "3.0.0-alpha.31",
+    "nextra-theme-docs": "3.0.0-alpha.31",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/estree": "^1.0.8",
     "@types/estree-jsx": "^1.0.5",
-    "@types/node": "^25.0.3",
-    "@types/react": "19.2.7",
-    "autoprefixer": "^10.4.23",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3"
+    "@types/node": "^22.0.0",
+    "@types/react": "18.2.18",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.10",
+    "typescript": "^4.9.5"
   }
 }
