@@ -1,0 +1,38 @@
+---
+title: "Software Engineer Resume"
+author: "Test User"
+date: "2026-01-09"
+format: html
+---
+
+# Test User
+Software Engineer
+
+## Experience
+
+### Senior Engineer at Tech Company
+*2023-Present*
+
+- Developed web applications using Python and React
+- Worked on database optimization
+- Collaborated with team members
+
+### Junior Developer at Startup
+*2021-2023*
+
+- Built features for mobile app
+- Fixed bugs
+- Learned new technologies
+
+## Skills
+
+- Python
+- JavaScript
+- React
+- SQL
+- Git
+
+## Education
+
+Bachelor of Science in Computer Science
+University Name, 2021

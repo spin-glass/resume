@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  packages/web:
     dependencies:
       next:
         specifier: ^14.2.5

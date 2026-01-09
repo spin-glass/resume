@@ -1,21 +1,24 @@
 {
-  "name": "nextra-docs-template",
+  "name": "resume-monorepo",
   "version": "0.0.1",
-  "description": "Nextra docs template",
+  "private": true,
+  "description": "Resume monorepo with web app, AI review tool, and resume source",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "quarto:pdf": "cd public/assets && quarto render resume-ja.qmd --to pdf && cp resume-ja.pdf ../../resume.pdf",
-    "quarto:html": "cd public/assets && quarto render resume-ja.qmd --to html",
-    "quarto:preview": "cd public/assets && quarto preview resume-ja.qmd",
-    "quarto:preview:html": "cd public/assets && quarto preview resume-ja.qmd --to html",
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter web build",
+    "start": "pnpm --filter web start",
+    "quarto:pdf": "cd resume && quarto render resume-ja.qmd --to pdf --output-dir output",
+    "quarto:html": "cd resume && quarto render resume-ja.qmd --to html --output-dir output",
+    "quarto:preview": "cd resume && quarto preview resume-ja.qmd",
+    "quarto:preview:html": "cd resume && quarto preview resume-ja.qmd --to html",
     "sync": "python3 scripts/sync_qmd_to_mdx.py",
-    "resume:build": "npm run quarto:pdf && npm run quarto:html && npm run sync",
-    "review": "cd agents && python -m src.cli review --input ../public/assets/resume-ja.qmd",
-    "review:dry": "cd agents && python -m src.cli review --input ../public/assets/resume-ja.qmd --dry-run --verbose",
-    "review:full": "cd agents && python -m src.cli review --input ../public/assets/resume-ja.qmd --screenshot-url http://localhost:3000/ja --verbose",
-    "review:build": "npm run review && npm run resume:build"
+    "resume:build": "pnpm quarto:pdf && pnpm quarto:html && pnpm sync",
+    "review": "cd packages/resume-review && .venv/bin/python -m src.cli review --input ../../resume/resume-ja.qmd --save-iterations --verbose",
+    "review:dry": "cd packages/resume-review && .venv/bin/python -m src.cli review --input ../../resume/resume-ja.qmd --dry-run --verbose",
+    "review:full": "cd packages/resume-review && .venv/bin/python -m src.cli review --input ../../resume/resume-ja.qmd --screenshot-url http://localhost:3000/ja --save-iterations --verbose",
+    "review:build": "pnpm review && pnpm resume:build",
+    "test:python": "cd packages/resume-review && .venv/bin/pytest",
+    "lint:python": "cd packages/resume-review && .venv/bin/ruff check ."
   },
   "repository": {
     "type": "git",
@@ -29,23 +32,5 @@
   "homepage": "https://github.com/spin-glass/resume#README.md",
   "engines": {
     "node": "22.x"
-  },
-  "dependencies": {
-    "next": "^14.2.5",
-    "next-auth": "^4.24.7",
-    "nextra": "3.0.0-alpha.31",
-    "nextra-theme-docs": "3.0.0-alpha.31",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
-    "@types/estree": "^1.0.8",
-    "@types/estree-jsx": "^1.0.5",
-    "@types/node": "^22.0.0",
-    "@types/react": "18.2.18",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.41",
-    "tailwindcss": "^3.4.10",
-    "typescript": "^4.9.5"
   }
 }

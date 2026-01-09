@@ -6,3 +6,46 @@
 node_modules
 .vercel
 .env.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+dist/
+*.egg-info/
+.env
+*.log
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
+
+# Web package (packages/web/)
+packages/web/.next/
+packages/web/node_modules/
+
+# Resume review agents (packages/resume-review/)
+packages/resume-review/.venv/
+packages/resume-review/dist/
+packages/resume-review/*.egg-info/
+packages/resume-review/.env
+packages/resume-review/*.log
+
+# Resume output (keep directory, ignore generated files)
+resume/output/*.pdf
+resume/output/*.html
+!resume/output/.gitkeep
+
+# Temporary files
+/tmp/resume-screenshots/
+~/.resume-review/

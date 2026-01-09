@@ -1,22 +1,34 @@
-# About this repository
+# Resume Monorepo
 
-This is the repository for my [resume](https://resume.spin-glass.dev/)
-This resume is developed by Next.js template [Nextra](https://nextra.site/)
+This is the monorepo for my [resume](https://resume.spin-glass.dev/).
+
+## Repository Structure
+
+```text
+resume/                      # Monorepo root
+├── packages/
+│   ├── web/                # Next.js/Nextra web application
+│   └── resume-review/      # Python AI review tool
+├── resume/                 # Resume source files
+│   ├── resume-ja.qmd      # Canonical resume source
+│   └── output/            # Generated PDF/HTML
+└── scripts/               # Build and sync scripts
+```
 
 ## Resume更新フロー
 
 ### 1. QMDファイルを編集
 
-`public/assets/resume-ja.qmd` を編集します。
+`resume/resume-ja.qmd` を編集します。
 
 ### 2. プレビューで確認
 
 ```bash
 # HTMLプレビュー（推奨）
-npm run quarto:preview:html
+pnpm quarto:preview:html
 
 # PDFプレビュー
-npm run quarto:preview
+pnpm quarto:preview
 ```
 
 ブラウザが開き、ファイル保存時に自動更新されます。
@@ -24,15 +36,28 @@ npm run quarto:preview
 ### 3. ビルド（PDF/HTML/MDX生成）
 
 ```bash
-npm run resume:build
+pnpm resume:build
 ```
 
 以下が実行されます：
-- `resume-ja.qmd` → `resume-ja.pdf` / `resume.pdf`
-- `resume-ja.qmd` → `resume-ja.html`
-- `resume-ja.qmd` → `pages/ja/index.mdx`
+- `resume/resume-ja.qmd` → `resume/output/resume-ja.pdf`
+- `resume/resume-ja.qmd` → `resume/output/resume-ja.html`
+- `resume/resume-ja.qmd` → `packages/web/pages/ja/index.mdx`
 
-### 4. デプロイ
+### 4. AIレビュー（オプション）
+
+```bash
+# ドライラン（変更プレビューのみ）
+pnpm review:dry
+
+# フルレビュー（変更適用）
+pnpm review
+
+# スクリーンショット付きフルレビュー
+pnpm review:full
+```
+
+### 5. デプロイ
 
 ```bash
 git add .
@@ -42,26 +67,47 @@ git push
 
 Vercelが自動でデプロイします。
 
-## npm scripts一覧
+## コマンド一覧
+
+すべてのコマンドはリポジトリルートから実行します。
 
 | コマンド | 説明 |
 |---------|------|
-| `npm run quarto:preview` | PDFプレビュー（自動更新） |
-| `npm run quarto:preview:html` | HTMLプレビュー（自動更新） |
-| `npm run quarto:pdf` | PDF生成 |
-| `npm run quarto:html` | HTML生成 |
-| `npm run sync` | QMD → MDX同期 |
-| `npm run resume:build` | 全て生成（PDF/HTML/MDX） |
-| `npm run dev` | Next.js開発サーバー |
+| `pnpm dev` | Next.js開発サーバー起動 |
+| `pnpm build` | Webアプリビルド |
+| `pnpm quarto:preview` | PDFプレビュー（自動更新） |
+| `pnpm quarto:preview:html` | HTMLプレビュー（自動更新） |
+| `pnpm quarto:pdf` | PDF生成 |
+| `pnpm quarto:html` | HTML生成 |
+| `pnpm sync` | QMD → MDX同期 |
+| `pnpm resume:build` | 全て生成（PDF/HTML/MDX） |
+| `pnpm review:dry` | AIレビュー（ドライラン） |
+| `pnpm review` | AIレビュー実行 |
+| `pnpm test:python` | Pythonテスト実行 |
+| `pnpm lint:python` | Pythonリント実行 |
 
-## Development Environment
+## 新規パッケージの追加
 
-```sh
-pnpm run dev
+```bash
+# 1. packages/ディレクトリにパッケージを作成
+mkdir packages/new-package
+cd packages/new-package
+
+# 2. package.jsonを初期化
+pnpm init
+
+# 3. ルートからpnpm installを実行
+cd ../..
+pnpm install
 ```
+
+pnpm-workspace.yamlは`packages/*`パターンを使用しているため、新規パッケージは自動的に認識されます。
 
 ## Requirements
 
+- Node.js 22.x
+- pnpm 9+
+- Python 3.13+
 - Quarto CLI
 - LuaLaTeX (TeX Live)
 - Japanese fonts (Hiragino Mincho Pro)

@@ -1,0 +1,30 @@
+---
+title: "Resume with Skill Gaps"
+author: "Test User"
+date: "2026-01-09"
+format: html
+---
+
+# Test User
+Junior Developer
+
+## Experience
+
+### Web Developer at Small Company
+*2024-Present (6 months)*
+
+- Built simple websites
+- Fixed bugs
+- Used basic HTML and CSS
+
+## Skills
+
+- HTML
+- CSS
+- Basic JavaScript
+- Git (beginner)
+
+## Education
+
+Associate Degree in Web Development
+Community College, 2024
