@@ -1,5 +1,6 @@
 """Configuration module for resume review agents."""
 
+from .model_config import AGENT_MODEL_MAP, MODEL_PRICING, AgentName, calculate_cost
 from .prompts import get_system_prompt
 from .settings import (
     DEFAULT_MAX_ITERATIONS,
@@ -22,4 +23,9 @@ __all__ = [
     "get_agent_weight",
     # Prompts
     "get_system_prompt",
+    # Model Configuration
+    "AgentName",
+    "AGENT_MODEL_MAP",
+    "MODEL_PRICING",
+    "calculate_cost",
 ]

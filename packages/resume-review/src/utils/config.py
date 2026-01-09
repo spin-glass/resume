@@ -19,6 +19,10 @@ class Config:
 
         # API Configuration
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+        self.gemini_api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+
+        # Validate that at least one API key is present
         if not self.anthropic_api_key:
             raise ValueError(
                 "ANTHROPIC_API_KEY environment variable is required. "
@@ -50,6 +54,18 @@ class Config:
     def get_api_key(self) -> str:
         """Get Anthropic API key."""
         return self.anthropic_api_key
+
+    def get_anthropic_api_key(self) -> str:
+        """Get Anthropic API key."""
+        return self.anthropic_api_key
+
+    def get_gemini_api_key(self) -> Optional[str]:
+        """Get Gemini API key (may be None if not configured)."""
+        return self.gemini_api_key
+
+    def get_openai_api_key(self) -> Optional[str]:
+        """Get OpenAI API key (may be None if not configured)."""
+        return self.openai_api_key
 
 
 def setup_logging(verbose: bool = False, log_file: Optional[Path] = None) -> logging.Logger:
