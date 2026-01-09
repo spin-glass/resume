@@ -26,6 +26,8 @@ class ReviewSession(BaseModel):
     status: SessionStatus = SessionStatus.INITIALIZED
     dry_run: bool = False
     screenshot_url: Optional[str] = None
+    max_validation_retries: int = 3
+    strict_validation: bool = False
 
     @field_validator("score_threshold")
     @classmethod

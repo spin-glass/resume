@@ -88,6 +88,18 @@ def cli():
     envvar="ANTHROPIC_API_KEY",
     help="Anthropic API key (or set ANTHROPIC_API_KEY env var)",
 )
+@click.option(
+    "--max-validation-retries",
+    type=int,
+    default=None,
+    help="Maximum validation retry attempts per iteration (default: 3). Set to 0 to skip retries.",
+)
+@click.option(
+    "--strict-validation",
+    is_flag=True,
+    default=False,
+    help="Exit workflow if Quarto validation fails after all retries (default: continue with warning)",
+)
 def review(
     input_file: Path,
     output_file: Optional[Path],
@@ -100,6 +112,8 @@ def review(
     save_iterations: bool,
     iterations_dir: Optional[Path],
     api_key: Optional[str],
+    max_validation_retries: Optional[int],
+    strict_validation: bool,
 ):
     """
     Run multi-agent resume review and improvement.
@@ -124,6 +138,15 @@ def review(
 
         # Custom threshold and role
         resume-review review --input resume.qmd --threshold 9.0 --target-role "Senior Backend Engineer" --save-iterations
+
+        # With custom validation retry settings
+        resume-review review --input resume.qmd --max-validation-retries 1 --save-iterations
+
+        # Strict validation mode (exit on validation failure)
+        resume-review review --input resume.qmd --strict-validation --save-iterations
+
+        # Skip validation retries entirely
+        resume-review review --input resume.qmd --max-validation-retries 0 --save-iterations
     """
     # Setup logging
     logger = setup_logging(verbose=verbose)
@@ -131,6 +154,11 @@ def review(
     # Validate inputs
     if threshold < 1.0 or threshold > 10.0:
         click.echo("Error: Threshold must be between 1.0 and 10.0", err=True)
+        sys.exit(2)
+
+    # Validate max_validation_retries (T038)
+    if max_validation_retries is not None and max_validation_retries < 0:
+        click.echo("Error: max-validation-retries must be >= 0", err=True)
         sys.exit(2)
 
     if max_iterations < 1:
@@ -143,7 +171,7 @@ def review(
             config = get_config()
             api_key = config.get_api_key()
         except ValueError as e:
-            click.echo(f"Error: {e}", err=True)
+            click.echo(f"Error: {e} Please create a .env file with your API key.", err=True)
             sys.exit(3)
 
     # Display header
@@ -168,6 +196,8 @@ def review(
         click.echo(f"✓ Resume loaded ({len(resume.content)} characters)")
 
         # Create review session
+        from .config.settings import DEFAULT_MAX_VALIDATION_RETRIES
+
         session = ReviewSession(
             resume=resume,
             target_role=target_role,
@@ -175,6 +205,8 @@ def review(
             max_iterations=max_iterations,
             dry_run=dry_run,
             screenshot_url=screenshot_url,
+            max_validation_retries=max_validation_retries if max_validation_retries is not None else DEFAULT_MAX_VALIDATION_RETRIES,
+            strict_validation=strict_validation,
         )
 
         # Run workflow

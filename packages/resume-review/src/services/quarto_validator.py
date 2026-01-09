@@ -6,6 +6,9 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
+from ..models import ActionType, Severity
+from ..models.feedback import Feedback, Issue
+
 logger = logging.getLogger("resume_review")
 
 
@@ -67,3 +70,69 @@ class QuartoValidator:
             tmp_path.unlink(missing_ok=True)
             html_path = tmp_path.with_suffix(".html")
             html_path.unlink(missing_ok=True)
+
+    def create_validation_feedback(self, error_message: str) -> Feedback:
+        """
+        Parse Quarto error message and generate structured Feedback for revisor.
+
+        Args:
+            error_message: Error message from Quarto validation
+
+        Returns:
+            Feedback object with Issues parsed from error patterns
+        """
+        issues = []
+        error_lower = error_message.lower()
+
+        # Pattern 1: Standalone # markers (T012)
+        if "invalid heading" in error_lower or "unexpected #" in error_lower:
+            issues.append(Issue(
+                description="単独の # 記号が検出されました。セクション区切りとして不適切です。",
+                severity=Severity.CRITICAL,
+                action_type=ActionType.REMOVE,
+                location=None  # Global fix
+            ))
+
+        # Pattern 2: YAML syntax errors (T013)
+        if "yaml" in error_lower or "frontmatter" in error_lower:
+            issues.append(Issue(
+                description="YAMLフロントマターに構文エラーがあります。",
+                severity=Severity.CRITICAL,
+                action_type=ActionType.RESTRUCTURE,
+                location="## YAML Header"
+            ))
+
+        # Pattern 3: Unclosed code blocks (T014)
+        if "code block" in error_lower or "```" in error_message:
+            issues.append(Issue(
+                description="コードブロックが正しく閉じられていません。",
+                severity=Severity.HIGH,
+                action_type=ActionType.RESTRUCTURE,
+                location=None
+            ))
+
+        # Pattern 4: Invalid markdown tables (T015)
+        if "table" in error_lower or "column" in error_lower:
+            issues.append(Issue(
+                description="Markdownテーブルの列数が不一致です。",
+                severity=Severity.HIGH,
+                action_type=ActionType.REMOVE,
+                location=None
+            ))
+
+        # Pattern 5: Fallback for unknown errors (T016)
+        if not issues:
+            issues.append(Issue(
+                description=f"Quarto検証エラー: {error_message[:200]}",
+                severity=Severity.HIGH,
+                action_type=ActionType.RESTRUCTURE,
+                location=None
+            ))
+
+        return Feedback(
+            agent_name="quarto_validator",
+            score=3.0,  # Low score to trigger revision
+            strengths=[],
+            issues=issues,
+            suggestions=["Quarto構文エラーを修正してください"]
+        )

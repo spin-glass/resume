@@ -21,6 +21,8 @@ This system uses [LangGraph](https://github.com/langchain-ai/langgraph) for mult
 - **Dry-run mode**: Preview changes before applying them
 - **YAML preservation**: Maintains Quarto frontmatter integrity
 - **No fabrication**: Enforces truthful enhancements only (FR-008)
+- **Automatic validation retry**: Detects Quarto syntax errors and automatically retries with fixes (default: 3 retries)
+- **Retry logging**: Detailed markdown logs track every validation attempt with timestamps
 
 ## Quick Start
 
@@ -79,6 +81,41 @@ python -m src.cli review \
   --threshold 9.0 \
   --target-role "Senior Backend Engineer" \
   --save-iterations
+
+# With custom validation retry settings
+python -m src.cli review \
+  --input ../public/assets/resume-ja.qmd \
+  --max-validation-retries 1 \
+  --save-iterations
+
+# Strict validation mode (exit on validation failure)
+python -m src.cli review \
+  --input ../public/assets/resume-ja.qmd \
+  --strict-validation \
+  --save-iterations
+```
+
+### Validation Retry Feature
+
+When Quarto validation fails during content revision, the system automatically:
+
+1. **Detects errors**: Parses Quarto error messages into structured feedback
+2. **Retries with fixes**: Re-invokes the revisor agent with validation-specific feedback
+3. **Logs attempts**: Creates detailed markdown logs showing each retry attempt
+4. **Saves artifacts**: Stores intermediate QMD files for debugging
+
+**Configuration options:**
+
+- `--max-validation-retries N`: Set maximum retry attempts (default: 3, set to 0 to disable)
+- `--strict-validation`: Exit workflow if validation fails after all retries (default: continue with warning)
+
+**Output files:**
+
+- `review_{timestamp}/iter{N}_retry{M}.qmd`: Retry artifacts for debugging
+- `review_{timestamp}/iter{N}_validation_retry.md`: Detailed log with timestamps
+
+See [validation_retry_log_example.md](docs/examples/validation_retry_log_example.md) for sample log format.
+
 ```
 
 ## Project Structure

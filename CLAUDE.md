@@ -27,6 +27,8 @@ resume/                     # Monorepo root
 ```
 
 ## Active Technologies
+- Python 3.13 (LangGraph compatibility requirement) + LangGraph 1.0.0+, Anthropic SDK 0.25.0+, Pydantic 2.0+, existing QuartoValidator service (009-quarto-retry-loop)
+- File-based (QMD files, retry logs, session artifacts) (009-quarto-retry-loop)
 
 - **Web**: Next.js 14, Nextra 3.0 (alpha), React 18, Tailwind CSS
 - **Python**: Python 3.13+ (LangGraph compatibility), LangGraph (multi-agent orchestration), Anthropic SDK (Claude API), Playwright (screenshot capture), pytest (testing)
@@ -53,6 +55,11 @@ pnpm review                # Run full review (modifies resume)
 pnpm review:dry            # Dry run (preview only, no modifications)
 pnpm review:full           # Full review with screenshot analysis
 
+# AI Review with Validation Retry (009-quarto-retry-loop)
+pnpm review --max-validation-retries 1        # Custom retry limit
+pnpm review --strict-validation               # Exit on validation failure
+pnpm review --max-validation-retries 0        # Skip retry loop
+
 # Python testing
 pnpm test:python           # Run pytest
 pnpm lint:python           # Run ruff linter
@@ -61,6 +68,53 @@ pnpm lint:python           # Run ruff linter
 pnpm sync                  # Sync QMD to MDX for web
 ```
 
+## Validation Retry Workflow (009-quarto-retry-loop)
+
+**Feature**: Automatic retry loop for Quarto validation failures with comprehensive logging
+
+### How It Works
+
+1. **After Revisor Node**: Every iteration's revised QMD content is validated with Quarto
+2. **On Validation Failure**:
+   - Parses error message into structured Feedback
+   - Re-invokes revisor with validation feedback
+   - Saves retry artifacts: `iter{N}_retry{M}.qmd`
+   - Logs to: `iter{N}_validation_retry.md`
+3. **Retry Loop**: Continues until validation passes OR max retries exhausted
+4. **Modes**:
+   - **Default** (`strict_validation=False`): Continue workflow with warning if validation fails
+   - **Strict** (`strict_validation=True`): Exit workflow if validation fails after all retries
+
+### Configuration
+
+```bash
+# Default: 3 retries, continue on failure
+pnpm review --save-iterations
+
+# Custom retry limit
+pnpm review --max-validation-retries 1 --save-iterations
+
+# Strict mode (exit on failure)
+pnpm review --strict-validation --save-iterations
+
+# Disable retry (legacy behavior)
+pnpm review --max-validation-retries 0 --save-iterations
+```
+
+### Output Files
+
+- `review_{timestamp}/iter{N}/resume.qmd` - Final iteration output
+- `review_{timestamp}/iter{N}_retry{M}.qmd` - Retry artifacts (if validation fails)
+- `review_{timestamp}/iter{N}_validation_retry.md` - Detailed retry log with timestamps
+
+### Error Patterns Detected
+
+1. **Standalone # markers** (T012): Invalid heading syntax
+2. **YAML frontmatter errors** (T013): Syntax errors in document header
+3. **Unclosed code blocks** (T014): Missing closing ```
+4. **Invalid markdown tables** (T015): Column count mismatch
+5. **Fallback** (T016): Any other Quarto errors
+
 ## Code Style
 
 - **Python**: Follow PEP 8, use type hints, workflow files must be <200 lines
@@ -68,6 +122,7 @@ pnpm sync                  # Sync QMD to MDX for web
 - **Commits**: Include `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>`
 
 ## Recent Changes
+- 009-quarto-retry-loop: Added Python 3.13 (LangGraph compatibility requirement) + LangGraph 1.0.0+, Anthropic SDK 0.25.0+, Pydantic 2.0+, existing QuartoValidator service
 
 - 002-monorepo-refactor: Reorganized repository into pnpm monorepo with packages/web/, packages/resume-review/, and resume/ directories
 - 001-resume-review-agents: Added multi-agent resume review system with LangGraph workflow
