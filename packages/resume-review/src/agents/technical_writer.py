@@ -24,13 +24,18 @@ class TechnicalWriterAgent(BaseAgent):
 
     def parse_feedback(self, feedback_text: str) -> Feedback:
         """Parse technical writer feedback from Claude response."""
+        import logging
+        logger = logging.getLogger("resume_review")
+
         try:
             # Extract JSON from response
             json_match = re.search(r"\{.*\}", feedback_text, re.DOTALL)
             if not json_match:
+                logger.warning(f"No JSON found in feedback response. First 200 chars: {feedback_text[:200]}")
                 raise ValueError("No JSON found in feedback response")
 
-            data = json.loads(json_match.group())
+            json_str = json_match.group()
+            data = json.loads(json_str)
 
             # Parse issues
             issues = []
@@ -53,6 +58,10 @@ class TechnicalWriterAgent(BaseAgent):
             )
 
         except (json.JSONDecodeError, KeyError, ValueError) as e:
+            # Log the error with more context
+            logger.error(f"Failed to parse technical writer feedback: {e}")
+            logger.debug(f"Feedback text (first 500 chars): {feedback_text[:500]}")
+
             # Fallback: create basic feedback from text
             return Feedback(
                 agent_name=self.agent_name,
