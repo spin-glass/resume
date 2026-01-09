@@ -13,7 +13,7 @@ class CopywriterAgent(BaseAgent):
 
     def __init__(self, llm_client, agent_name=None):
         """Initialize copywriter agent."""
-        super().__init__(llm_client, agent_name)
+        super().__init__(api_key, model)
         self.agent_name = "copywriter"
 
     def get_system_prompt(self, target_role: str) -> str:

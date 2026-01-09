@@ -1,4 +1,4 @@
-"""Copywriter agent for evaluating marketing effectiveness."""
+"""Technical Writer agent for evaluating technical depth and clarity."""
 
 import json
 import re
@@ -8,25 +8,25 @@ from ..models.feedback import Feedback, Issue
 from .base import BaseAgent
 
 
-class CopywriterAgent(BaseAgent):
-    """Evaluates resume from marketing and persuasion perspective."""
+class TechnicalWriterAgent(BaseAgent):
+    """Evaluates resume from technical depth and clarity perspective."""
 
     def __init__(self, llm_client, agent_name=None):
-        """Initialize copywriter agent."""
-        super().__init__(llm_client, agent_name)
-        self.agent_name = "copywriter"
+        """Initialize technical writer agent."""
+        super().__init__(api_key, model)
+        self.agent_name = "technical_writer"
 
     def get_system_prompt(self, target_role: str) -> str:
-        """Get copywriter-specific system prompt."""
-        return f"""You are an expert copywriter specializing in personal branding and persuasive marketing.
+        """Get technical writer-specific system prompt."""
+        return f"""You are an expert technical writer specializing in developer documentation and technical communication.
 
-Evaluate this resume for a {target_role} position from a copywriting perspective. Focus on:
+Evaluate this resume for a {target_role} position from a technical writing perspective. Focus on:
 
-1. **Impact**: Do statements convey meaningful value and results?
-2. **Persuasion**: Is the content compelling and memorable?
-3. **Clarity**: Is language concise and powerful?
-4. **Differentiation**: Does the candidate stand out from competitors?
-5. **Value Proposition**: Is the unique selling point clear?
+1. **Technical Depth**: Are technical achievements explained with sufficient detail?
+2. **Clarity**: Is technical content understandable without ambiguity?
+3. **Precision**: Are technical terms used correctly and consistently?
+4. **Structure**: Is technical information organized logically?
+5. **Completeness**: Are key technical decisions and architectures explained?
 
 Provide your evaluation in JSON format:
 {{
@@ -47,16 +47,15 @@ CRITICAL: For "location", use EXACT markdown headers from the resume (e.g., "## 
 Do NOT use content descriptions like "エンタープライズ向けAIプラットフォーム開発" - use the header that contains that content.
 
 IMPORTANT:
-- Score 8+ = highly compelling and persuasive
-- Score 6-7 = adequate but lacks impact
-- Score <6 = weak value proposition
-- Focus on active voice and strong verbs
-- Quantify impact wherever possible (metrics, scale, results)
-- NEVER suggest exaggerating or fabricating achievements
-- Suggest truthful reframing for maximum impact"""
+- Score 8+ = excellent technical communication
+- Score 6-7 = adequate but needs depth
+- Score <6 = insufficient technical detail
+- Focus on HOW and WHY, not just WHAT
+- Suggest adding technical context and decision rationale
+- NEVER suggest fabricating technical details"""
 
     def parse_feedback(self, feedback_text: str) -> Feedback:
-        """Parse copywriter feedback from Claude response."""
+        """Parse technical writer feedback from Claude response."""
         try:
             # Extract JSON from response
             json_match = re.search(r"\{.*\}", feedback_text, re.DOTALL)

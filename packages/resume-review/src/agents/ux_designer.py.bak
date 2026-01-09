@@ -1,4 +1,4 @@
-"""Visual Designer agent for evaluating visual presentation."""
+"""UX Designer agent for evaluating information hierarchy and scannability."""
 
 import json
 import re
@@ -8,25 +8,25 @@ from ..models.feedback import Feedback, Issue
 from .base import BaseAgent
 
 
-class VisualDesignerAgent(BaseAgent):
-    """Evaluates resume from visual design perspective."""
+class UXDesignerAgent(BaseAgent):
+    """Evaluates resume from UX/information hierarchy perspective."""
 
     def __init__(self, llm_client, agent_name=None):
-        """Initialize visual designer agent."""
-        super().__init__(llm_client, agent_name)
-        self.agent_name = "visual_designer"
+        """Initialize UX designer agent."""
+        super().__init__(api_key, model)
+        self.agent_name = "ux_designer"
 
     def get_system_prompt(self, target_role: str) -> str:
-        """Get visual designer-specific system prompt."""
-        return f"""You are an expert visual designer specializing in professional documents and typography.
+        """Get UX designer-specific system prompt."""
+        return f"""You are an expert UX designer specializing in information architecture and document design.
 
-Evaluate this resume for a {target_role} position from a visual design perspective. Focus on:
+Evaluate this resume for a {target_role} position from a UX perspective. Focus on:
 
-1. **Typography**: Font choices, sizes, and hierarchy
-2. **Spacing**: Margins, padding, line height
-3. **Consistency**: Visual elements aligned and uniform
-4. **Professionalism**: Overall polish and attention to detail
-5. **Balance**: Visual weight distribution across the page
+1. **Information Hierarchy**: Is the most important information prominent?
+2. **Scannability**: Can key qualifications be identified in 6-10 seconds?
+3. **Visual Flow**: Does the layout guide the eye naturally?
+4. **Readability**: Are sections clearly delineated and easy to navigate?
+5. **White Space**: Is spacing used effectively to reduce cognitive load?
 
 Provide your evaluation in JSON format:
 {{
@@ -35,7 +35,7 @@ Provide your evaluation in JSON format:
   "issues": [
     {{
       "description": "<specific problem>",
-      "action_type": "<restructure|emphasize|remove>",
+      "action_type": "<add_content|restructure|emphasize|remove|quantify>",
       "location": "<section name or null>",
       "severity": "<critical|high|medium|low>"
     }}
@@ -44,14 +44,14 @@ Provide your evaluation in JSON format:
 }}
 
 IMPORTANT:
-- Score 8+ = professional, polished design
-- Score 6-7 = adequate but lacks refinement
-- Score <6 = unprofessional appearance
-- Focus on visual presentation, not content
-- Suggest design improvements, not content changes"""
+- Score 8+ = excellent UX, highly scannable
+- Score 6-7 = adequate but improvements needed
+- Score <6 = poor information hierarchy
+- Focus on structure and organization, not visual styling
+- Suggest improvements to layout and content grouping"""
 
     def parse_feedback(self, feedback_text: str) -> Feedback:
-        """Parse visual designer feedback from Claude response."""
+        """Parse UX designer feedback from Claude response."""
         try:
             # Extract JSON from response
             json_match = re.search(r"\{.*\}", feedback_text, re.DOTALL)
@@ -99,7 +99,7 @@ IMPORTANT:
             target_role: Target position
 
         Returns:
-            Feedback with visual design evaluation
+            Feedback with UX evaluation
         """
         import base64
         from pathlib import Path
@@ -139,7 +139,7 @@ IMPORTANT:
                         },
                         {
                             "type": "text",
-                            "text": f"Please evaluate the visual design and presentation of this resume for a {target_role} position.",
+                            "text": f"Please evaluate the UX and information hierarchy of this resume for a {target_role} position.",
                         },
                     ],
                 }
