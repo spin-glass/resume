@@ -2,9 +2,11 @@
 
 import json
 import re
+from typing import Optional
 
 from ..models import Severity
 from ..models.feedback import Feedback, Issue
+from ..models.job_posting import JobPosting
 from .base import BaseAgent
 
 
@@ -16,9 +18,9 @@ class CopywriterAgent(BaseAgent):
         super().__init__(llm_client, agent_name)
         self.agent_name = "copywriter"
 
-    def get_system_prompt(self, target_role: str) -> str:
+    def get_system_prompt(self, target_role: str, job_posting: Optional[JobPosting] = None) -> str:
         """Get copywriter-specific system prompt."""
-        return f"""You are an expert copywriter specializing in personal branding and persuasive marketing.
+        prompt = f"""You are an expert copywriter specializing in personal branding and persuasive marketing.
 
 Evaluate this resume for a {target_role} position from a copywriting perspective. Focus on:
 
@@ -54,6 +56,12 @@ IMPORTANT:
 - Quantify impact wherever possible (metrics, scale, results)
 - NEVER suggest exaggerating or fabricating achievements
 - Suggest truthful reframing for maximum impact"""
+
+        if job_posting:
+            prompt += self._format_job_context(job_posting)
+            prompt += "\n\nWhen evaluating, focus on how well the resume highlights experience and skills that match the job requirements. Suggest reframing or emphasizing relevant achievements to align with the target role."
+
+        return prompt
 
     def parse_feedback(self, feedback_text: str) -> Feedback:
         """Parse copywriter feedback from Claude response."""

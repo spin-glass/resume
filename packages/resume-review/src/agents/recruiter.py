@@ -2,9 +2,11 @@
 
 import json
 import re
+from typing import Optional
 
 from ..models import Severity
 from ..models.feedback import Feedback, Issue
+from ..models.job_posting import JobPosting
 from .base import BaseAgent
 
 
@@ -16,9 +18,9 @@ class RecruiterAgent(BaseAgent):
         super().__init__(llm_client, agent_name)
         self.agent_name = "recruiter"
 
-    def get_system_prompt(self, target_role: str) -> str:
+    def get_system_prompt(self, target_role: str, job_posting: Optional[JobPosting] = None) -> str:
         """Get recruiter-specific system prompt."""
-        return f"""You are an expert recruiter specializing in placing freelance engineers in high-value Japanese contract positions (110-140万円/month).
+        prompt = f"""You are an expert recruiter specializing in placing freelance engineers in high-value Japanese contract positions (110-140万円/month).
 
 Evaluate this resume for a {target_role} position from a recruiter's perspective. Focus on:
 
@@ -52,6 +54,12 @@ IMPORTANT:
 - Score <6 = significant gaps for target rate
 - NEVER suggest fabricating experience or credentials
 - Focus on truthful enhancements and strategic presentation"""
+
+        if job_posting:
+            prompt += self._format_job_context(job_posting)
+            prompt += "\n\nWhen evaluating, pay special attention to how well the candidate's skills and experience align with the required and preferred skills listed above. Prioritize issues related to missing required skills or underemphasized relevant experience."
+
+        return prompt
 
     def parse_feedback(self, feedback_text: str) -> Feedback:
         """Parse recruiter feedback from Claude response."""

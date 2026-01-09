@@ -163,17 +163,38 @@ Return JSON with this structure:
         matched_skills: list[SkillMatch],
         missing_skills: list[str],
     ) -> list[str]:
-        """Generate 3-5 emphasis suggestions using LLM."""
-        system_prompt = "You are a resume optimization expert. Generate 3-5 actionable suggestions for emphasizing relevant experience."
+        """Generate prioritized emphasis suggestions using LLM."""
+        system_prompt = """You are an expert resume consultant specializing in ATS optimization.
+Generate 3-5 actionable emphasis suggestions for resume improvement based on job requirements.
+
+Priority levels (use emoji prefix):
+- 🔴 Critical: Missing required skills, major gaps in key responsibilities
+- 🟡 Important: Underemphasized matched skills, quantification opportunities
+- 🟢 Enhancement: Polish, additional details, nice-to-have improvements
+
+Requirements:
+- Focus on highlighting matched skills more prominently
+- Suggest addressing missing required skills (if any)
+- Recommend quantifying relevant achievements
+- Prioritize suggestions by impact (critical → important → enhancement)
+- Be specific and actionable
+
+Return ONLY a JSON array of strings with priority emoji prefix:
+["🔴 Critical suggestion", "🟡 Important suggestion", "🟢 Enhancement", ...]"""
 
         matched_list = [m.skill for m in matched_skills if m.matched and m.confidence >= 0.8][:8]
         missing_list = missing_skills[:5]
 
+        responsibilities = job_posting.responsibilities[:5] if job_posting.responsibilities else []
+
         user_prompt = f"""Job Title: {job_posting.title}
 Matched Skills: {matched_list}
-Missing Critical Skills: {missing_list}
+Missing Required Skills: {missing_list}
 
-Generate 3-5 specific suggestions. Return as JSON array: ["suggestion 1", ...]"""
+Key Responsibilities:
+{chr(10).join([f"- {r}" for r in responsibilities])}
+
+Generate 3-5 prioritized emphasis suggestions."""
 
         try:
             response = await self.llm_client.generate_async(
@@ -191,23 +212,72 @@ Generate 3-5 specific suggestions. Return as JSON array: ["suggestion 1", ...]""
             if content.endswith("```"):
                 content = content[:-3]
             suggestions = json.loads(content.strip())
+
+            # Sort by priority (🔴 > 🟡 > 🟢)
+            priority_order = {"🔴": 0, "🟡": 1, "🟢": 2}
+            suggestions.sort(key=lambda s: priority_order.get(s[0] if s else "x", 3))
+
             return suggestions[:5]
 
         except Exception as e:
             logger.error(f"Error generating suggestions: {e}")
             return [
-                "Emphasize experience with matched technologies",
-                "Quantify achievements related to job responsibilities",
-                "Add examples demonstrating required competencies",
+                "🔴 Emphasize experience with matched technologies",
+                "🟡 Quantify achievements related to job responsibilities",
+                "🟢 Add examples demonstrating required competencies",
             ]
 
     async def _generate_keyword_additions(self, job_posting: JobPosting) -> list[str]:
-        """Identify keywords to add to resume."""
-        keywords = job_posting.get_all_skills()
-        for resp in job_posting.responsibilities[:5]:
-            words = [w for w in resp.split() if len(w) > 4]
-            keywords.extend(words[:3])
-        return list(set(keywords))[:10]
+        """Generate bilingual keyword suggestions using LLM."""
+        system_prompt = """You are an ATS (Applicant Tracking System) optimization expert.
+Generate 5-10 keyword additions for a Japanese resume based on the job description.
+
+Requirements:
+- Extract key technical terms, skills, frameworks, and methodologies
+- For technical terms, provide BOTH English and Japanese translations
+- Format: "English (日本語)" or "日本語 (English)"
+- Prioritize terms that appear frequently in job requirements
+- Focus on ATS-searchable terms (specific technologies, not vague descriptions)
+
+Return ONLY a JSON array of bilingual keyword strings:
+["Docker (コンテナ)", "Kubernetes (K8s)", "マイクロサービス (Microservices)", ...]"""
+
+        skills = job_posting.get_all_skills()[:15]
+        responsibilities = job_posting.responsibilities[:5] if job_posting.responsibilities else []
+
+        user_prompt = f"""Job Title: {job_posting.title}
+
+Skills: {', '.join(skills)}
+
+Responsibilities:
+{chr(10).join([f"- {r}" for r in responsibilities])}
+
+Generate 5-10 bilingual ATS keywords."""
+
+        try:
+            response = await self.llm_client.generate_async(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                max_tokens=1500,
+                temperature=0.5,
+            )
+
+            content = response.content.strip()
+            if content.startswith("```json"):
+                content = content[7:]
+            if content.startswith("```"):
+                content = content[3:]
+            if content.endswith("```"):
+                content = content[:-3]
+            keywords = json.loads(content.strip())
+
+            # Deduplicate and limit to 10
+            return list(set(keywords))[:10]
+
+        except Exception as e:
+            logger.error(f"Error generating keywords: {e}")
+            # Fallback: extract unique skills
+            return list(set(job_posting.get_all_skills()))[:10]
 
     async def analyze_match(
         self,

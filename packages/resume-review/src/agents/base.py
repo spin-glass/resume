@@ -9,6 +9,7 @@ from anthropic import Anthropic, AsyncAnthropic
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ..models.feedback import Feedback, Resume
+from ..models.job_posting import JobPosting
 from ..services.llm_client import BaseLLMClient
 
 
@@ -33,17 +34,55 @@ class BaseAgent(ABC):
             self.model = llm_client.model
 
     @abstractmethod
-    def get_system_prompt(self, target_role: str) -> str:
+    def get_system_prompt(self, target_role: str, job_posting: Optional[JobPosting] = None) -> str:
         """
         Get system prompt for this agent.
 
         Args:
             target_role: Target position the resume is being tailored for
+            job_posting: Optional job posting for personalized feedback
 
         Returns:
             System prompt string
         """
         pass
+
+    def _format_job_context(self, job_posting: JobPosting) -> str:
+        """
+        Format job posting into context string for prompts.
+
+        Args:
+            job_posting: Job posting to format
+
+        Returns:
+            Formatted job context string
+        """
+        context = "\n\n## Target Job Requirements\n"
+
+        if job_posting.title:
+            context += f"**Job Title**: {job_posting.title}\n"
+
+        if job_posting.company:
+            context += f"**Company**: {job_posting.company}\n"
+
+        if job_posting.required_skills:
+            context += f"\n**Required Skills (Must-Have)**:\n"
+            for skill in job_posting.required_skills[:10]:
+                context += f"- {skill}\n"
+
+        if job_posting.preferred_skills:
+            context += f"\n**Preferred Skills (Nice-to-Have)**:\n"
+            for skill in job_posting.preferred_skills[:10]:
+                context += f"- {skill}\n"
+
+        if job_posting.responsibilities:
+            context += f"\n**Key Responsibilities**:\n"
+            for resp in job_posting.responsibilities[:5]:
+                context += f"- {resp}\n"
+
+        context += "\n**Evaluation Focus**: Assess how well the resume aligns with these specific requirements.\n"
+
+        return context
 
     @retry(
         stop=stop_after_attempt(3),
@@ -91,7 +130,7 @@ class BaseAgent(ABC):
         return self.parse_feedback(feedback_text)
 
     async def evaluate_async(
-        self, resume: Resume, target_role: str = "LLM/Multi-Agent Engineer"
+        self, resume: Resume, target_role: str = "LLM/Multi-Agent Engineer", job_posting: Optional[JobPosting] = None
     ) -> Feedback:
         """
         Async version of evaluate for parallel execution in LangGraph.
@@ -99,6 +138,7 @@ class BaseAgent(ABC):
         Args:
             resume: Resume entity to evaluate
             target_role: Target position
+            job_posting: Optional job posting for personalized feedback
 
         Returns:
             Feedback entity with score, strengths, issues, suggestions
@@ -106,7 +146,7 @@ class BaseAgent(ABC):
         import logging
         logger = logging.getLogger("resume_review")
 
-        system_prompt = self.get_system_prompt(target_role)
+        system_prompt = self.get_system_prompt(target_role, job_posting=job_posting)
         user_prompt = f"Please evaluate this resume for a {target_role} position:\n\n{resume.content}"
 
         # Verbose: Log which model is being used
