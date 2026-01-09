@@ -190,6 +190,30 @@ def review(
     click.echo(f"Max Iterations: {max_iterations}")
     if screenshot_url:
         click.echo(f"Screenshot URL: {screenshot_url}")
+
+    # Verbose: Display model configuration
+    if verbose:
+        click.echo()
+        if model:
+            # Override mode
+            click.echo(f"Mode: Override all agents with {model}")
+        else:
+            # Hybrid mode
+            click.echo("Mode: Hybrid configuration (optimal model per agent)")
+            from .config.model_config import AGENT_MODEL_MAP, AgentName
+            click.echo("\nAgent Model Assignments:")
+            for agent_name in [
+                AgentName.RECRUITER,
+                AgentName.TECHNICAL_WRITER,
+                AgentName.COPYWRITER,
+                AgentName.UX_DESIGNER,
+                AgentName.VISUAL_DESIGNER,
+                AgentName.REVISOR,
+            ]:
+                config = AGENT_MODEL_MAP.get(agent_name)
+                if config:
+                    click.echo(f"  {agent_name.value:20} → {config['model_id']:30} ({config['provider']})")
+
     click.echo()
 
     try:

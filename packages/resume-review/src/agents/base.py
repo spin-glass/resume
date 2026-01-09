@@ -103,8 +103,14 @@ class BaseAgent(ABC):
         Returns:
             Feedback entity with score, strengths, issues, suggestions
         """
+        import logging
+        logger = logging.getLogger("resume_review")
+
         system_prompt = self.get_system_prompt(target_role)
         user_prompt = f"Please evaluate this resume for a {target_role} position:\n\n{resume.content}"
+
+        # Verbose: Log which model is being used
+        logger.debug(f"Agent {self.agent_name} using model: {self.llm_client.model} ({self.llm_client.provider})")
 
         # Call LLM via provider-agnostic client
         response = await self.llm_client.generate_async(
