@@ -35,11 +35,11 @@ AGENT_MODEL_MAP = {
     },
     AgentName.UX_DESIGNER: {
         "provider": "gemini",
-        "model_id": "gemini-3-flash-preview",
+        "model_id": "gemini-3-pro-preview",
     },
     AgentName.VISUAL_DESIGNER: {
         "provider": "gemini",
-        "model_id": "gemini-3-flash-preview",
+        "model_id": "gemini-3-pro-preview",
     },
     AgentName.REVISOR: {
         "provider": "gemini",
@@ -51,6 +51,10 @@ AGENT_MODEL_MAP = {
 # Reference: specs/003-multi-model-hybrid/research.md
 MODEL_PRICING = {
     "gemini-3-flash-preview": {
+        "input": 0.0,  # Free during preview
+        "output": 0.0,  # Free during preview
+    },
+    "gemini-3-pro-preview": {
         "input": 0.0,  # Free during preview
         "output": 0.0,  # Free during preview
     },
