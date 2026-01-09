@@ -1,4 +1,16 @@
-"""Content revision service for applying feedback to resume."""
+"""Content revision service for applying feedback to resume.
+
+DEPRECATED: This module is deprecated in favor of the new RevisorAgent architecture.
+
+The old RevisionService used fuzzy replacement which caused "Fuzzy replacement failed"
+errors. The new RevisorAgent (src/agents/revisor.py) uses full-rewrite approach which
+eliminates these errors entirely.
+
+New code should use:
+  from src.agents.revisor import RevisorAgent
+
+This module is kept for backward compatibility but will be removed in a future version.
+"""
 
 import logging
 import re
@@ -15,7 +27,11 @@ logger = logging.getLogger("resume_review")
 
 
 class RevisionService:
-    """Service for applying content changes while preserving YAML frontmatter."""
+    """Service for applying content changes while preserving YAML frontmatter.
+
+    DEPRECATED: Use RevisorAgent instead. This class uses fuzzy replacement which
+    causes reliability issues. The new RevisorAgent uses full-rewrite approach.
+    """
 
     def __init__(self, api_key: str, model: str = "claude-opus-4-5-20251101"):
         """
