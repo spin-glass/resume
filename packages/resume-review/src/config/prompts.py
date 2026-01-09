@@ -3,6 +3,10 @@
 Centralized prompt management for consistent agent behavior.
 """
 
+from typing import Optional
+
+from ..models.job_posting import JobPosting
+
 # Base instructions shared by all agents
 BASE_INSTRUCTIONS = """
 IMPORTANT:
@@ -179,13 +183,63 @@ AGENT_PROMPTS = {
 }
 
 
-def get_system_prompt(agent_name: str, target_role: str) -> str:
+def format_job_context(job_posting: JobPosting) -> str:
+    """
+    Format job posting context for agent prompts.
+
+    Args:
+        job_posting: JobPosting instance with job requirements
+
+    Returns:
+        Formatted job context string to append to prompts
+    """
+    context = "\n\n## Target Job Requirements\n"
+
+    if job_posting.title:
+        context += f"**Job Title**: {job_posting.title}\n"
+
+    if job_posting.company:
+        context += f"**Company**: {job_posting.company}\n"
+
+    if job_posting.required_skills:
+        context += f"\n**Required Skills (Must-Have)**:\n"
+        for skill in job_posting.required_skills[:10]:
+            context += f"- {skill}\n"
+        if len(job_posting.required_skills) > 10:
+            context += f"- ...and {len(job_posting.required_skills) - 10} more\n"
+
+    if job_posting.preferred_skills:
+        context += f"\n**Preferred Skills (Nice-to-Have)**:\n"
+        for skill in job_posting.preferred_skills[:10]:
+            context += f"- {skill}\n"
+        if len(job_posting.preferred_skills) > 10:
+            context += f"- ...and {len(job_posting.preferred_skills) - 10} more\n"
+
+    if job_posting.responsibilities:
+        context += f"\n**Key Responsibilities**:\n"
+        for resp in job_posting.responsibilities[:5]:
+            context += f"- {resp}\n"
+        if len(job_posting.responsibilities) > 5:
+            context += f"- ...and {len(job_posting.responsibilities) - 5} more\n"
+
+    if job_posting.qualifications:
+        context += f"\n**Qualifications**:\n"
+        for qual in job_posting.qualifications[:5]:
+            context += f"- {qual}\n"
+        if len(job_posting.qualifications) > 5:
+            context += f"- ...and {len(job_posting.qualifications) - 5} more\n"
+
+    return context
+
+
+def get_system_prompt(agent_name: str, target_role: str, job_posting: Optional[JobPosting] = None) -> str:
     """
     Get the system prompt for a specific agent.
 
     Args:
         agent_name: Name of the agent (e.g., "recruiter", "copywriter")
         target_role: Target position the resume is being tailored for
+        job_posting: Optional job posting for job-specific evaluation
 
     Returns:
         Formatted system prompt string
@@ -196,4 +250,17 @@ def get_system_prompt(agent_name: str, target_role: str) -> str:
     if agent_name not in AGENT_PROMPTS:
         raise ValueError(f"Unknown agent: {agent_name}. Valid agents: {list(AGENT_PROMPTS.keys())}")
 
-    return AGENT_PROMPTS[agent_name].format(target_role=target_role)
+    prompt = AGENT_PROMPTS[agent_name].format(target_role=target_role)
+
+    if job_posting:
+        prompt += format_job_context(job_posting)
+
+        # Add agent-specific job context guidance
+        if agent_name == "recruiter":
+            prompt += "\n\nWhen evaluating, pay special attention to how well the candidate's skills and experience align with the required and preferred skills listed above. Prioritize issues related to missing required skills or underemphasized relevant experience."
+        elif agent_name == "technical_writer":
+            prompt += "\n\nWhen evaluating technical accuracy, verify that the resume adequately covers the technical skills and qualifications listed in the job requirements. Flag missing technical details that are relevant to the target role."
+        elif agent_name == "copywriter":
+            prompt += "\n\nWhen evaluating, focus on how well the resume highlights experience and skills that match the job requirements. Suggest reframing or emphasizing relevant achievements to align with the target role."
+
+    return prompt
