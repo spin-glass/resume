@@ -1,0 +1,10 @@
+---
+title: "Invalid YAML Resume
+author: Test User
+date: 2026-01-09
+format: {html
+---
+
+# Test Content
+
+This resume has invalid YAML frontmatter.

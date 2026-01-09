@@ -2,7 +2,7 @@
 """
 QMDファイルからMDXファイルへの変換スクリプト
 
-public/assets/resume-ja.qmd → pages/ja/index.mdx
+resume/resume-ja.qmd → packages/web/pages/ja/index.mdx
 - YAMLフロントマターを除去
 - MDX用のヘッダーを追加
 """
@@ -12,8 +12,8 @@ from pathlib import Path
 
 # パス設定
 PROJECT_ROOT = Path(__file__).parent.parent
-QMD_FILE = PROJECT_ROOT / "public/assets/resume-ja.qmd"
-MDX_FILE = PROJECT_ROOT / "pages/ja/index.mdx"
+QMD_FILE = PROJECT_ROOT / "resume/resume-ja.qmd"
+MDX_FILE = PROJECT_ROOT / "packages/web/pages/ja/index.mdx"
 
 # MDXヘッダーテンプレート
 MDX_HEADER = '''import CurrentDate from "../../components/CurrentDate";

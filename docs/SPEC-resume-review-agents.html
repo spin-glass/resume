@@ -1,0 +1,2101 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>spec-resume-review-agents</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="SPEC-resume-review-agents_files/libs/clipboard/clipboard.min.js"></script>
+<script src="SPEC-resume-review-agents_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="SPEC-resume-review-agents_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="SPEC-resume-review-agents_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="SPEC-resume-review-agents_files/libs/quarto-html/popper.min.js"></script>
+<script src="SPEC-resume-review-agents_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="SPEC-resume-review-agents_files/libs/quarto-html/anchor.min.js"></script>
+<link href="SPEC-resume-review-agents_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="SPEC-resume-review-agents_files/libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="SPEC-resume-review-agents_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="SPEC-resume-review-agents_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="SPEC-resume-review-agents_files/libs/bootstrap/bootstrap-d6a003b94517c951b2d65075d42fb01b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="仕様書-resume-review-multi-agent-system" class="level1">
+<h1>仕様書: Resume Review Multi-Agent System</h1>
+<section id="概要" class="level2">
+<h2 class="anchored" data-anchor-id="概要">1. 概要</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>目的</td>
+<td>職務経歴書のコンテンツとデザインを自動レビュー・修正し、高単価案件（110〜140万円/月）獲得を支援</td>
+</tr>
+<tr class="even">
+<td>実行環境</td>
+<td>ローカルのみ（CLI）</td>
+</tr>
+<tr class="odd">
+<td>入力</td>
+<td>QMDファイル（<code>public/assets/resume-ja.qmd</code>）</td>
+</tr>
+<tr class="even">
+<td>出力</td>
+<td>修正済みQMD + PDF + HTML + MDX</td>
+</tr>
+<tr class="odd">
+<td>統合方式</td>
+<td>Monorepo（既存resume/配下にagents/を追加）</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="ターゲット定義" class="level2">
+<h2 class="anchored" data-anchor-id="ターゲット定義">2. ターゲット定義</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>項目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>目標単価</strong></td>
+<td>110〜140万円/月</td>
+</tr>
+<tr class="even">
+<td><strong>目標時期</strong></td>
+<td>2025年Q1中</td>
+</tr>
+<tr class="odd">
+<td><strong>ターゲット職種</strong></td>
+<td>LLM/マルチエージェントエンジニア</td>
+</tr>
+<tr class="even">
+<td><strong>リモート率</strong></td>
+<td>フルリモート優先</td>
+</tr>
+</tbody>
+</table>
+<section id="単価帯別-必須スキル市場調査より" class="level3">
+<h3 class="anchored" data-anchor-id="単価帯別-必須スキル市場調査より">単価帯別 必須スキル（市場調査より）</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>単価帯</th>
+<th>必須スキル</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>100〜120万円</td>
+<td>LangGraph、Vector DB、LLMOps（LangSmith/LangFuse）、Fine-tuning経験</td>
+</tr>
+<tr class="even">
+<td>120万円+</td>
+<td>MLOps、大規模分散環境、LLMサービング最適化（vLLM/TGI）、チームリード</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="高単価案件向け必須キーワード" class="level3">
+<h3 class="anchored" data-anchor-id="高単価案件向け必須キーワード">高単価案件向け必須キーワード</h3>
+<ul>
+<li>LangGraph / LangChain</li>
+<li>RAG / Vector DB（Qdrant, Pinecone, Chroma）</li>
+<li>LangSmith / LangFuse</li>
+<li>Fine-tuning（LoRA, QLoRA, PEFT）</li>
+<li>MLOps（MLflow, Kubeflow）</li>
+<li>Vertex AI / SageMaker / Bedrock</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="ポートフォリオ補完方針" class="level2">
+<h2 class="anchored" data-anchor-id="ポートフォリオ補完方針">3. ポートフォリオ補完方針</h2>
+<section id="基本方針" class="level3">
+<h3 class="anchored" data-anchor-id="基本方針">基本方針</h3>
+<p><strong>実務経験にないスキルは、ポートフォリオで補完する（完成済み前提）</strong></p>
+<ul>
+<li>エージェントは不足スキルを検出したら、対応するポートフォリオを提案</li>
+<li>ポートフォリオは即座に作成可能（バイブコーディング + 経験により高速実装）</li>
+<li>Revisorはポートフォリオセクションにリンクを追加</li>
+</ul>
+</section>
+<section id="命名規則" class="level3">
+<h3 class="anchored" data-anchor-id="命名規則">命名規則</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>項目</th>
+<th>値</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>基本形式</td>
+<td><code>{技術}-{種類}</code></td>
+</tr>
+<tr class="even">
+<td>GitHub URL</td>
+<td><code>https://github.com/spin-glass/{repo-name}</code></td>
+</tr>
+<tr class="odd">
+<td>Demo URL</td>
+<td><code>https://{repo-name}.spin-glass.dev/</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>命名パターン（LLMが一貫した名前を生成するためのガイド）</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 45%">
+<col style="width: 30%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>パターン</th>
+<th>用途</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>{技術}-{用途}</code></td>
+<td>特定用途のデモ</td>
+<td><code>langgraph-multi-agent</code></td>
+</tr>
+<tr class="even">
+<td><code>{技術}-{ユースケース}</code></td>
+<td>ユースケース実装</td>
+<td><code>rag-evaluation-pipeline</code></td>
+</tr>
+<tr class="odd">
+<td><code>{技術}-demo</code></td>
+<td>シンプルなデモ</td>
+<td><code>graphrag-demo</code></td>
+</tr>
+<tr class="even">
+<td><code>{技術}-benchmark</code></td>
+<td>ベンチマーク・比較</td>
+<td><code>vllm-benchmark</code></td>
+</tr>
+<tr class="odd">
+<td><code>{技術}-example</code></td>
+<td>チュートリアル的実装</td>
+<td><code>lora-finetuning-example</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ポートフォリオ生成例" class="level3">
+<h3 class="anchored" data-anchor-id="ポートフォリオ生成例">ポートフォリオ生成例</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 34%">
+<col style="width: 21%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>不足スキル</th>
+<th>リポジトリ名</th>
+<th>GitHub</th>
+<th>Demo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>LangGraph/Multi-Agent</td>
+<td><code>langgraph-multi-agent</code></td>
+<td><code>https://github.com/spin-glass/langgraph-multi-agent</code></td>
+<td><code>https://langgraph-multi-agent.spin-glass.dev/</code></td>
+</tr>
+<tr class="even">
+<td>RAG評価パイプライン</td>
+<td><code>rag-evaluation-pipeline</code></td>
+<td><code>https://github.com/spin-glass/rag-evaluation-pipeline</code></td>
+<td><code>https://rag-evaluation-pipeline.spin-glass.dev/</code></td>
+</tr>
+<tr class="odd">
+<td>GraphRAG</td>
+<td><code>graphrag-demo</code></td>
+<td><code>https://github.com/spin-glass/graphrag-demo</code></td>
+<td><code>https://graphrag-demo.spin-glass.dev/</code></td>
+</tr>
+<tr class="even">
+<td>LLMサービング</td>
+<td><code>vllm-benchmark</code></td>
+<td><code>https://github.com/spin-glass/vllm-benchmark</code></td>
+<td><code>https://vllm-benchmark.spin-glass.dev/</code></td>
+</tr>
+<tr class="odd">
+<td>Fine-tuning</td>
+<td><code>lora-finetuning-example</code></td>
+<td><code>https://github.com/spin-glass/lora-finetuning-example</code></td>
+<td><code>https://lora-finetuning-example.spin-glass.dev/</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="ディレクトリ構成" class="level2">
+<h2 class="anchored" data-anchor-id="ディレクトリ構成">4. ディレクトリ構成</h2>
+<pre><code>resume/
+├── pages/
+│   └── ja/
+│       └── index.mdx              # Web用（QMDから自動生成）
+├── public/
+│   └── assets/
+│       ├── resume-ja.qmd          # ★ ソースファイル（レビュー対象）
+│       ├── resume-ja.pdf          # PDF出力
+│       ├── resume-ja.html         # HTML出力
+│       └── header.tex             # LaTeXヘッダー
+├── scripts/
+│   └── sync_qmd_to_mdx.py         # QMD→MDX変換
+├── agents/                        # 【新規】Python agents
+│   ├── src/
+│   │   ├── __init__.py
+│   │   ├── cli.py                 # CLIエントリーポイント
+│   │   ├── graph.py               # LangGraphワークフロー
+│   │   ├── agents/
+│   │   │   ├── __init__.py
+│   │   │   ├── evaluators.py      # 評価エージェント
+│   │   │   ├── reviewers.py       # 統合レビュアー
+│   │   │   └── revisors.py        # 修正エージェント
+│   │   ├── models/
+│   │   │   ├── __init__.py
+│   │   │   └── state.py           # 状態定義
+│   │   └── utils/
+│   │       ├── __init__.py
+│   │       ├── screenshot.py      # スクリーンショット取得
+│   │       └── qmd.py             # QMDパース・出力
+│   ├── tests/
+│   │   └── test_graph.py
+│   ├── pyproject.toml
+│   └── README.md
+├── docs/
+│   └── SPEC-resume-review-agents.md
+├── package.json                   # npm scripts定義
+├── resume.pdf                     # ルートのPDF（コピー）
+└── .env                           # ANTHROPIC_API_KEY</code></pre>
+<hr>
+</section>
+<section id="cli-インターフェース" class="level2">
+<h2 class="anchored" data-anchor-id="cli-インターフェース">5. CLI インターフェース</h2>
+<section id="コマンド" class="level3">
+<h3 class="anchored" data-anchor-id="コマンド">5.1 コマンド</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 基本実行</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> resume/agents</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> src.cli review <span class="at">--input</span> ../public/assets/resume-ja.qmd</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># オプション付き</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> src.cli review <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">--input</span> ../public/assets/resume-ja.qmd <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">--output</span> ../public/assets/resume-ja.qmd <span class="dt">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">--target-role</span> <span class="st">"生成AI/LLMエンジニア"</span> <span class="dt">\</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">--screenshot-url</span> <span class="st">"http://localhost:3000/ja"</span> <span class="dt">\</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">--max-iterations</span> 3 <span class="dt">\</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">--threshold</span> 8.0 <span class="dt">\</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">--dry-run</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="オプション一覧" class="level3">
+<h3 class="anchored" data-anchor-id="オプション一覧">5.2 オプション一覧</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>オプション</th>
+<th>型</th>
+<th>デフォルト</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>--input</code></td>
+<td>path</td>
+<td>必須</td>
+<td>入力QMDファイルパス</td>
+</tr>
+<tr class="even">
+<td><code>--output</code></td>
+<td>path</td>
+<td>入力と同じ</td>
+<td>出力QMDファイルパス</td>
+</tr>
+<tr class="odd">
+<td><code>--target-role</code></td>
+<td>string</td>
+<td>“生成AI/LLMエンジニア”</td>
+<td>ターゲット職種</td>
+</tr>
+<tr class="even">
+<td><code>--screenshot-url</code></td>
+<td>url</td>
+<td>None</td>
+<td>スクリーンショット取得URL</td>
+</tr>
+<tr class="odd">
+<td><code>--max-iterations</code></td>
+<td>int</td>
+<td>3</td>
+<td>最大イテレーション数</td>
+</tr>
+<tr class="even">
+<td><code>--threshold</code></td>
+<td>float</td>
+<td>8.0</td>
+<td>通過スコア閾値</td>
+</tr>
+<tr class="odd">
+<td><code>--dry-run</code></td>
+<td>flag</td>
+<td>False</td>
+<td>修正を適用せず結果のみ表示</td>
+</tr>
+<tr class="even">
+<td><code>--verbose</code></td>
+<td>flag</td>
+<td>False</td>
+<td>詳細ログ出力</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="出力例" class="level3">
+<h3 class="anchored" data-anchor-id="出力例">5.3 出力例</h3>
+<pre><code>$ python -m src.cli review --input ../public/assets/resume-ja.qmd --verbose
+
+🚀 Resume Review System Starting...
+
+📄 Input: ../public/assets/resume-ja.qmd (2,847 chars)
+🎯 Target Role: 生成AI/LLMエンジニア
+📸 Screenshot: Capturing http://localhost:3000/ja ...
+
+═══════════════════════════════════════════════════════════
+ CONTENT PHASE
+═══════════════════════════════════════════════════════════
+
+── Iteration 1/3 ──────────────────────────────────────────
+
+[Recruiter]      Score: 6/10
+  ✓ MLOps経験が明確
+  ✗ タグラインがない
+  ✗ RAG経験が目立たない
+  ✗ LangGraph経験なし → ポートフォリオ追加: langgraph-multi-agent
+
+[TechWriter]     Score: 7/10
+  ✓ 技術スタックが具体的
+  ✗ STAR形式が不完全
+  ✗ 数値化が不足
+
+[Copywriter]     Score: 5/10
+  ✗ フックが弱い
+  ✗ 差別化ポイントが不明確
+
+[Reviewer]       Integrated Score: 6.0/10
+  Priority Issues:
+  1. [HIGH] タグラインの追加
+  2. [HIGH] RAG経験の前面化
+  3. [HIGH] ポートフォリオ追加: langgraph-multi-agent
+  4. [MEDIUM] 成果の数値化
+
+[Revisor]        Applying revisions...
+  ✓ Added tagline
+  ✓ Moved RAG project to prominent position
+  ✓ Added portfolio: langgraph-multi-agent
+      GitHub: https://github.com/spin-glass/langgraph-multi-agent
+      Demo: https://langgraph-multi-agent.spin-glass.dev/
+
+── Iteration 2/3 ──────────────────────────────────────────
+
+...
+
+═══════════════════════════════════════════════════════════
+ SUMMARY
+═══════════════════════════════════════════════════════════
+
+✅ Review Complete!
+
+Content Phase:  6.0 → 8.0 (3 iterations)
+Design Phase:   6.5 → 8.0 (2 iterations)
+
+📝 Changes Applied:
+  1. Added tagline: "LLM/RAGを活用した推薦システムの設計から運用まで"
+  2. Moved RAG project from side work to main experience
+  3. Added portfolio section:
+     - langgraph-multi-agent (LangGraph, Multi-Agent)
+     - rag-evaluation-pipeline (RAG, LangFuse)
+  4. Added metrics: CTR improvement 15%, processing time -40%
+  5. Restructured skills into categories (実務/ポートフォリオ)
+
+📄 Output: ../public/assets/resume-ja.qmd (3,412 chars)
+
+🔨 Portfolio to create:
+  - langgraph-multi-agent
+  - rag-evaluation-pipeline
+
+Next Steps:
+  $ npm run resume:build   # Generate PDF/HTML/MDX
+  $ npm run dev            # Preview changes</code></pre>
+<hr>
+</section>
+</section>
+<section id="状態定義" class="level2">
+<h2 class="anchored" data-anchor-id="状態定義">6. 状態定義</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># agents/src/models/state.py</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> TypedDict, Literal, Annotated</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> operator</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PortfolioItem(TypedDict):</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    repo_name: <span class="bu">str</span>                          <span class="co"># e.g., "langgraph-multi-agent"</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    skills: <span class="bu">list</span>[<span class="bu">str</span>]                       <span class="co"># e.g., ["LangGraph", "Multi-Agent"]</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    github_url: <span class="bu">str</span>                         <span class="co"># auto-generated</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    demo_url: <span class="bu">str</span>                           <span class="co"># auto-generated</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Issue(TypedDict):</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    description: <span class="bu">str</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    action_type: Literal[<span class="st">"add_content"</span>, <span class="st">"add_portfolio"</span>, <span class="st">"restructure"</span>, <span class="st">"emphasize"</span>]</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    suggestion: <span class="bu">str</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    portfolio: PortfolioItem <span class="op">|</span> <span class="va">None</span>         <span class="co"># add_portfolioの場合のみ</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Feedback(TypedDict):</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    agent: <span class="bu">str</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    score: <span class="bu">int</span>                              <span class="co"># 1-10</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    strengths: <span class="bu">list</span>[<span class="bu">str</span>]</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    issues: <span class="bu">list</span>[Issue]                     <span class="co"># Issue オブジェクトのリスト</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    priority: Literal[<span class="st">"high"</span>, <span class="st">"medium"</span>, <span class="st">"low"</span>]</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ReviewerOutput(TypedDict):</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    integrated_score: <span class="bu">float</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    priority_issues: <span class="bu">list</span>[Issue]            <span class="co"># 統合されたIssueリスト</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    portfolios_to_add: <span class="bu">list</span>[PortfolioItem]  <span class="co"># 追加すべきポートフォリオ（重複排除済み）</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    passed: <span class="bu">bool</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ResumeReviewState(TypedDict):</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    <span class="co"># === Configuration ===</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    target_role: <span class="bu">str</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    max_iterations: <span class="bu">int</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    threshold: <span class="bu">float</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    screenshot_url: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    <span class="co"># === Input ===</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    original_content: <span class="bu">str</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>    <span class="co"># === Current State ===</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>    current_content: <span class="bu">str</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    current_screenshot: <span class="bu">str</span> <span class="op">|</span> <span class="va">None</span>          <span class="co"># base64</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>    phase: Literal[<span class="st">"content"</span>, <span class="st">"design"</span>]</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>    iteration: <span class="bu">int</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>    <span class="co"># === Feedbacks (per iteration, reset each iteration) ===</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>    current_feedbacks: <span class="bu">list</span>[Feedback]</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>    <span class="co"># === Reviewer Output ===</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>    reviewer_output: ReviewerOutput <span class="op">|</span> <span class="va">None</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>    <span class="co"># === Portfolio tracking (append-only) ===</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>    added_portfolios: Annotated[<span class="bu">list</span>[PortfolioItem], operator.add]  <span class="co"># reducer追加</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>    <span class="co"># === History (append-only) ===</span></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>    revision_history: Annotated[<span class="bu">list</span>[<span class="bu">dict</span>], operator.add]</span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>    <span class="co"># {phase, iteration, changes: list[str], before_score, after_score}</span></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>    <span class="co"># === Phase Results ===</span></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>    content_final_score: <span class="bu">float</span> <span class="op">|</span> <span class="va">None</span></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>    content_iterations: <span class="bu">int</span> <span class="op">|</span> <span class="va">None</span></span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>    design_final_score: <span class="bu">float</span> <span class="op">|</span> <span class="va">None</span></span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>    design_iterations: <span class="bu">int</span> <span class="op">|</span> <span class="va">None</span></span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>    <span class="co"># === Output ===</span></span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>    final_content: <span class="bu">str</span></span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>    summary: <span class="bu">str</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="エージェント仕様" class="level2">
+<h2 class="anchored" data-anchor-id="エージェント仕様">7. エージェント仕様</h2>
+<section id="recruiter採用担当" class="level3">
+<h3 class="anchored" data-anchor-id="recruiter採用担当">7.1 Recruiter（採用担当）</h3>
+<p><strong>ペルソナ</strong>: LLM/マルチエージェント案件を発注する企業の採用担当・PM</p>
+<p><strong>Input</strong>: <code>current_content</code>, <code>target_role</code></p>
+<p><strong>基本方針</strong>: - 高単価案件（100万円+）の要件を基準に評価 - <strong>実務経験がないスキルは「ポートフォリオで補完」として提案</strong>（ポートフォリオは完成済み前提）</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 24%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>観点</th>
+<th>説明</th>
+<th>チェック項目</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>即戦力性</strong></td>
+<td>すぐに稼働できるか</td>
+<td>LangGraph/LangChain実務経験、RAG構築経験の有無</td>
+</tr>
+<tr class="even">
+<td><strong>スキルマッチ</strong></td>
+<td>100万円+案件の要件を満たすか</td>
+<td>LangGraph、Vector DB、LLMOps、Fine-tuning の記載</td>
+</tr>
+<tr class="odd">
+<td><strong>市場希少性</strong></td>
+<td>差別化できるスキルがあるか</td>
+<td>vLLM/TGI、MLOps（MLflow/Kubeflow）、大規模環境経験</td>
+</tr>
+<tr class="even">
+<td><strong>リード経験</strong></td>
+<td>120万円+に必要な要素</td>
+<td>チームリード、アーキテクチャ設計、技術選定の実績</td>
+</tr>
+<tr class="odd">
+<td><strong>本番経験</strong></td>
+<td>PoC止まりでないか</td>
+<td>評価パイプライン、運用、監視の経験</td>
+</tr>
+<tr class="even">
+<td><strong>ポートフォリオ補完</strong></td>
+<td>不足スキルの補完状況</td>
+<td>必要なポートフォリオが記載されているか</td>
+</tr>
+</tbody>
+</table>
+<p><strong>スコア基準</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>スコア</th>
+<th>基準</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>9-10</td>
+<td>120万円+案件に即アサイン可能（実務 + ポートフォリオで網羅）</td>
+</tr>
+<tr class="even">
+<td>7-8</td>
+<td>100〜120万円案件に適合</td>
+</tr>
+<tr class="odd">
+<td>5-6</td>
+<td>80〜100万円案件レベル</td>
+</tr>
+<tr class="even">
+<td>3-4</td>
+<td>エントリーレベル（〜80万円）</td>
+</tr>
+<tr class="odd">
+<td>1-2</td>
+<td>LLM/マルチエージェント案件に不適合</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output形式</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"score"</span><span class="fu">:</span> <span class="dv">6</span><span class="fu">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"strengths"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"MLOps（Vertex AI Pipelines）の実務経験が明確"</span><span class="ot">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"RAG案件の本番経験あり"</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"issues"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"LangGraph/Multi-Agent経験が記載されていない"</span><span class="fu">,</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"add_portfolio"</span><span class="fu">,</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"portfolio"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"repo_name"</span><span class="fu">:</span> <span class="st">"langgraph-multi-agent"</span><span class="fu">,</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"skills"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"LangGraph"</span><span class="ot">,</span> <span class="st">"Multi-Agent"</span><span class="ot">,</span> <span class="st">"Claude API"</span><span class="ot">]</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">},</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"suggestion"</span><span class="fu">:</span> <span class="st">"ポートフォリオセクションにlanggraph-multi-agentを追加"</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"タグラインがない"</span><span class="fu">,</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"add_content"</span><span class="fu">,</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"suggestion"</span><span class="fu">:</span> <span class="st">"冒頭に専門性を示す一言を追加"</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"priority"</span><span class="fu">:</span> <span class="st">"high"</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>action_type の種類</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 39%">
+<col style="width: 18%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>action_type</th>
+<th>説明</th>
+<th>Revisorの対応</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>add_content</code></td>
+<td>既存経験を元に追記可能</td>
+<td>テキストを追加・修正</td>
+</tr>
+<tr class="even">
+<td><code>add_portfolio</code></td>
+<td>実務経験がない → ポートフォリオで補完</td>
+<td>ポートフォリオセクションにリンク追加</td>
+</tr>
+<tr class="odd">
+<td><code>restructure</code></td>
+<td>構造・配置の変更</td>
+<td>セクション移動・再構成</td>
+</tr>
+<tr class="even">
+<td><code>emphasize</code></td>
+<td>既存内容の強調</td>
+<td>表現の強化、位置の変更</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="techwriterテクニカルライター" class="level3">
+<h3 class="anchored" data-anchor-id="techwriterテクニカルライター">7.2 TechWriter（テクニカルライター）</h3>
+<p><strong>ペルソナ</strong>: 技術責任者が面談前に確認する視点</p>
+<p><strong>Input</strong>: <code>current_content</code></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 24%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>観点</th>
+<th>説明</th>
+<th>チェック項目</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>技術深度</strong></td>
+<td>表面的でなく深い理解が伝わるか</td>
+<td>アーキテクチャ選定理由、トレードオフの記述</td>
+</tr>
+<tr class="even">
+<td><strong>STAR形式</strong></td>
+<td>課題→行動→結果の流れ</td>
+<td>各プロジェクトで「なぜ」「どう解決」「結果」が明確</td>
+</tr>
+<tr class="odd">
+<td><strong>数値化</strong></td>
+<td>成果が定量的か</td>
+<td>CTR改善率、レイテンシ短縮、コスト削減の具体値</td>
+</tr>
+<tr class="even">
+<td><strong>スケール感</strong></td>
+<td>大規模環境の経験が伝わるか</td>
+<td>データ量、リクエスト数、チーム規模の記載</td>
+</tr>
+<tr class="odd">
+<td><strong>技術選定力</strong></td>
+<td>比較検討した経験があるか</td>
+<td>「〇〇と比較して△△を採用」の記述</td>
+</tr>
+<tr class="even">
+<td><strong>最新技術</strong></td>
+<td>2024年以降のトレンドを押さえているか</td>
+<td>LangGraph、GraphRAG、vLLM等の言及</td>
+</tr>
+</tbody>
+</table>
+<p><strong>スコア基準</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>スコア</th>
+<th>基準</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>9-10</td>
+<td>技術ブログとして公開できるレベル</td>
+</tr>
+<tr class="even">
+<td>7-8</td>
+<td>技術責任者が納得する詳細さ</td>
+</tr>
+<tr class="odd">
+<td>5-6</td>
+<td>内容は伝わるが深さが不足</td>
+</tr>
+<tr class="even">
+<td>3-4</td>
+<td>表面的、具体性に欠ける</td>
+</tr>
+<tr class="odd">
+<td>1-2</td>
+<td>技術的に不正確または曖昧</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output形式</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"score"</span><span class="fu">:</span> <span class="dv">7</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"strengths"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"技術スタックが具体的に記載されている"</span><span class="ot">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Two-Tower Architectureの実装詳細が明確"</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"issues"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"STAR形式が不完全（結果の数値化が不足）"</span><span class="fu">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"add_content"</span><span class="fu">,</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"suggestion"</span><span class="fu">:</span> <span class="st">"CTR改善率、処理時間短縮などの具体的数値を追加"</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"priority"</span><span class="fu">:</span> <span class="st">"medium"</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="copywriterコピーライター" class="level3">
+<h3 class="anchored" data-anchor-id="copywriterコピーライター">7.3 Copywriter（コピーライター）</h3>
+<p><strong>ペルソナ</strong>: 多数の候補者から選ぶ採用担当の「最初の10秒」</p>
+<p><strong>Input</strong>: <code>current_content</code>, <code>target_role</code></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 24%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>観点</th>
+<th>説明</th>
+<th>チェック項目</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>タグライン</strong></td>
+<td>一言で専門性が伝わるか</td>
+<td>冒頭3行以内に差別化された一言</td>
+</tr>
+<tr class="even">
+<td><strong>ポジショニング</strong></td>
+<td>100万円+エンジニアとして認識されるか</td>
+<td>シニア感、リード経験、戦略的視点</td>
+</tr>
+<tr class="odd">
+<td><strong>希少性</strong></td>
+<td>「この人しかいない」感</td>
+<td>推薦システム×LLMの組み合わせ、業界特化</td>
+</tr>
+<tr class="even">
+<td><strong>フック</strong></td>
+<td>最初の3行で興味を引けるか</td>
+<td>具体的数字、ユニークな経験、インパクト</td>
+</tr>
+<tr class="odd">
+<td><strong>ストーリー</strong></td>
+<td>キャリアの一貫性</td>
+<td>推薦システム→LLM/RAGへの自然な流れ</td>
+</tr>
+<tr class="even">
+<td><strong>CTA</strong></td>
+<td>ポートフォリオへの導線</td>
+<td>GitHubリンク、デモリンクの明示</td>
+</tr>
+</tbody>
+</table>
+<p><strong>タグライン例</strong>:</p>
+<pre><code>❌ 弱い: MLエンジニア / データサイエンティスト
+△ 普通: LLM/RAGエンジニア
+✅ 強い: 推薦システム×LLMで、設計から本番運用まで一気通貫
+✅ 強い: LangGraphでマルチエージェント基盤を構築するMLエンジニア</code></pre>
+<p><strong>スコア基準</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>スコア</th>
+<th>基準</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>9-10</td>
+<td>「この人と話したい」と即座に思わせる</td>
+</tr>
+<tr class="even">
+<td>7-8</td>
+<td>印象に残り、他候補者と差別化されている</td>
+</tr>
+<tr class="odd">
+<td>5-6</td>
+<td>無難だが埋もれる可能性</td>
+</tr>
+<tr class="even">
+<td>3-4</td>
+<td>平凡、100万円+のシニア感がない</td>
+</tr>
+<tr class="odd">
+<td>1-2</td>
+<td>ターゲット層に響かない</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output形式</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"score"</span><span class="fu">:</span> <span class="dv">5</span><span class="fu">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"strengths"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"技術的な深さは伝わる"</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"issues"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"タグラインがない"</span><span class="fu">,</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"add_content"</span><span class="fu">,</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"suggestion"</span><span class="fu">:</span> <span class="st">"冒頭に「推薦システム×LLMで、設計から本番運用まで」のような一言を追加"</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"ポートフォリオへの導線がない"</span><span class="fu">,</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"add_portfolio"</span><span class="fu">,</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"portfolio"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"repo_name"</span><span class="fu">:</span> <span class="st">"rag-evaluation-pipeline"</span><span class="fu">,</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"skills"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"RAG"</span><span class="ot">,</span> <span class="st">"LangFuse"</span><span class="ot">,</span> <span class="st">"Ragas"</span><span class="ot">]</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>      <span class="fu">},</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"suggestion"</span><span class="fu">:</span> <span class="st">"CTAとしてポートフォリオセクションを追加"</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"priority"</span><span class="fu">:</span> <span class="st">"high"</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="ux-designeruxデザイナー" class="level3">
+<h3 class="anchored" data-anchor-id="ux-designeruxデザイナー">7.4 UX Designer（UXデザイナー）</h3>
+<p><strong>ペルソナ</strong>: 5分で候補者を評価したい技術責任者</p>
+<p><strong>Input</strong>: <code>current_screenshot</code></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 24%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>観点</th>
+<th>説明</th>
+<th>チェック項目</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>ファーストビュー</strong></td>
+<td>スクロールなしで何が伝わるか</td>
+<td>タグライン、主要スキル、代表実績</td>
+</tr>
+<tr class="even">
+<td><strong>ポートフォリオ導線</strong></td>
+<td>デモへのアクセスしやすさ</td>
+<td>リンクの視認性、クリックしやすさ</td>
+</tr>
+<tr class="odd">
+<td><strong>スキル可視化</strong></td>
+<td>技術スタックが一目でわかるか</td>
+<td>カテゴリ分け（LLM/MLOps/Cloud等）</td>
+</tr>
+<tr class="even">
+<td><strong>情報階層</strong></td>
+<td>重要情報が上部にあるか</td>
+<td>高単価案件向けスキルの配置順序</td>
+</tr>
+<tr class="odd">
+<td><strong>スキャナビリティ</strong></td>
+<td>30秒で要点が把握できるか</td>
+<td>見出しの明確さ、キーワードの視認性</td>
+</tr>
+<tr class="even">
+<td><strong>CTA</strong></td>
+<td>次のアクションが明確か</td>
+<td>連絡先、GitHubリンク、デモリンク</td>
+</tr>
+</tbody>
+</table>
+<p><strong>ファーストビュー必須要素</strong>: 1. タグライン（一言で専門性） 2. 主要スキル（LangGraph, RAG, MLOps） 3. 代表的な実績数字（例: CTR +15%、3つの本番システム） 4. ポートフォリオCTA（デモへのリンク）</p>
+<p><strong>スコア基準</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>スコア</th>
+<th>基準</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>9-10</td>
+<td>5秒で「100万円+エンジニア」と認識される</td>
+</tr>
+<tr class="even">
+<td>7-8</td>
+<td>重要情報にすぐアクセスできる</td>
+</tr>
+<tr class="odd">
+<td>5-6</td>
+<td>情報はあるが探す必要がある</td>
+</tr>
+<tr class="even">
+<td>3-4</td>
+<td>構造が不明確、迷う</td>
+</tr>
+<tr class="odd">
+<td>1-2</td>
+<td>何者かわからない</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output形式</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"score"</span><span class="fu">:</span> <span class="dv">6</span><span class="fu">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"strengths"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"情報階層は概ね適切"</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"issues"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"ファーストビューの情報密度が低い"</span><span class="fu">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"restructure"</span><span class="fu">,</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"suggestion"</span><span class="fu">:</span> <span class="st">"冒頭にタグライン、主要スキル、代表実績数字を集約"</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"ポートフォリオへのリンクが目立たない"</span><span class="fu">,</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"emphasize"</span><span class="fu">,</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"suggestion"</span><span class="fu">:</span> <span class="st">"ポートフォリオセクションを上部に移動、リンクを強調"</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"priority"</span><span class="fu">:</span> <span class="st">"high"</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="visual-designerビジュアルデザイナー" class="level3">
+<h3 class="anchored" data-anchor-id="visual-designerビジュアルデザイナー">7.5 Visual Designer（ビジュアルデザイナー）</h3>
+<p><strong>ペルソナ</strong>: プロフェッショナルな印象を求める採用担当</p>
+<p><strong>Input</strong>: <code>current_screenshot</code></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 24%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>観点</th>
+<th>説明</th>
+<th>チェック項目</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>プロフェッショナル感</strong></td>
+<td>シニアエンジニアに相応しい印象か</td>
+<td>落ち着いた色使い、洗練されたレイアウト</td>
+</tr>
+<tr class="even">
+<td><strong>視覚的階層</strong></td>
+<td>重要情報が目立つか</td>
+<td>スキル、実績数字、CTAの強調</td>
+</tr>
+<tr class="odd">
+<td><strong>タイポグラフィ</strong></td>
+<td>読みやすく信頼感があるか</td>
+<td>フォント選択、サイズ階層、行間</td>
+</tr>
+<tr class="even">
+<td><strong>余白</strong></td>
+<td>情報が詰まりすぎていないか</td>
+<td>セクション間の余白、呼吸感</td>
+</tr>
+<tr class="odd">
+<td><strong>一貫性</strong></td>
+<td>デザインルールが統一されているか</td>
+<td>色、装飾、アイコンスタイル</td>
+</tr>
+<tr class="even">
+<td><strong>差別化</strong></td>
+<td>他の職務経歴書と視覚的に差別化されているか</td>
+<td>ユニークな要素</td>
+</tr>
+</tbody>
+</table>
+<p><strong>スコア基準</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>スコア</th>
+<th>基準</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>9-10</td>
+<td>デザイン自体がスキルの証明になる</td>
+</tr>
+<tr class="even">
+<td>7-8</td>
+<td>プロフェッショナルで好印象</td>
+</tr>
+<tr class="odd">
+<td>5-6</td>
+<td>無難だが印象に残らない</td>
+</tr>
+<tr class="even">
+<td>3-4</td>
+<td>デザインがマイナス要因</td>
+</tr>
+<tr class="odd">
+<td>1-2</td>
+<td>信頼性を損なう見た目</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output形式</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"score"</span><span class="fu">:</span> <span class="dv">7</span><span class="fu">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"strengths"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"クリーンなレイアウト"</span><span class="ot">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"タイポグラフィが読みやすい"</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"issues"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"視覚的な強調が不足"</span><span class="fu">,</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"emphasize"</span><span class="fu">,</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"suggestion"</span><span class="fu">:</span> <span class="st">"スキルセクションの視認性を向上、キーワードの強調"</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"priority"</span><span class="fu">:</span> <span class="st">"medium"</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="統合レビュアーreviewer" class="level3">
+<h3 class="anchored" data-anchor-id="統合レビュアーreviewer">7.6 統合レビュアー（Reviewer）</h3>
+<p><strong>Input</strong>: <code>current_feedbacks: list[Feedback]</code></p>
+<p><strong>処理</strong>: 1. 各エージェントのスコアを重み付き平均 2. issuesをaction_type別に分類 3. <strong>ポートフォリオ提案を集約・重複排除</strong> 4. 優先度でソート・統合 5. 通過判定（<code>integrated_score &gt;= threshold</code>）</p>
+<p><strong>重み付け</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Agent</th>
+<th>重み</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Recruiter</td>
+<td>30%</td>
+<td>高単価案件要件とのマッチ度が最重要</td>
+</tr>
+<tr class="even">
+<td>Copywriter</td>
+<td>25%</td>
+<td>第一印象・差別化が案件獲得に直結</td>
+</tr>
+<tr class="odd">
+<td>TechWriter</td>
+<td>20%</td>
+<td>技術的信頼性の担保</td>
+</tr>
+<tr class="even">
+<td>UX Designer</td>
+<td>15%</td>
+<td>情報到達性</td>
+</tr>
+<tr class="odd">
+<td>Visual Designer</td>
+<td>10%</td>
+<td>印象の補強</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Output</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"integrated_score"</span><span class="fu">:</span> <span class="fl">6.2</span><span class="fu">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"priority_issues"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"priority"</span><span class="fu">:</span> <span class="st">"high"</span><span class="fu">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"タグラインがない"</span><span class="fu">,</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"suggestion"</span><span class="fu">:</span> <span class="st">"冒頭に一言で専門性を示す文を追加"</span><span class="fu">,</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"add_content"</span><span class="fu">,</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_agents"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"Recruiter"</span><span class="ot">,</span> <span class="st">"Copywriter"</span><span class="ot">]</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"priority"</span><span class="fu">:</span> <span class="st">"high"</span><span class="fu">,</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"LangGraph/Multi-Agent経験が記載されていない"</span><span class="fu">,</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"suggestion"</span><span class="fu">:</span> <span class="st">"ポートフォリオセクションにlanggraph-multi-agentを追加"</span><span class="fu">,</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"add_portfolio"</span><span class="fu">,</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_agents"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"Recruiter"</span><span class="ot">]</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"priority"</span><span class="fu">:</span> <span class="st">"medium"</span><span class="fu">,</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"成果の数値化が不足"</span><span class="fu">,</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"suggestion"</span><span class="fu">:</span> <span class="st">"CTR改善率などの具体的数値を追加"</span><span class="fu">,</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"add_content"</span><span class="fu">,</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_agents"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"TechWriter"</span><span class="ot">]</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"portfolios_to_add"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"repo_name"</span><span class="fu">:</span> <span class="st">"langgraph-multi-agent"</span><span class="fu">,</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"skills"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"LangGraph"</span><span class="ot">,</span> <span class="st">"Multi-Agent"</span><span class="ot">,</span> <span class="st">"Claude API"</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"github_url"</span><span class="fu">:</span> <span class="st">"https://github.com/spin-glass/langgraph-multi-agent"</span><span class="fu">,</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"demo_url"</span><span class="fu">:</span> <span class="st">"https://langgraph-multi-agent.spin-glass.dev/"</span></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"repo_name"</span><span class="fu">:</span> <span class="st">"rag-evaluation-pipeline"</span><span class="fu">,</span></span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"skills"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"RAG"</span><span class="ot">,</span> <span class="st">"LangFuse"</span><span class="ot">,</span> <span class="st">"Ragas"</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"github_url"</span><span class="fu">:</span> <span class="st">"https://github.com/spin-glass/rag-evaluation-pipeline"</span><span class="fu">,</span></span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"demo_url"</span><span class="fu">:</span> <span class="st">"https://rag-evaluation-pipeline.spin-glass.dev/"</span></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"passed"</span><span class="fu">:</span> <span class="kw">false</span></span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+<section id="修正エージェントrevisor" class="level3">
+<h3 class="anchored" data-anchor-id="修正エージェントrevisor">7.7 修正エージェント（Revisor）</h3>
+<p><strong>Input</strong>: <code>current_content</code>, <code>priority_issues</code>, <code>portfolios_to_add</code>, <code>phase</code></p>
+<p><strong>修正ルール</strong>:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 43%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>action_type</th>
+<th>Revisorの対応</th>
+<th>例</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>add_content</code></td>
+<td>既存経験を元にテキスト追加・修正</td>
+<td>タグライン追加、数値化</td>
+</tr>
+<tr class="even">
+<td><code>add_portfolio</code></td>
+<td>ポートフォリオセクションにリンク追加</td>
+<td>GitHub/Demoリンク追加</td>
+</tr>
+<tr class="odd">
+<td><code>restructure</code></td>
+<td>セクション移動・再構成</td>
+<td>RAG案件を職務経歴に昇格</td>
+</tr>
+<tr class="even">
+<td><code>emphasize</code></td>
+<td>表現の強化、位置の変更</td>
+<td>キーワード強調、上位移動</td>
+</tr>
+</tbody>
+</table>
+<p><strong>絶対にやらないこと</strong>: - 実務経験がないスキルを「実務経験」として追記する（嘘になる） - 存在しない成果を捏造する</p>
+<p><strong>ポートフォリオセクションのテンプレート</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">## ポートフォリオ</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">| プロジェクト | 技術スタック | リンク |</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">|-------------|-------------|--------|</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">| langgraph-multi-agent | LangGraph, Multi-Agent, Claude API | [GitHub](https://github.com/spin-glass/langgraph-multi-agent) / [Demo](https://langgraph-multi-agent.spin-glass.dev/) |</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co">| rag-evaluation-pipeline | RAG, LangFuse, Ragas | [GitHub](https://github.com/spin-glass/rag-evaluation-pipeline) / [Demo](https://rag-evaluation-pipeline.spin-glass.dev/) |</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>URL生成ルール</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generate_portfolio_urls(repo_name: <span class="bu">str</span>) <span class="op">-&gt;</span> <span class="bu">tuple</span>[<span class="bu">str</span>, <span class="bu">str</span>]:</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    github_url <span class="op">=</span> <span class="ss">f"https://github.com/spin-glass/</span><span class="sc">{</span>repo_name<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    demo_url <span class="op">=</span> <span class="ss">f"https://</span><span class="sc">{</span>repo_name<span class="sc">}</span><span class="ss">.spin-glass.dev/"</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> github_url, demo_url</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Output</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"revised_content"</span><span class="fu">:</span> <span class="st">"...(修正後のQMD)..."</span><span class="fu">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"changes"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"add_content"</span><span class="fu">,</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"Added tagline at the beginning"</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"add_portfolio"</span><span class="fu">,</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"Added portfolio: langgraph-multi-agent"</span><span class="fu">,</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"portfolio"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"repo_name"</span><span class="fu">:</span> <span class="st">"langgraph-multi-agent"</span><span class="fu">,</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"github_url"</span><span class="fu">:</span> <span class="st">"https://github.com/spin-glass/langgraph-multi-agent"</span><span class="fu">,</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"demo_url"</span><span class="fu">:</span> <span class="st">"https://langgraph-multi-agent.spin-glass.dev/"</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"action_type"</span><span class="fu">:</span> <span class="st">"restructure"</span><span class="fu">,</span></span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"Moved RAG project from side work to main experience"</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"added_portfolios"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"repo_name"</span><span class="fu">:</span> <span class="st">"langgraph-multi-agent"</span><span class="fu">,</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"skills"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"LangGraph"</span><span class="ot">,</span> <span class="st">"Multi-Agent"</span><span class="ot">,</span> <span class="st">"Claude API"</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"github_url"</span><span class="fu">:</span> <span class="st">"https://github.com/spin-glass/langgraph-multi-agent"</span><span class="fu">,</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"demo_url"</span><span class="fu">:</span> <span class="st">"https://langgraph-multi-agent.spin-glass.dev/"</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>制約</strong>: - High優先度のissueから順に対応 - 1イテレーションで最大3つのissueに対応 - 元の内容を大幅に変えない（追加・移動・強調が主） - QMDのYAMLフロントマターは保持する</p>
+<hr>
+</section>
+</section>
+<section id="ワークフロー仕様" class="level2">
+<h2 class="anchored" data-anchor-id="ワークフロー仕様">8. ワークフロー仕様</h2>
+<section id="フロー図" class="level3">
+<h3 class="anchored" data-anchor-id="フロー図">8.1 フロー図</h3>
+<pre><code>START
+  │
+  ▼
+[Initialize]
+  │ phase = "content"
+  │ iteration = 0
+  │ current_content = original_content
+  │ added_portfolios = []
+  │
+  ▼
+┌─────────────────────────────────────┐
+│         CONTENT LOOP                │
+│                                     │
+│  ┌─────────────────────────────┐   │
+│  │ iteration += 1              │   │
+│  └─────────────┬───────────────┘   │
+│                │                    │
+│                ▼                    │
+│  ┌─────────────────────────────┐   │
+│  │ Content Evaluators (並列)   │   │
+│  │ [Recruiter, TechWriter,     │   │
+│  │  Copywriter]                │   │
+│  └─────────────┬───────────────┘   │
+│                │                    │
+│                ▼                    │
+│  ┌─────────────────────────────┐   │
+│  │ Content Reviewer            │   │
+│  │ (ポートフォリオ提案を集約)    │   │
+│  └─────────────┬───────────────┘   │
+│                │                    │
+│        ┌───────┴───────┐           │
+│        ▼               ▼           │
+│   [passed=true    [passed=false    │
+│    OR iter&gt;=max]   AND iter&lt;max]   │
+│        │               │           │
+│        │               ▼           │
+│        │    ┌─────────────────┐   │
+│        │    │ Content Revisor │   │
+│        │    │ (ポートフォリオ追加)│   │
+│        │    └────────┬────────┘   │
+│        │             │            │
+│        │             └──────┐     │
+│        ▼                    │     │
+│   [Save Results]◀───────────┘     │
+│                                    │
+└─────────────────┬──────────────────┘
+                  │
+                  ▼
+          [Generate HTML]
+          (npm run quarto:html)
+                  │
+                  ▼
+          [Take Screenshot]
+          (Playwrightでキャプチャ)
+                  │
+                  ▼
+┌─────────────────────────────────────┐
+│         DESIGN LOOP                 │
+│                                     │
+│  (同様の構造)                        │
+│  Evaluators: [UX, Visual]          │
+│  Revisor: Design Revisor           │
+│                                     │
+│  ※修正後は再度HTML生成→スクリーンショット│
+│                                     │
+└─────────────────┬──────────────────┘
+                  │
+                  ▼
+           [Summarize]
+           (追加されたポートフォリオ一覧を出力)
+                  │
+                  ▼
+                 END</code></pre>
+</section>
+<section id="並列実行の実装方針" class="level3">
+<h3 class="anchored" data-anchor-id="並列実行の実装方針">8.2 並列実行の実装方針</h3>
+<p>Content Evaluators（Recruiter, TechWriter, Copywriter）は並列実行で高速化します。</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>方式</th>
+<th>説明</th>
+<th>採用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>asyncio.gather</code></td>
+<td>単一ノード内で3つのLLM呼び出しを並列実行</td>
+<td>✅ 推奨</td>
+</tr>
+<tr class="even">
+<td>LangGraph <code>Send</code> API</td>
+<td>各エージェントを並列ノードとして実行</td>
+<td>○ 複雑だが柔軟</td>
+</tr>
+<tr class="odd">
+<td>順次実行</td>
+<td>シンプルだが遅い</td>
+<td>△</td>
+</tr>
+</tbody>
+</table>
+<p><strong>実装例（asyncio.gather）</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="kw">def</span> content_evaluators_node(state: ResumeReviewState) <span class="op">-&gt;</span> <span class="bu">dict</span>:</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    content <span class="op">=</span> state[<span class="st">"current_content"</span>]</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    target_role <span class="op">=</span> state[<span class="st">"target_role"</span>]</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 並列実行</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    recruiter_task <span class="op">=</span> recruiter_agent.ainvoke(content, target_role)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    techwriter_task <span class="op">=</span> techwriter_agent.ainvoke(content)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    copywriter_task <span class="op">=</span> copywriter_agent.ainvoke(content, target_role)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    feedbacks <span class="op">=</span> <span class="cf">await</span> asyncio.gather(</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>        recruiter_task, </span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>        techwriter_task, </span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>        copywriter_task</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {<span class="st">"current_feedbacks"</span>: <span class="bu">list</span>(feedbacks)}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="終了条件" class="level3">
+<h3 class="anchored" data-anchor-id="終了条件">8.3 終了条件</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 41%">
+<col style="width: 41%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>条件</th>
+<th>Content Phase</th>
+<th>Design Phase</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>スコア閾値達成</td>
+<td><code>content_score &gt;= threshold</code></td>
+<td><code>design_score &gt;= threshold</code></td>
+</tr>
+<tr class="even">
+<td>最大イテレーション</td>
+<td><code>iteration &gt;= max_iterations</code></td>
+<td><code>iteration &gt;= max_iterations</code></td>
+</tr>
+</tbody>
+</table>
+<p>両方のPhaseで、いずれかの条件を満たしたら次へ進む。</p>
+</section>
+<section id="スクリーンショット取得タイミング" class="level3">
+<h3 class="anchored" data-anchor-id="スクリーンショット取得タイミング">8.4 スクリーンショット取得タイミング</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>タイミング</th>
+<th>条件</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Design Phase開始時</td>
+<td>必須</td>
+</tr>
+<tr class="even">
+<td>Design Loop各イテレーション</td>
+<td>Revisorが修正を適用した後</td>
+</tr>
+</tbody>
+</table>
+<p><strong>取得方法</strong>: 1. <code>screenshot_url</code>が指定されている場合: Playwrightで取得 2. 指定されていない場合: Design Phaseをスキップ</p>
+<hr>
+</section>
+</section>
+<section id="npm-scripts統合" class="level2">
+<h2 class="anchored" data-anchor-id="npm-scripts統合">9. npm scripts統合</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="er">//</span> <span class="er">package.json（scriptsセクション）</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"scripts"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"dev"</span><span class="fu">:</span> <span class="st">"next dev"</span><span class="fu">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"build"</span><span class="fu">:</span> <span class="st">"next build"</span><span class="fu">,</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"quarto:pdf"</span><span class="fu">:</span> <span class="st">"cd public/assets &amp;&amp; quarto render resume-ja.qmd --to pdf &amp;&amp; cp resume-ja.pdf ../../resume.pdf"</span><span class="fu">,</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"quarto:html"</span><span class="fu">:</span> <span class="st">"cd public/assets &amp;&amp; quarto render resume-ja.qmd --to html"</span><span class="fu">,</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"quarto:preview"</span><span class="fu">:</span> <span class="st">"cd public/assets &amp;&amp; quarto preview resume-ja.qmd"</span><span class="fu">,</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"quarto:preview:html"</span><span class="fu">:</span> <span class="st">"cd public/assets &amp;&amp; quarto preview resume-ja.qmd --to html"</span><span class="fu">,</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"sync"</span><span class="fu">:</span> <span class="st">"python3 scripts/sync_qmd_to_mdx.py"</span><span class="fu">,</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"resume:build"</span><span class="fu">:</span> <span class="st">"npm run quarto:pdf &amp;&amp; npm run quarto:html &amp;&amp; npm run sync"</span><span class="fu">,</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"review"</span><span class="fu">:</span> <span class="st">"cd agents &amp;&amp; python -m src.cli review --input ../public/assets/resume-ja.qmd"</span><span class="fu">,</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"review:dry"</span><span class="fu">:</span> <span class="st">"cd agents &amp;&amp; python -m src.cli review --input ../public/assets/resume-ja.qmd --dry-run --verbose"</span><span class="fu">,</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"review:full"</span><span class="fu">:</span> <span class="st">"cd agents &amp;&amp; python -m src.cli review --input ../public/assets/resume-ja.qmd --screenshot-url http://localhost:3000/ja --verbose"</span><span class="fu">,</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"review:build"</span><span class="fu">:</span> <span class="st">"npm run review &amp;&amp; npm run resume:build"</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="npm-scripts一覧" class="level3">
+<h3 class="anchored" data-anchor-id="npm-scripts一覧">npm scripts一覧</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>コマンド</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>npm run review</code></td>
+<td>エージェントによるレビュー実行</td>
+</tr>
+<tr class="even">
+<td><code>npm run review:dry</code></td>
+<td>ドライラン（変更なし、詳細出力）</td>
+</tr>
+<tr class="odd">
+<td><code>npm run review:full</code></td>
+<td>スクリーンショット付きフルレビュー</td>
+</tr>
+<tr class="even">
+<td><code>npm run review:build</code></td>
+<td>レビュー + ビルド（PDF/HTML/MDX生成）</td>
+</tr>
+<tr class="odd">
+<td><code>npm run resume:build</code></td>
+<td>ビルドのみ（PDF/HTML/MDX生成）</td>
+</tr>
+<tr class="even">
+<td><code>npm run quarto:preview:html</code></td>
+<td>HTMLプレビュー</td>
+</tr>
+<tr class="odd">
+<td><code>npm run dev</code></td>
+<td>Next.js開発サーバー</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+</section>
+<section id="環境構築" class="level2">
+<h2 class="anchored" data-anchor-id="環境構築">10. 環境構築</h2>
+<section id="必要なファイル" class="level3">
+<h3 class="anchored" data-anchor-id="必要なファイル">10.1 必要なファイル</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode toml code-with-copy"><code class="sourceCode toml"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># agents/pyproject.toml</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="kw">[project]</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="dt">name</span> <span class="op">=</span> <span class="st">"resume-review-agents"</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="dt">version</span> <span class="op">=</span> <span class="st">"0.1.0"</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="dt">requires-python</span> <span class="op">=</span> <span class="st">"&gt;=3.11"</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="dt">dependencies</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"langgraph&gt;=0.2.0"</span><span class="op">,</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"langchain-anthropic&gt;=0.3.0"</span><span class="op">,</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"playwright&gt;=1.48.0"</span><span class="op">,</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"click&gt;=8.1.0"</span><span class="op">,</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"rich&gt;=13.0.0"</span><span class="op">,</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"python-dotenv&gt;=1.0.0"</span><span class="op">,</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="op">]</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="kw">[project.optional-dependencies]</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="dt">dev</span> <span class="op">=</span> <span class="op">[</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"pytest&gt;=8.0.0"</span><span class="op">,</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ruff&gt;=0.8.0"</span><span class="op">,</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a><span class="op">]</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a><span class="kw">[project.scripts]</span></span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a><span class="dt">resume-review</span> <span class="op">=</span> <span class="st">"src.cli:main"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="セットアップ手順" class="level3">
+<h3 class="anchored" data-anchor-id="セットアップ手順">10.2 セットアップ手順</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Python環境作成</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> resume/agents</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> venv .venv</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> .venv/bin/activate</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. 依存関係インストール</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install <span class="at">-e</span> .</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Playwright ブラウザインストール</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="ex">playwright</span> install chromium</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. 環境変数設定</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> .env.example .env</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="co"># ANTHROPIC_API_KEY を設定</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. 動作確認</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> src.cli review <span class="at">--input</span> ../public/assets/resume-ja.qmd <span class="at">--dry-run</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<hr>
+</section>
+</section>
+<section id="制約事項注意点" class="level2">
+<h2 class="anchored" data-anchor-id="制約事項注意点">11. 制約事項・注意点</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>項目</th>
+<th>制約</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>API コスト</td>
+<td>1回のフル実行で約 $0.50〜$1.00（イテレーション数による）</td>
+</tr>
+<tr class="even">
+<td>実行時間</td>
+<td>約2〜5分（ネットワーク状況による）</td>
+</tr>
+<tr class="odd">
+<td>QMD互換性</td>
+<td>YAMLフロントマターは保持、本文のみ修正</td>
+</tr>
+<tr class="even">
+<td>破壊的変更</td>
+<td><code>--dry-run</code>で事前確認を推奨</td>
+</tr>
+<tr class="odd">
+<td>スクリーンショット</td>
+<td>ローカルでdev server起動が必要</td>
+</tr>
+<tr class="even">
+<td>実務経験の追加</td>
+<td>Revisorは存在しない実務経験を追加しない</td>
+</tr>
+<tr class="odd">
+<td>ポートフォリオ</td>
+<td>完成済み前提で即座にリンク追加可能</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</section>
+<section id="今後の拡張対象外" class="level2">
+<h2 class="anchored" data-anchor-id="今後の拡張対象外">12. 今後の拡張（対象外）</h2>
+<ul>
+<li>Human-in-the-loop（承認フロー）</li>
+<li>LangFuse統合（トレーシング）</li>
+<li>Streamlit UI</li>
+<li>CI/CD統合</li>
+<li>英語版対応</li>
+</ul>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
