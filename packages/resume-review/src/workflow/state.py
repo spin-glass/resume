@@ -73,3 +73,9 @@ class ReviewState(TypedDict, total=False):
     # Control flow
     should_continue: bool
     error: Optional[str]
+
+    # Validation retry tracking
+    validation_retry_count: int
+    max_validation_retries: int
+    strict_validation: bool
+    current_retry_attempts: list[dict]  # Serialized RetryAttempt records
