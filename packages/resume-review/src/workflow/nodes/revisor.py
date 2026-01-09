@@ -1,32 +1,51 @@
 """Revisor node for applying content revisions."""
 
+import asyncio
 import logging
 from typing import Any
 
-from ...services.revision import RevisionService
+from ...agents.revisor import RevisorAgent
+from ...config.model_config import AgentName
+from ...services.llm_factory import LLMClientFactory
 from ..state import ReviewState
 
 logger = logging.getLogger("resume_review")
 
 
-def revisor_node(state: ReviewState) -> dict[str, Any]:
+async def revisor_node(state: ReviewState) -> dict[str, Any]:
     """
     Revisor node that applies content revisions based on feedback.
 
-    Uses RevisionService to modify resume content while preserving YAML.
+    Uses RevisorAgent with full-rewrite approach to eliminate fuzzy replacement errors.
     """
-    logger.info("Revisor: Applying content revisions")
+    logger.info("Revisor: Applying content revisions using full-rewrite approach")
 
-    api_key = state["api_key"]
     resume = state["resume"]
     current_feedback = state.get("current_feedback", [])
     dry_run = state.get("dry_run", False)
+    target_role = state["target_role"]
 
-    revision_service = RevisionService(api_key)
+    # Get API keys
+    gemini_api_key = state.get("gemini_api_key")
+    openai_api_key = state.get("openai_api_key")
+    anthropic_api_key = state.get("anthropic_api_key") or state.get("api_key")
+    override_model = state.get("override_model")
+
+    # Create LLM client for Revisor (uses Gemini for cost-effectiveness)
+    revisor_client = LLMClientFactory.create_client(
+        agent_name=AgentName.REVISOR,
+        gemini_api_key=gemini_api_key,
+        openai_api_key=openai_api_key,
+        anthropic_api_key=anthropic_api_key,
+        override_model=override_model,
+    )
+
+    # Initialize RevisorAgent with injected LLM client
+    revisor = RevisorAgent(llm_client=revisor_client)
 
     try:
-        revised_resume, revisions = revision_service.apply_revisions(
-            resume, current_feedback, dry_run=dry_run
+        revised_resume, revisions = await revisor.apply_revisions_async(
+            resume, current_feedback, target_role=target_role, dry_run=dry_run
         )
 
         # Update state with revisions

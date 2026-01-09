@@ -4,6 +4,8 @@ import asyncio
 import logging
 from pathlib import Path
 from typing import Callable, Optional
+
+from ..config.model_config import calculate_cost
 from ..models import SessionStatus
 from ..models.session import ReviewSession
 from ..services.qmd_parser import QMDParser
@@ -20,9 +22,28 @@ class ReviewWorkflow:
 
     def __init__(self, api_key: str, save_iterations: bool = False,
                  output_dir: Optional[Path] = None,
-                 on_iteration_complete: Optional[Callable[[int, float, Path], None]] = None):
-        """Initialize workflow wrapper."""
-        self.api_key = api_key
+                 on_iteration_complete: Optional[Callable[[int, float, Path], None]] = None,
+                 gemini_api_key: Optional[str] = None,
+                 openai_api_key: Optional[str] = None,
+                 anthropic_api_key: Optional[str] = None,
+                 override_model: Optional[str] = None):
+        """Initialize workflow wrapper.
+
+        Args:
+            api_key: Legacy Anthropic API key (for backward compatibility)
+            save_iterations: Whether to save iteration artifacts
+            output_dir: Directory for saving artifacts
+            on_iteration_complete: Callback after each iteration
+            gemini_api_key: Google Gemini API key (optional)
+            openai_api_key: OpenAI API key (optional)
+            anthropic_api_key: Anthropic API key (optional, overrides api_key)
+            override_model: Force all agents to use this model (optional, for testing)
+        """
+        self.api_key = api_key  # Legacy
+        self.gemini_api_key = gemini_api_key
+        self.openai_api_key = openai_api_key
+        self.anthropic_api_key = anthropic_api_key or api_key
+        self.override_model = override_model
         self.save_iterations = save_iterations
         self.output_dir = output_dir
         self.on_iteration_complete = on_iteration_complete
@@ -48,6 +69,10 @@ class ReviewWorkflow:
             session = self._update_session_from_state(session, final_state)
             session.status = SessionStatus.COMPLETED
             logger.info(f"Review completed. Final score: {session.final_score}/{session.score_threshold}")
+
+            # Log cost summary if token usage is tracked
+            self._log_cost_summary(final_state)
+
         except Exception as e:
             logger.error(f"Workflow execution failed: {e}")
             session.status = SessionStatus.FAILED
@@ -59,6 +84,11 @@ class ReviewWorkflow:
             "resume": session.resume, "resume_content": session.resume.content,
             "target_role": session.target_role, "score_threshold": session.score_threshold,
             "max_iterations": session.max_iterations, "api_key": self.api_key,
+            # New multi-provider API keys
+            "anthropic_api_key": self.anthropic_api_key,
+            "gemini_api_key": self.gemini_api_key,
+            "openai_api_key": self.openai_api_key,
+            "override_model": self.override_model,
             "dry_run": session.dry_run, "screenshot_url": session.screenshot_url,
             "save_iterations": self.save_iterations,
             "output_dir": str(self.output_dir) if self.output_dir else None,
@@ -67,6 +97,7 @@ class ReviewWorkflow:
             "integrated_score": 0.0, "threshold_met": False,
             "skill_gaps": [], "portfolio_suggestions": [],
             "revised_content": "", "applied_revisions": [],
+            "token_usage": {},  # New: token usage tracking
             "final_score": 0.0, "should_continue": True, "error": None,
             "validation_retry_count": 0,
             "max_validation_retries": session.max_validation_retries,
@@ -343,3 +374,40 @@ class ReviewWorkflow:
         session.current_iteration = state.get("current_iteration", 0)
         logger.debug(f"Session updated: final_score={session.final_score}, iteration={session.current_iteration}")
         return session
+
+    def _log_cost_summary(self, state: ReviewState) -> None:
+        """Log token usage and cost summary.
+
+        Args:
+            state: Final workflow state with token_usage data
+        """
+        token_usage = state.get("token_usage", {})
+        if not token_usage:
+            return
+
+        logger.info("=== Cost Summary ===")
+        total_cost = 0.0
+
+        for agent_name, usage in token_usage.items():
+            model = usage.get("model", "unknown")
+            provider = usage.get("provider", "unknown")
+            input_tokens = usage.get("input_tokens", 0)
+            output_tokens = usage.get("output_tokens", 0)
+
+            # Calculate cost if we have token counts
+            if input_tokens > 0 and output_tokens > 0:
+                try:
+                    cost = calculate_cost(model, input_tokens, output_tokens)
+                    total_cost += cost
+                    logger.info(
+                        f"{agent_name}: {model} ({provider}) - "
+                        f"in:{input_tokens} out:{output_tokens} cost:${cost:.4f}"
+                    )
+                except KeyError:
+                    logger.warning(f"{agent_name}: Model '{model}' not found in pricing data")
+            else:
+                logger.info(f"{agent_name}: {model} ({provider})")
+
+        if total_cost > 0:
+            logger.info(f"Total estimated cost: ${total_cost:.4f}")
+            logger.info("=" * 40)

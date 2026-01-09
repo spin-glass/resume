@@ -1,0 +1,415 @@
+# Tasks: Multi-Model Hybrid Configuration
+
+**Input**: Design documents from `/specs/003-multi-model-hybrid/`
+**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/
+
+**Tests**: Not explicitly requested in specification - unit/integration tests included only for critical components
+
+**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2)
+- Include exact file paths in descriptions
+
+## Path Conventions
+
+All paths relative to `packages/resume-review/`:
+- Implementation: `src/`
+- Tests: `tests/`
+- Config: `pyproject.toml`, `README.md`
+
+---
+
+## Phase 1: Setup (Shared Infrastructure)
+
+**Purpose**: Project initialization and dependency setup for multi-provider LLM support
+
+- [ ] T001 Add new dependencies to packages/resume-review/pyproject.toml (google-genai[aiohttp]>=1.0.0, openai>=1.0.0)
+- [ ] T002 Install dependencies via pip install -e . from packages/resume-review/
+- [ ] T003 [P] Update packages/resume-review/.env to include GEMINI_API_KEY and OPENAI_API_KEY (keep existing ANTHROPIC_API_KEY)
+- [ ] T004 [P] Create packages/resume-review/src/config/model_config.py for agent-to-model mappings
+- [ ] T005 [P] Create empty packages/resume-review/src/services/llm_client.py file
+- [ ] T006 [P] Create empty packages/resume-review/src/services/llm_factory.py file
+
+---
+
+## Phase 2: Foundational (Blocking Prerequisites)
+
+**Purpose**: Core LLM client abstraction that ALL user stories depend on
+
+**⚠️ CRITICAL**: No user story work can begin until this phase is complete
+
+- [ ] T006 Implement LLMResponse dataclass in packages/resume-review/src/services/llm_client.py
+- [ ] T007 Implement BaseLLMClient abstract base class with generate_async() method in packages/resume-review/src/services/llm_client.py
+- [ ] T008 [P] Implement GeminiClient with google-genai SDK in packages/resume-review/src/services/llm_client.py
+- [ ] T009 [P] Implement OpenAIClient with openai SDK in packages/resume-review/src/services/llm_client.py
+- [ ] T010 [P] Implement AnthropicClient wrapper for existing AsyncAnthropic in packages/resume-review/src/services/llm_client.py
+- [ ] T011 Implement AGENT_MODEL_MAP constant in packages/resume-review/src/config/model_config.py
+- [ ] T012 Implement MODEL_PRICING constant in packages/resume-review/src/config/model_config.py
+- [ ] T013 Implement AgentName enum in packages/resume-review/src/config/model_config.py
+- [ ] T014 Implement LLMClientFactory.create_client() method in packages/resume-review/src/services/llm_factory.py
+- [ ] T015 Add API key validation logic to LLMClientFactory in packages/resume-review/src/services/llm_factory.py
+- [ ] T016 Create MockLLMClient for testing in packages/resume-review/tests/unit/services/test_llm_client.py
+- [ ] T017 Write unit tests for GeminiClient in packages/resume-review/tests/unit/services/test_llm_client.py
+- [ ] T018 Write unit tests for OpenAIClient in packages/resume-review/tests/unit/services/test_llm_client.py
+- [ ] T019 Write unit tests for AnthropicClient in packages/resume-review/tests/unit/services/test_llm_client.py
+- [ ] T020 Write unit tests for LLMClientFactory in packages/resume-review/tests/unit/services/test_llm_factory.py
+
+**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
+
+---
+
+## Phase 3: User Story 1 - Fast and Cost-Effective Review Execution (Priority: P1) 🎯 MVP
+
+**Goal**: Enable hybrid model configuration with automatic optimal model assignment per agent to achieve 50% cost reduction and 70% speed improvement
+
+**Independent Test**: Run review with hybrid configuration, measure execution time (<3 min) and cost (<$0.55)
+
+### Implementation for User Story 1
+
+- [ ] T021 [P] [US1] Update BaseAgent.__init__() to accept llm_client parameter instead of api_key in packages/resume-review/src/agents/base.py
+- [ ] T022 [P] [US1] Update BaseAgent.evaluate_async() to use self.llm_client.generate_async() in packages/resume-review/src/agents/base.py
+- [ ] T023 [P] [US1] Add gemini_api_key field to ReviewState in packages/resume-review/src/workflow/state.py
+- [ ] T024 [P] [US1] Add openai_api_key field to ReviewState in packages/resume-review/src/workflow/state.py
+- [ ] T025 [P] [US1] Add anthropic_api_key field to ReviewState in packages/resume-review/src/workflow/state.py
+- [ ] T026 [P] [US1] Add token_usage dict field to ReviewState in packages/resume-review/src/workflow/state.py
+- [ ] T027 [P] [US1] Add override_model field to ReviewState in packages/resume-review/src/workflow/state.py
+- [ ] T028 [US1] Update supervisor_node to construct llm_client via LLMClientFactory in packages/resume-review/src/workflow/nodes/supervisor.py
+- [ ] T029 [US1] Pass llm_client to agent constructors in supervisor_node in packages/resume-review/src/workflow/nodes/supervisor.py
+- [ ] T030 [US1] Add token usage logging after each agent call in supervisor_node in packages/resume-review/src/workflow/nodes/supervisor.py
+- [ ] T031 [US1] Update ReviewWorkflow._create_initial_state() to accept 3 API keys in packages/resume-review/src/workflow/runner.py
+- [ ] T032 [US1] Pass API keys to ReviewState in ReviewWorkflow._create_initial_state() in packages/resume-review/src/workflow/runner.py
+- [ ] T033 [US1] Add --gemini-api-key CLI option in packages/resume-review/src/cli.py
+- [ ] T034 [US1] Add --openai-api-key CLI option in packages/resume-review/src/cli.py
+- [ ] T035 [US1] Add --anthropic-api-key CLI option (replace --api-key) in packages/resume-review/src/cli.py
+- [ ] T036 [US1] Implement calculate_cost() function using MODEL_PRICING in packages/resume-review/src/config/model_config.py
+- [ ] T037 [US1] Add cost summary logging at end of review in packages/resume-review/src/workflow/runner.py
+- [ ] T038 [US1] Write unit test for BaseAgent with injected llm_client in packages/resume-review/tests/unit/agents/test_base.py
+- [ ] T039 [US1] Write unit test for ReviewState with new API key fields in packages/resume-review/tests/unit/workflow/test_state.py
+
+**Validation Tasks**:
+- [ ] T040 [US1] Run dry-run review with hybrid configuration and verify no errors
+- [ ] T041 [US1] Measure execution time with hybrid config (target: <3 min)
+- [ ] T042 [US1] Measure API cost with hybrid config (target: <$0.55)
+- [ ] T043 [US1] Verify each agent uses assigned model (check logs)
+
+**Checkpoint**: User Story 1 complete - Hybrid configuration functional with cost/speed optimization
+
+---
+
+## Phase 4: User Story 2 - Reliable Resume Revision (Priority: P1)
+
+**Goal**: Eliminate fuzzy replacement errors by implementing full-rewrite architecture in Revisor
+
+**Independent Test**: Run 10 revision cycles, verify 0 "Fuzzy replacement failed" errors
+
+### Implementation for User Story 2
+
+- [ ] T044 [P] [US2] Create REVISOR_SYSTEM_PROMPT for full rewrite in packages/resume-review/src/config/prompts.py
+- [ ] T045 [US2] Implement RevisorAgent.apply_revisions_async() with full rewrite logic in packages/resume-review/src/agents/revisor.py (create new file if needed)
+- [ ] T046 [US2] Implement YAML frontmatter extraction in apply_revisions_async() in packages/resume-review/src/agents/revisor.py
+- [ ] T047 [US2] Implement YAML frontmatter validation after generation in packages/resume-review/src/agents/revisor.py
+- [ ] T048 [US2] Set max_tokens=8000 for full resume rewrite in packages/resume-review/src/agents/revisor.py
+- [ ] T049 [US2] Update revisor_node to use RevisorAgent.apply_revisions_async() in packages/resume-review/src/workflow/nodes/revisor.py
+- [ ] T050 [US2] Update revisor_node to construct Revisor's llm_client (Gemini) via LLMClientFactory in packages/resume-review/src/workflow/nodes/revisor.py
+- [ ] T051 [US2] Remove calls to old RevisionService if present in packages/resume-review/src/workflow/nodes/revisor.py
+- [ ] T052 [US2] Add explicit "no truncation" instruction to REVISOR_SYSTEM_PROMPT in packages/resume-review/src/config/prompts.py
+- [ ] T053 [US2] Add output length validation in apply_revisions_async() in packages/resume-review/src/agents/revisor.py
+
+**Validation Tasks**:
+- [ ] T054 [US2] Create test resume with complex revisions (deletions, fixes, completions)
+- [ ] T055 [US2] Run 10 consecutive reviews with test resume, verify 0 replacement errors
+- [ ] T056 [US2] Verify YAML frontmatter unchanged in all 10 runs
+- [ ] T057 [US2] Verify all revision instructions applied correctly
+
+**Checkpoint**: User Story 2 complete - Revision process 100% reliable with full rewrite
+
+---
+
+## Phase 5: User Story 3 - Enhanced Technical Evaluation (Priority: P2)
+
+**Goal**: Improve technical evaluation depth using o3-mini model for Technical Writer agent
+
+**Independent Test**: Run evaluation on resume with intentional technical issues, verify 90%+ detection
+
+### Implementation for User Story 3
+
+- [ ] T058 [P] [US3] Update TECHNICAL_WRITER_SYSTEM_PROMPT with enhanced detection instructions in packages/resume-review/src/config/prompts.py
+- [ ] T059 [P] [US3] Add anachronistic technology detection logic to Technical Writer prompt in packages/resume-review/src/config/prompts.py
+- [ ] T060 [P] [US3] Add incompatible stack detection logic to Technical Writer prompt in packages/resume-review/src/config/prompts.py
+- [ ] T061 [P] [US3] Add duplicate project detection logic to Technical Writer prompt in packages/resume-review/src/config/prompts.py
+- [ ] T062 [US3] Verify Technical Writer uses o3-mini model in AGENT_MODEL_MAP in packages/resume-review/src/config/model_config.py
+- [ ] T063 [US3] Update TechnicalWriterAgent to output structured RevisionInstruction format in packages/resume-review/src/agents/technical_writer.py
+
+**Validation Tasks**:
+- [ ] T064 [US3] Create test resume with anachronistic tech (e.g., "Next.js 14 in 2015")
+- [ ] T065 [US3] Create test resume with incompatible stack (e.g., "Django + Flask")
+- [ ] T066 [US3] Create test resume with duplicate projects
+- [ ] T067 [US3] Run Technical Writer evaluation, verify detection of all 3 issues
+- [ ] T068 [US3] Calculate detection rate (target: ≥90%)
+
+**Checkpoint**: User Story 3 complete - Technical evaluation quality significantly improved
+
+---
+
+## Phase 6: User Story 4 - Flexible Model Override for Testing (Priority: P3)
+
+**Goal**: Allow users to override default hybrid configuration with single model for all agents
+
+**Independent Test**: Run review with --model flag, verify all agents use specified model
+
+### Implementation for User Story 4
+
+- [ ] T069 [P] [US4] Add --model CLI option for override in packages/resume-review/src/cli.py
+- [ ] T070 [P] [US4] Implement detect_provider_from_model() helper in packages/resume-review/src/services/llm_factory.py
+- [ ] T071 [US4] Update LLMClientFactory.create_client() to check override_model first in packages/resume-review/src/services/llm_factory.py
+- [ ] T072 [US4] If override_model set, use same provider/model for all agents in packages/resume-review/src/services/llm_factory.py
+- [ ] T073 [US4] Add validation for invalid model names in override mode in packages/resume-review/src/services/llm_factory.py
+- [ ] T074 [US4] Add validation that required API key exists for override model in packages/resume-review/src/services/llm_factory.py
+
+**Validation Tasks**:
+- [ ] T075 [US4] Test --model gemini-2.0-flash-001 flag, verify all agents use Gemini
+- [ ] T076 [US4] Test --model claude-sonnet-4-5-20250929 flag, verify all agents use Claude
+- [ ] T077 [US4] Test --model o3-mini flag, verify all agents use OpenAI
+- [ ] T078 [US4] Test invalid model name, verify clear error message
+- [ ] T079 [US4] Test override without required API key, verify error message
+
+**Checkpoint**: User Story 4 complete - Model override functional for testing/troubleshooting
+
+---
+
+## Phase 7: User Story 5 - Verbose Model Selection Reporting (Priority: P3)
+
+**Goal**: Display which models are assigned to each agent when verbose mode enabled
+
+**Independent Test**: Run review with --verbose, verify model assignments visible in output
+
+### Implementation for User Story 5
+
+- [ ] T080 [P] [US5] Add verbose mode check in CLI review() function in packages/resume-review/src/cli.py
+- [ ] T081 [P] [US5] If verbose and hybrid mode, print "Mode: Hybrid configuration" in packages/resume-review/src/cli.py
+- [ ] T082 [P] [US5] If verbose and hybrid mode, print agent-to-model mapping in packages/resume-review/src/cli.py
+- [ ] T083 [P] [US5] If verbose and override mode, print "Mode: Override all with [model]" in packages/resume-review/src/cli.py
+- [ ] T084 [US5] Add model name logging in each agent's evaluate_async() call in packages/resume-review/src/agents/base.py
+- [ ] T085 [US5] Format verbose output with clear model assignments per agent in packages/resume-review/src/cli.py
+
+**Validation Tasks**:
+- [ ] T086 [US5] Run review with --verbose (hybrid mode), verify model assignments printed
+- [ ] T087 [US5] Run review with --verbose (override mode), verify override model printed
+- [ ] T088 [US5] Verify verbose output shows different models for different agents (hybrid)
+- [ ] T089 [US5] Verify verbose output shows same model for all agents (override)
+
+**Checkpoint**: User Story 5 complete - Verbose mode provides transparency
+
+---
+
+## Phase 8: Integration & End-to-End Testing
+
+**Purpose**: Validate all user stories work together and meet success criteria
+
+- [ ] T090 [P] Create integration test suite in packages/resume-review/tests/integration/test_multi_model.py
+- [ ] T091 [P] Write integration test for hybrid configuration (US1) in packages/resume-review/tests/integration/test_multi_model.py
+- [ ] T092 [P] Write integration test for full rewrite reliability (US2) in packages/resume-review/tests/integration/test_multi_model.py
+- [ ] T093 [P] Write integration test for enhanced technical eval (US3) in packages/resume-review/tests/integration/test_multi_model.py
+- [ ] T094 [P] Write integration test for model override (US4) in packages/resume-review/tests/integration/test_multi_model.py
+- [ ] T095 [P] Write integration test for verbose reporting (US5) in packages/resume-review/tests/integration/test_multi_model.py
+- [ ] T096 Mark integration tests with @pytest.mark.integration in packages/resume-review/tests/integration/test_multi_model.py
+- [ ] T097 Run all unit tests (pytest tests/unit -v)
+- [ ] T098 Run integration tests with real APIs (pytest tests/integration -v -m integration)
+
+**Success Criteria Validation**:
+- [ ] T099 SC-001: Measure execution time on actual resume (<3 minutes)
+- [ ] T100 SC-002: Measure API cost on actual resume (<$0.55)
+- [ ] T101 SC-003: Run 20 consecutive reviews, verify 0 replacement errors
+- [ ] T102 SC-004: Test technical detection rate (≥90%)
+- [ ] T103 SC-005: Test incomplete sentence correction (100%)
+- [ ] T104 SC-006: Test YAML preservation (100%)
+- [ ] T105 SC-007: Test hybrid execution (all agents use assigned models)
+- [ ] T106 SC-008: Test override for all supported models
+- [ ] T107 SC-009: Test verbose reporting displays model assignments
+
+---
+
+## Phase 9: Polish & Cross-Cutting Concerns
+
+**Purpose**: Documentation, cleanup, and final improvements
+
+- [ ] T108 [P] Update packages/resume-review/README.md with multi-model configuration section
+- [ ] T109 [P] Add API key setup instructions for Gemini/OpenAI to packages/resume-review/README.md
+- [ ] T110 [P] Document --model override flag usage in packages/resume-review/README.md
+- [ ] T111 [P] Add troubleshooting section for API key issues in packages/resume-review/README.md
+- [ ] T112 [P] Document cost optimization benefits in packages/resume-review/README.md
+- [ ] T113 [P] Add examples of hybrid vs override mode usage in packages/resume-review/README.md
+- [ ] T114 [P] Deprecate old RevisionService in packages/resume-review/src/services/revision.py (add deprecation comment)
+- [ ] T115 Run quickstart.md validation (follow guide, verify all steps work)
+- [ ] T116 Run final smoke test: full review with real resume in hybrid mode
+- [ ] T117 Verify all success criteria met (SC-001 through SC-009)
+- [ ] T118 Create summary report of cost/speed improvements vs baseline
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **Setup (Phase 1)**: No dependencies - can start immediately
+- **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
+- **User Stories (Phase 3-7)**: All depend on Foundational phase completion
+  - US1 & US2 (P1): Should be done first (core value proposition)
+  - US3 (P2): Can start after US1 complete (builds on hybrid config)
+  - US4 & US5 (P3): Can start anytime after Foundational (independent features)
+- **Integration (Phase 8)**: Depends on all user stories being complete
+- **Polish (Phase 9)**: Depends on integration testing complete
+
+### User Story Dependencies
+
+- **User Story 1 (P1)**: Can start after Foundational (Phase 2) - No dependencies on other stories
+- **User Story 2 (P1)**: Can start after Foundational (Phase 2) - No dependencies, but uses US1's llm_client infrastructure
+- **User Story 3 (P2)**: Can start after US1 complete (uses hybrid configuration)
+- **User Story 4 (P3)**: Can start after Foundational (Phase 2) - Independent, extends US1
+- **User Story 5 (P3)**: Can start after Foundational (Phase 2) - Independent, extends US1
+
+### Critical Path
+
+```
+Setup (T001-T005)
+  → Foundational (T006-T020) [BLOCKING]
+    → US1: Hybrid Config (T021-T043) [P1, MVP]
+    → US2: Full Rewrite (T044-T057) [P1, MVP]
+    → US3: Enhanced Tech Eval (T058-T068) [P2]
+    → US4: Model Override (T069-T079) [P3]
+    → US5: Verbose Reporting (T080-T089) [P3]
+      → Integration Testing (T090-T107)
+        → Polish (T108-T118)
+```
+
+### Parallel Opportunities
+
+**Setup Phase**: T003, T004, T005 can run in parallel
+
+**Foundational Phase**: T008, T009, T010 (client implementations) can run in parallel after T006-T007
+
+**User Story 1**: T021-T027 (state/base agent updates) can run in parallel
+
+**User Story 2**: T044, T052 (prompt updates) can run in parallel
+
+**User Story 3**: T058-T061 (prompt enhancements) can run in parallel
+
+**User Story 4**: T069, T070 (CLI and helper) can run in parallel
+
+**User Story 5**: T080-T083 (verbose output) can run in parallel
+
+**Integration**: T090-T095 (test writing) can run in parallel
+
+**Polish**: T108-T113 (documentation) can run in parallel
+
+---
+
+## Parallel Example: Foundational Phase
+
+```bash
+# After T006-T007 complete, launch client implementations together:
+Task T008: "Implement GeminiClient in llm_client.py"
+Task T009: "Implement OpenAIClient in llm_client.py"
+Task T010: "Implement AnthropicClient in llm_client.py"
+
+# After T014-T015 complete, launch unit tests together:
+Task T017: "Unit tests for GeminiClient"
+Task T018: "Unit tests for OpenAIClient"
+Task T019: "Unit tests for AnthropicClient"
+Task T020: "Unit tests for LLMClientFactory"
+```
+
+---
+
+## Parallel Example: User Story 1
+
+```bash
+# Launch state and agent updates together:
+Task T021: "Update BaseAgent.__init__() to accept llm_client"
+Task T022: "Update BaseAgent.evaluate_async() to use llm_client"
+Task T023: "Add gemini_api_key to ReviewState"
+Task T024: "Add openai_api_key to ReviewState"
+Task T025: "Add anthropic_api_key to ReviewState"
+Task T026: "Add token_usage to ReviewState"
+Task T027: "Add override_model to ReviewState"
+```
+
+---
+
+## Implementation Strategy
+
+### MVP First (User Stories 1 & 2 Only)
+
+1. Complete Phase 1: Setup (T001-T005)
+2. Complete Phase 2: Foundational (T006-T020) **[CRITICAL BLOCKING PHASE]**
+3. Complete Phase 3: User Story 1 (T021-T043)
+4. Complete Phase 4: User Story 2 (T044-T057)
+5. **STOP and VALIDATE**: Test US1 & US2 together
+   - Verify hybrid config works
+   - Verify full rewrite eliminates errors
+   - Measure cost (<$0.55) and time (<3 min)
+6. Deploy/demo if ready - **This is a complete, valuable MVP**
+
+### Incremental Delivery
+
+1. MVP (US1 + US2) → 50% cost reduction + 100% revision reliability
+2. Add US3 → Enhanced technical evaluation quality
+3. Add US4 → Model override for testing flexibility
+4. Add US5 → Verbose reporting for transparency
+5. Each addition enhances value without breaking previous functionality
+
+### Parallel Team Strategy
+
+With multiple developers:
+
+1. Team completes Setup + Foundational together (T001-T020)
+2. Once Foundational is done (after T020):
+   - **Developer A**: User Story 1 (T021-T043)
+   - **Developer B**: User Story 2 (T044-T057)
+   - Both can work in parallel since they modify different files
+3. Once US1 & US2 complete:
+   - **Developer A**: User Story 3 (T058-T068)
+   - **Developer B**: User Story 4 (T069-T079)
+   - **Developer C**: User Story 5 (T080-T089)
+4. Integration testing (T090-T107) done together
+5. Polish (T108-T118) divided among team
+
+---
+
+## Task Count Summary
+
+- **Phase 1 (Setup)**: 5 tasks
+- **Phase 2 (Foundational)**: 15 tasks [BLOCKING]
+- **Phase 3 (US1)**: 23 tasks [P1, MVP]
+- **Phase 4 (US2)**: 14 tasks [P1, MVP]
+- **Phase 5 (US3)**: 11 tasks [P2]
+- **Phase 6 (US4)**: 11 tasks [P3]
+- **Phase 7 (US5)**: 10 tasks [P3]
+- **Phase 8 (Integration)**: 18 tasks
+- **Phase 9 (Polish)**: 11 tasks
+
+**Total**: 118 tasks
+
+**MVP Scope** (US1 + US2): 57 tasks (48% of total)
+**P1 Priority** (US1 + US2): 37 implementation tasks
+**P2 Priority** (US3): 11 tasks
+**P3 Priority** (US4 + US5): 21 tasks
+
+**Parallel Opportunities Identified**: 35 tasks marked [P]
+
+---
+
+## Notes
+
+- [P] tasks = different files, no dependencies, can run in parallel
+- [Story] label maps task to specific user story for traceability
+- Each user story is independently completable and testable
+- Commit after each task or logical group
+- Stop at any checkpoint to validate story independently
+- Foundational phase (T006-T020) MUST complete before ANY user story work begins
+- MVP = US1 + US2 (hybrid config + full rewrite) delivers maximum value
+- US3-US5 are enhancements that can be added incrementally
+- All 9 success criteria (SC-001 through SC-009) validated in Phase 8

@@ -41,7 +41,11 @@ class ReviewState(TypedDict, total=False):
     target_role: str
     score_threshold: float
     max_iterations: int
-    api_key: str
+    api_key: str  # Legacy: kept for backward compatibility
+    anthropic_api_key: Optional[str]  # New: Anthropic API key
+    gemini_api_key: Optional[str]  # New: Gemini API key
+    openai_api_key: Optional[str]  # New: OpenAI API key
+    override_model: Optional[str]  # New: Override model for all agents (testing)
     dry_run: bool
     screenshot_url: Optional[str]
     save_iterations: bool
@@ -66,6 +70,9 @@ class ReviewState(TypedDict, total=False):
     # Revision tracking
     revised_content: str
     applied_revisions: Annotated[list[str], add_revisions]
+
+    # Token usage tracking (New: for cost calculation)
+    token_usage: dict[str, dict[str, int]]  # {agent_name: {input_tokens, output_tokens, model}}
 
     # Final output
     final_score: float

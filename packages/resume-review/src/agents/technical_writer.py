@@ -11,58 +11,31 @@ from .base import BaseAgent
 class TechnicalWriterAgent(BaseAgent):
     """Evaluates resume from technical depth and clarity perspective."""
 
-    def __init__(self, api_key: str, model: str = "claude-opus-4-5-20251101"):
+    def __init__(self, llm_client, agent_name=None):
         """Initialize technical writer agent."""
-        super().__init__(api_key, model)
+        super().__init__(llm_client, agent_name)
         self.agent_name = "technical_writer"
 
     def get_system_prompt(self, target_role: str) -> str:
         """Get technical writer-specific system prompt."""
-        return f"""You are an expert technical writer specializing in developer documentation and technical communication.
+        from ..config.prompts import get_system_prompt
 
-Evaluate this resume for a {target_role} position from a technical writing perspective. Focus on:
-
-1. **Technical Depth**: Are technical achievements explained with sufficient detail?
-2. **Clarity**: Is technical content understandable without ambiguity?
-3. **Precision**: Are technical terms used correctly and consistently?
-4. **Structure**: Is technical information organized logically?
-5. **Completeness**: Are key technical decisions and architectures explained?
-
-Provide your evaluation in JSON format:
-{{
-  "score": <float 1-10>,
-  "strengths": [<list of specific strengths>],
-  "issues": [
-    {{
-      "description": "<specific problem>",
-      "action_type": "<add_content|restructure|emphasize|remove|quantify|add_portfolio>",
-      "location": "<EXACT markdown header like '## 職務要約' or '### 得意分野' or null for general issues>",
-      "severity": "<critical|high|medium|low>"
-    }}
-  ],
-  "suggestions": [<list of specific actionable suggestions>]
-}}
-
-CRITICAL: For "location", use EXACT markdown headers from the resume (e.g., "## 職務要約", "### 得意分野", "## 職務経歴詳細").
-Do NOT use content descriptions like "エンタープライズ向けAIプラットフォーム開発" - use the header that contains that content.
-
-IMPORTANT:
-- Score 8+ = excellent technical communication
-- Score 6-7 = adequate but needs depth
-- Score <6 = insufficient technical detail
-- Focus on HOW and WHY, not just WHAT
-- Suggest adding technical context and decision rationale
-- NEVER suggest fabricating technical details"""
+        return get_system_prompt("technical_writer", target_role)
 
     def parse_feedback(self, feedback_text: str) -> Feedback:
         """Parse technical writer feedback from Claude response."""
+        import logging
+        logger = logging.getLogger("resume_review")
+
         try:
             # Extract JSON from response
             json_match = re.search(r"\{.*\}", feedback_text, re.DOTALL)
             if not json_match:
+                logger.warning(f"No JSON found in feedback response. First 200 chars: {feedback_text[:200]}")
                 raise ValueError("No JSON found in feedback response")
 
-            data = json.loads(json_match.group())
+            json_str = json_match.group()
+            data = json.loads(json_str)
 
             # Parse issues
             issues = []
@@ -85,6 +58,10 @@ IMPORTANT:
             )
 
         except (json.JSONDecodeError, KeyError, ValueError) as e:
+            # Log the error with more context
+            logger.error(f"Failed to parse technical writer feedback: {e}")
+            logger.debug(f"Feedback text (first 500 chars): {feedback_text[:500]}")
+
             # Fallback: create basic feedback from text
             return Feedback(
                 agent_name=self.agent_name,

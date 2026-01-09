@@ -11,9 +11,9 @@ from .base import BaseAgent
 class CopywriterAgent(BaseAgent):
     """Evaluates resume from marketing and persuasion perspective."""
 
-    def __init__(self, api_key: str, model: str = "claude-opus-4-5-20251101"):
+    def __init__(self, llm_client, agent_name=None):
         """Initialize copywriter agent."""
-        super().__init__(api_key, model)
+        super().__init__(llm_client, agent_name)
         self.agent_name = "copywriter"
 
     def get_system_prompt(self, target_role: str) -> str:

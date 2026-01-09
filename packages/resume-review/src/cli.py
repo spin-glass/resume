@@ -86,7 +86,27 @@ def cli():
 @click.option(
     "--api-key",
     envvar="ANTHROPIC_API_KEY",
+    help="Anthropic API key (or set ANTHROPIC_API_KEY env var) [LEGACY]",
+)
+@click.option(
+    "--anthropic-api-key",
+    envvar="ANTHROPIC_API_KEY",
     help="Anthropic API key (or set ANTHROPIC_API_KEY env var)",
+)
+@click.option(
+    "--gemini-api-key",
+    envvar="GEMINI_API_KEY",
+    help="Google Gemini API key (or set GEMINI_API_KEY env var)",
+)
+@click.option(
+    "--openai-api-key",
+    envvar="OPENAI_API_KEY",
+    help="OpenAI API key (or set OPENAI_API_KEY env var)",
+)
+@click.option(
+    "--model",
+    default=None,
+    help="Override model for all agents (e.g., 'gemini-3.0-flash', 'claude-sonnet-4-5-20250929')",
 )
 @click.option(
     "--max-validation-retries",
@@ -112,6 +132,10 @@ def review(
     save_iterations: bool,
     iterations_dir: Optional[Path],
     api_key: Optional[str],
+    anthropic_api_key: Optional[str],
+    gemini_api_key: Optional[str],
+    openai_api_key: Optional[str],
+    model: Optional[str],
     max_validation_retries: Optional[int],
     strict_validation: bool,
 ):
@@ -165,14 +189,22 @@ def review(
         click.echo("Error: Max iterations must be >= 1", err=True)
         sys.exit(2)
 
-    # Get API key
-    if not api_key:
+    # Get API keys from config if not provided
+    if not anthropic_api_key and not api_key:
         try:
             config = get_config()
-            api_key = config.get_api_key()
+            anthropic_api_key = config.get_anthropic_api_key()
+            if not gemini_api_key:
+                gemini_api_key = config.get_gemini_api_key()
+            if not openai_api_key:
+                openai_api_key = config.get_openai_api_key()
         except ValueError as e:
             click.echo(f"Error: {e} Please create a .env file with your API key.", err=True)
             sys.exit(3)
+
+    # Backward compatibility: use api_key if anthropic_api_key not set
+    if not anthropic_api_key:
+        anthropic_api_key = api_key
 
     # Display header
     if dry_run:
@@ -186,6 +218,30 @@ def review(
     click.echo(f"Max Iterations: {max_iterations}")
     if screenshot_url:
         click.echo(f"Screenshot URL: {screenshot_url}")
+
+    # Verbose: Display model configuration
+    if verbose:
+        click.echo()
+        if model:
+            # Override mode
+            click.echo(f"Mode: Override all agents with {model}")
+        else:
+            # Hybrid mode
+            click.echo("Mode: Hybrid configuration (optimal model per agent)")
+            from .config.model_config import AGENT_MODEL_MAP, AgentName
+            click.echo("\nAgent Model Assignments:")
+            for agent_name in [
+                AgentName.RECRUITER,
+                AgentName.TECHNICAL_WRITER,
+                AgentName.COPYWRITER,
+                AgentName.UX_DESIGNER,
+                AgentName.VISUAL_DESIGNER,
+                AgentName.REVISOR,
+            ]:
+                config = AGENT_MODEL_MAP.get(agent_name)
+                if config:
+                    click.echo(f"  {agent_name.value:20} → {config['model_id']:30} ({config['provider']})")
+
     click.echo()
 
     try:
@@ -218,10 +274,14 @@ def review(
             click.echo(f"  💾 Iteration {iteration} saved: {path.name} (score: {score:.1f})")
 
         workflow = ReviewWorkflow(
-            api_key,
+            api_key=anthropic_api_key,  # Legacy parameter (backward compat)
             save_iterations=save_iterations,
             output_dir=iterations_dir,
             on_iteration_complete=on_iteration_saved if save_iterations else None,
+            gemini_api_key=gemini_api_key,
+            openai_api_key=openai_api_key,
+            anthropic_api_key=anthropic_api_key,
+            override_model=model,
         )
         session = workflow.run_review(session)
 

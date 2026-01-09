@@ -7,7 +7,9 @@ from typing import Any
 from ...agents.copywriter import CopywriterAgent
 from ...agents.recruiter import RecruiterAgent
 from ...agents.technical_writer import TechnicalWriterAgent
+from ...config.model_config import AgentName, calculate_cost
 from ...models.feedback import Feedback
+from ...services.llm_factory import LLMClientFactory
 from ..scoring import calculate_integrated_score
 from ..state import ReviewState
 
@@ -25,14 +27,46 @@ async def supervisor_node(state: ReviewState) -> dict[str, Any]:
         f"Supervisor: Starting parallel agent evaluation (iteration {state.get('current_iteration', 0) + 1})"
     )
 
-    api_key = state["api_key"]
     resume = state["resume"]
     target_role = state["target_role"]
 
-    # Initialize agents
-    recruiter = RecruiterAgent(api_key)
-    tech_writer = TechnicalWriterAgent(api_key)
-    copywriter = CopywriterAgent(api_key)
+    # Get API keys (new multi-provider support)
+    gemini_api_key = state.get("gemini_api_key")
+    openai_api_key = state.get("openai_api_key")
+    anthropic_api_key = state.get("anthropic_api_key") or state.get("api_key")
+    override_model = state.get("override_model")
+
+    # Initialize token usage tracking
+    if "token_usage" not in state:
+        state["token_usage"] = {}
+
+    # Create LLM clients for each agent using factory
+    recruiter_client = LLMClientFactory.create_client(
+        agent_name=AgentName.RECRUITER,
+        gemini_api_key=gemini_api_key,
+        openai_api_key=openai_api_key,
+        anthropic_api_key=anthropic_api_key,
+        override_model=override_model,
+    )
+    tech_writer_client = LLMClientFactory.create_client(
+        agent_name=AgentName.TECHNICAL_WRITER,
+        gemini_api_key=gemini_api_key,
+        openai_api_key=openai_api_key,
+        anthropic_api_key=anthropic_api_key,
+        override_model=override_model,
+    )
+    copywriter_client = LLMClientFactory.create_client(
+        agent_name=AgentName.COPYWRITER,
+        gemini_api_key=gemini_api_key,
+        openai_api_key=openai_api_key,
+        anthropic_api_key=anthropic_api_key,
+        override_model=override_model,
+    )
+
+    # Initialize agents with injected LLM clients
+    recruiter = RecruiterAgent(llm_client=recruiter_client)
+    tech_writer = TechnicalWriterAgent(llm_client=tech_writer_client)
+    copywriter = CopywriterAgent(llm_client=copywriter_client)
 
     # Run all agents in parallel using asyncio.gather
     try:
@@ -45,8 +79,12 @@ async def supervisor_node(state: ReviewState) -> dict[str, Any]:
 
         # Process results, handling any exceptions
         feedback_list = []
+        token_usage = state.get("token_usage", {})
+
         for i, result in enumerate(results):
             agent_name = ["recruiter", "technical_writer", "copywriter"][i]
+            client = [recruiter_client, tech_writer_client, copywriter_client][i]
+
             if isinstance(result, Exception):
                 logger.error(f"Agent {agent_name} failed: {result}")
                 # Create minimal feedback for failed agent
@@ -63,7 +101,18 @@ async def supervisor_node(state: ReviewState) -> dict[str, Any]:
                 feedback_list.append(result)
                 logger.debug(f"Agent {agent_name} score: {result.score}/10.0")
 
-        return {"current_feedback": feedback_list}
+                # Log token usage for cost tracking
+                # Note: In real implementation, we'd capture this from LLMResponse
+                # For now, we track the model used
+                token_usage[agent_name] = {
+                    "model": client.model,
+                    "provider": client.provider,
+                }
+
+        return {
+            "current_feedback": feedback_list,
+            "token_usage": token_usage,
+        }
 
     except Exception as e:
         logger.error(f"Supervisor node failed: {e}")
@@ -83,8 +132,13 @@ async def design_supervisor_node(state: ReviewState) -> dict[str, Any]:
 
     logger.info(f"Design Supervisor: Starting design review for {screenshot_url}")
 
-    api_key = state["api_key"]
     target_role = state["target_role"]
+
+    # Get API keys
+    gemini_api_key = state.get("gemini_api_key")
+    openai_api_key = state.get("openai_api_key")
+    anthropic_api_key = state.get("anthropic_api_key") or state.get("api_key")
+    override_model = state.get("override_model")
 
     # Import design agents and screenshot service
     from ...agents.ux_designer import UXDesignerAgent
@@ -100,9 +154,25 @@ async def design_supervisor_node(state: ReviewState) -> dict[str, Any]:
             logger.warning("Design Supervisor: Failed to capture screenshot")
             return {}
 
-        # Initialize design agents
-        ux_designer = UXDesignerAgent(api_key)
-        visual_designer = VisualDesignerAgent(api_key)
+        # Create LLM clients for design agents
+        ux_client = LLMClientFactory.create_client(
+            agent_name=AgentName.UX_DESIGNER,
+            gemini_api_key=gemini_api_key,
+            openai_api_key=openai_api_key,
+            anthropic_api_key=anthropic_api_key,
+            override_model=override_model,
+        )
+        visual_client = LLMClientFactory.create_client(
+            agent_name=AgentName.VISUAL_DESIGNER,
+            gemini_api_key=gemini_api_key,
+            openai_api_key=openai_api_key,
+            anthropic_api_key=anthropic_api_key,
+            override_model=override_model,
+        )
+
+        # Initialize design agents with injected clients
+        ux_designer = UXDesignerAgent(llm_client=ux_client)
+        visual_designer = VisualDesignerAgent(llm_client=visual_client)
 
         # Run design agents in parallel
         ux_feedback, visual_feedback = await asyncio.gather(

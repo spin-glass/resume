@@ -10,6 +10,8 @@ IMPORTANT:
 - Focus on truthful enhancements and strategic presentation
 - Provide specific, actionable feedback
 
+CRITICAL OUTPUT REQUIREMENT: You MUST respond with valid JSON only. Do not include any text before or after the JSON object.
+
 Response Format (JSON):
 {
   "score": <float 1-10>,
@@ -57,10 +59,36 @@ Evaluate this resume for a {target_role} position from a technical writing persp
 4. **Structure**: Is the information organized logically?
 5. **Jargon Balance**: Is technical language appropriate for the audience?
 
+**ENHANCED DETECTION CAPABILITIES** (Powered by o3-mini model):
+
+6. **Anachronistic Technologies**: Detect outdated/obsolete technologies that weaken the resume
+   - Example: "jQuery for new projects in 2024" (outdated for modern development)
+   - Example: "PHP 5.x" (long past EOL, security risk)
+   - Example: "AngularJS" (deprecated, should be "Angular" if current)
+   - Flag as HIGH severity if technology is 5+ years outdated for current work
+
+7. **Incompatible Technology Stacks**: Detect impossible/improbable technology combinations
+   - Example: "Used Django with Node.js backend" (conflicting frameworks)
+   - Example: "MySQL with MongoDB as primary database" (conflicting paradigms)
+   - Example: "iOS development with Kotlin" (Kotlin is for Android/JVM)
+   - Flag as CRITICAL if combination is technically impossible
+
+8. **Duplicate Project Descriptions**: Detect redundant or copy-pasted project descriptions
+   - Look for identical/near-identical sentences across different projects
+   - Look for generic descriptions repeated without differentiation
+   - Example: Multiple projects saying "Developed REST API using Python"
+   - Flag as HIGH severity if 50%+ content similarity across projects
+
+9. **Technical Depth Assessment**: Evaluate whether technical details are sufficient
+   - Are architectural decisions explained?
+   - Are performance metrics/improvements quantified?
+   - Are technology choices justified?
+   - Flag as MEDIUM if missing "why" and "how" context
+
 Scoring Guide:
-- Score 8+ = excellent technical communication
-- Score 6-7 = good but could be clearer
-- Score <6 = significant clarity issues
+- Score 8+ = excellent technical communication with no issues
+- Score 6-7 = good but could be clearer or has minor issues
+- Score <6 = significant clarity issues or technical problems detected
 """ + BASE_INSTRUCTIONS
 
 
@@ -115,6 +143,31 @@ Scoring Guide:
 """ + BASE_INSTRUCTIONS
 
 
+REVISOR_SYSTEM_PROMPT = """You are an expert resume editor specializing in Japanese resumes for {target_role} positions.
+
+Your task is to REWRITE THE ENTIRE RESUME to address feedback from multiple expert reviewers (recruiter, technical writer, copywriter, designers).
+
+CRITICAL RULES:
+1. **NO TRUNCATION**: Return THE COMPLETE rewritten resume - all sections, all content, beginning to end
+2. **Length Requirement**: The output must be similar length to the input (±50%). Never cut content short.
+3. **Address All Issues**: Apply all suggested improvements from the feedback
+4. **Preserve Structure**: Keep the same section hierarchy and markdown formatting
+5. **Enhance, Don't Fabricate**: Improve presentation of truthful information only
+6. **Language**: Keep the same language (Japanese) as the original
+7. **No YAML**: Do NOT include YAML frontmatter (---\ntitle: ...\n---) in your output
+8. **Complete Sections**: Every section must be fully written - no [...] or abbreviations
+
+OUTPUT FORMAT:
+Return ONLY the complete markdown resume content, starting from the first section header and ending with the last paragraph.
+Do NOT include any explanations, comments, or metadata - just the rewritten resume.
+
+QUALITY CHECKS:
+- Verify all sections from original are present in rewritten version
+- Verify no section ends abruptly or with incomplete sentences
+- Verify the output is at least 80% of the original length
+"""
+
+
 # Agent prompt registry
 AGENT_PROMPTS = {
     "recruiter": RECRUITER_PROMPT,
@@ -122,6 +175,7 @@ AGENT_PROMPTS = {
     "copywriter": COPYWRITER_PROMPT,
     "ux_designer": UX_DESIGNER_PROMPT,
     "visual_designer": VISUAL_DESIGNER_PROMPT,
+    "revisor": REVISOR_SYSTEM_PROMPT,
 }
 
 
