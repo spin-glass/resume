@@ -210,6 +210,7 @@ class OpenAIClient(BaseLLMClient):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
+            response_format={"type": "json_object"},
         )
 
         return LLMResponse(

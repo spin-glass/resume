@@ -23,11 +23,11 @@ class AgentName(Enum):
 AGENT_MODEL_MAP = {
     AgentName.RECRUITER: {
         "provider": "gemini",
-        "model_id": "gemini-2.0-flash-exp",
+        "model_id": "gemini-3-flash-preview",
     },
     AgentName.TECHNICAL_WRITER: {
-        "provider": "anthropic",  # Changed from openai due to o3-mini availability
-        "model_id": "claude-sonnet-4-5-20250929",
+        "provider": "openai",
+        "model_id": "gpt-4o-mini",
     },
     AgentName.COPYWRITER: {
         "provider": "anthropic",
@@ -35,28 +35,28 @@ AGENT_MODEL_MAP = {
     },
     AgentName.UX_DESIGNER: {
         "provider": "gemini",
-        "model_id": "gemini-2.0-flash-exp",
+        "model_id": "gemini-3-flash-preview",
     },
     AgentName.VISUAL_DESIGNER: {
         "provider": "gemini",
-        "model_id": "gemini-2.0-flash-exp",
+        "model_id": "gemini-3-flash-preview",
     },
     AgentName.REVISOR: {
         "provider": "gemini",
-        "model_id": "gemini-2.0-flash-exp",
+        "model_id": "gemini-3-flash-preview",
     },
 }
 
 # Model pricing (USD per 1M tokens)
 # Reference: specs/003-multi-model-hybrid/research.md
 MODEL_PRICING = {
-    "gemini-2.0-flash-exp": {
+    "gemini-3-flash-preview": {
         "input": 0.0,  # Free during preview
         "output": 0.0,  # Free during preview
     },
-    "o3-mini": {
-        "input": 1.1,  # $1.10 per 1M input tokens
-        "output": 4.4,  # $4.40 per 1M output tokens
+    "gpt-4o-mini": {
+        "input": 0.15,  # $0.15 per 1M input tokens
+        "output": 0.6,  # $0.60 per 1M output tokens
     },
     "claude-sonnet-4-5-20250929": {
         "input": 3.0,  # $3.00 per 1M input tokens

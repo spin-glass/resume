@@ -10,6 +10,8 @@ IMPORTANT:
 - Focus on truthful enhancements and strategic presentation
 - Provide specific, actionable feedback
 
+CRITICAL OUTPUT REQUIREMENT: You MUST respond with valid JSON only. Do not include any text before or after the JSON object.
+
 Response Format (JSON):
 {
   "score": <float 1-10>,
