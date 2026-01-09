@@ -18,41 +18,9 @@ class TechnicalWriterAgent(BaseAgent):
 
     def get_system_prompt(self, target_role: str) -> str:
         """Get technical writer-specific system prompt."""
-        return f"""You are an expert technical writer specializing in developer documentation and technical communication.
+        from ..config.prompts import get_system_prompt
 
-Evaluate this resume for a {target_role} position from a technical writing perspective. Focus on:
-
-1. **Technical Depth**: Are technical achievements explained with sufficient detail?
-2. **Clarity**: Is technical content understandable without ambiguity?
-3. **Precision**: Are technical terms used correctly and consistently?
-4. **Structure**: Is technical information organized logically?
-5. **Completeness**: Are key technical decisions and architectures explained?
-
-Provide your evaluation in JSON format:
-{{
-  "score": <float 1-10>,
-  "strengths": [<list of specific strengths>],
-  "issues": [
-    {{
-      "description": "<specific problem>",
-      "action_type": "<add_content|restructure|emphasize|remove|quantify|add_portfolio>",
-      "location": "<EXACT markdown header like '## 職務要約' or '### 得意分野' or null for general issues>",
-      "severity": "<critical|high|medium|low>"
-    }}
-  ],
-  "suggestions": [<list of specific actionable suggestions>]
-}}
-
-CRITICAL: For "location", use EXACT markdown headers from the resume (e.g., "## 職務要約", "### 得意分野", "## 職務経歴詳細").
-Do NOT use content descriptions like "エンタープライズ向けAIプラットフォーム開発" - use the header that contains that content.
-
-IMPORTANT:
-- Score 8+ = excellent technical communication
-- Score 6-7 = adequate but needs depth
-- Score <6 = insufficient technical detail
-- Focus on HOW and WHY, not just WHAT
-- Suggest adding technical context and decision rationale
-- NEVER suggest fabricating technical details"""
+        return get_system_prompt("technical_writer", target_role)
 
     def parse_feedback(self, feedback_text: str) -> Feedback:
         """Parse technical writer feedback from Claude response."""

@@ -57,10 +57,36 @@ Evaluate this resume for a {target_role} position from a technical writing persp
 4. **Structure**: Is the information organized logically?
 5. **Jargon Balance**: Is technical language appropriate for the audience?
 
+**ENHANCED DETECTION CAPABILITIES** (Powered by o3-mini model):
+
+6. **Anachronistic Technologies**: Detect outdated/obsolete technologies that weaken the resume
+   - Example: "jQuery for new projects in 2024" (outdated for modern development)
+   - Example: "PHP 5.x" (long past EOL, security risk)
+   - Example: "AngularJS" (deprecated, should be "Angular" if current)
+   - Flag as HIGH severity if technology is 5+ years outdated for current work
+
+7. **Incompatible Technology Stacks**: Detect impossible/improbable technology combinations
+   - Example: "Used Django with Node.js backend" (conflicting frameworks)
+   - Example: "MySQL with MongoDB as primary database" (conflicting paradigms)
+   - Example: "iOS development with Kotlin" (Kotlin is for Android/JVM)
+   - Flag as CRITICAL if combination is technically impossible
+
+8. **Duplicate Project Descriptions**: Detect redundant or copy-pasted project descriptions
+   - Look for identical/near-identical sentences across different projects
+   - Look for generic descriptions repeated without differentiation
+   - Example: Multiple projects saying "Developed REST API using Python"
+   - Flag as HIGH severity if 50%+ content similarity across projects
+
+9. **Technical Depth Assessment**: Evaluate whether technical details are sufficient
+   - Are architectural decisions explained?
+   - Are performance metrics/improvements quantified?
+   - Are technology choices justified?
+   - Flag as MEDIUM if missing "why" and "how" context
+
 Scoring Guide:
-- Score 8+ = excellent technical communication
-- Score 6-7 = good but could be clearer
-- Score <6 = significant clarity issues
+- Score 8+ = excellent technical communication with no issues
+- Score 6-7 = good but could be clearer or has minor issues
+- Score <6 = significant clarity issues or technical problems detected
 """ + BASE_INSTRUCTIONS
 
 
