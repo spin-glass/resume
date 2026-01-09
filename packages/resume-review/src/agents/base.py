@@ -9,23 +9,28 @@ from anthropic import Anthropic, AsyncAnthropic
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ..models.feedback import Feedback, Resume
+from ..services.llm_client import BaseLLMClient
 
 
 class BaseAgent(ABC):
     """Base class for all resume review agents."""
 
-    def __init__(self, api_key: str, model: str = "claude-opus-4-5-20251101"):
+    def __init__(self, llm_client: BaseLLMClient, agent_name: Optional[str] = None):
         """
-        Initialize agent with API credentials.
+        Initialize agent with LLM client.
 
         Args:
-            api_key: Anthropic API key
-            model: Claude model to use (default: Claude Opus 4.5)
+            llm_client: Pre-configured LLM client (injected, provider-agnostic)
+            agent_name: Optional agent name override (defaults to class name)
         """
-        self.client = Anthropic(api_key=api_key)
-        self.async_client = AsyncAnthropic(api_key=api_key)
-        self.model = model
-        self.agent_name = self.__class__.__name__.replace("Agent", "").lower()
+        self.llm_client = llm_client
+        self.agent_name = agent_name or self.__class__.__name__.replace("Agent", "").lower()
+
+        # Legacy compatibility: keep async_client for backward compatibility
+        # This will be removed once all agents are migrated
+        if hasattr(llm_client, 'client') and isinstance(llm_client.client, AsyncAnthropic):
+            self.async_client = llm_client.client
+            self.model = llm_client.model
 
     @abstractmethod
     def get_system_prompt(self, target_role: str) -> str:
@@ -99,23 +104,18 @@ class BaseAgent(ABC):
             Feedback entity with score, strengths, issues, suggestions
         """
         system_prompt = self.get_system_prompt(target_role)
+        user_prompt = f"Please evaluate this resume for a {target_role} position:\n\n{resume.content}"
 
-        # Call Claude API asynchronously
-        response = await self.async_client.messages.create(
-            model=self.model,
+        # Call LLM via provider-agnostic client
+        response = await self.llm_client.generate_async(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
             max_tokens=4000,
-            system=system_prompt,
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"Please evaluate this resume for a {target_role} position:\n\n{resume.content}",
-                }
-            ],
+            temperature=0.7
         )
 
         # Parse response and create Feedback
-        feedback_text = response.content[0].text
-        return self.parse_feedback(feedback_text)
+        return self.parse_feedback(response.content)
 
     @abstractmethod
     def parse_feedback(self, feedback_text: str) -> Feedback:
