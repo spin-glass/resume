@@ -6,6 +6,8 @@ from .conditions import should_continue_review, should_do_design_review
 from .nodes import (
     aggregator_node,
     design_supervisor_node,
+    job_parser_node,
+    personalizer_node,
     portfolio_analyzer_node,
     revisor_node,
     supervisor_node,
@@ -24,21 +26,29 @@ def build_review_workflow() -> StateGraph:
     workflow = StateGraph(ReviewState)
 
     # Add nodes
+    workflow.add_node("job_parser", job_parser_node)
     workflow.add_node("supervisor", supervisor_node)
     workflow.add_node("aggregator", aggregator_node)
+    workflow.add_node("personalizer", personalizer_node)
     workflow.add_node("revisor", revisor_node)
     workflow.add_node("portfolio", portfolio_analyzer_node)
     workflow.add_node("design", design_supervisor_node)
 
-    # Set entry point
-    workflow.set_entry_point("supervisor")
+    # Set entry point (job_parser will pass through if no job posting)
+    workflow.set_entry_point("job_parser")
+
+    # Job parser always goes to supervisor (it's a no-op if no job posting)
+    workflow.add_edge("job_parser", "supervisor")
 
     # Add edges
     workflow.add_edge("supervisor", "aggregator")
 
-    # Conditional edge after aggregator
+    # After aggregator, run personalizer (no-op if no job posting)
+    workflow.add_edge("aggregator", "personalizer")
+
+    # Conditional edge after personalizer
     workflow.add_conditional_edges(
-        "aggregator",
+        "personalizer",
         should_continue_review,
         {
             "revisor": "revisor",
