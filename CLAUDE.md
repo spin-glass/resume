@@ -27,6 +27,8 @@ resume/                     # Monorepo root
 ```
 
 ## Active Technologies
+- Python 3.13 (existing, LangGraph compatible) (003-multi-model-hybrid)
+- In-memory state (LangGraph StateGraph), filesystem for resume files (003-multi-model-hybrid)
 
 - **Web**: Next.js 14, Nextra 3.0 (alpha), React 18, Tailwind CSS
 - **Python**: Python 3.13+ (LangGraph compatibility), LangGraph (multi-agent orchestration), Anthropic SDK (Claude API), Playwright (screenshot capture), pytest (testing)
@@ -68,6 +70,7 @@ pnpm sync                  # Sync QMD to MDX for web
 - **Commits**: Include `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>`
 
 ## Recent Changes
+- 003-multi-model-hybrid: Added Python 3.13 (existing, LangGraph compatible)
 
 - 002-monorepo-refactor: Reorganized repository into pnpm monorepo with packages/web/, packages/resume-review/, and resume/ directories
 - 001-resume-review-agents: Added multi-agent resume review system with LangGraph workflow
