@@ -3,6 +3,7 @@
 from typing import Annotated, Optional, TypedDict
 
 from ..models.feedback import Feedback, Resume
+from ..models.job_posting import JobPosting, PersonalizationResult
 from ..models.portfolio import PortfolioItem
 
 
@@ -86,3 +87,10 @@ class ReviewState(TypedDict, total=False):
     max_validation_retries: int
     strict_validation: bool
     current_retry_attempts: list[dict]  # Serialized RetryAttempt records
+
+    # Job personalization (optional fields for job-specific review)
+    job_posting_file: Optional[str]  # Path to job posting file
+    job_url: Optional[str]  # Job posting URL
+    job_posting: Optional[JobPosting]
+    personalization_result: Optional[PersonalizationResult]
+    job_source_type: Optional[str]  # 'file' or 'url'

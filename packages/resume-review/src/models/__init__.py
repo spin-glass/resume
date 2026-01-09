@@ -34,4 +34,6 @@ class SessionStatus(str, Enum):
     FAILED = "failed"
 
 
-__all__ = ["ActionType", "Severity", "SessionStatus"]
+from .job_posting import JobPosting, PersonalizationResult, SkillMatch
+
+__all__ = ["ActionType", "Severity", "SessionStatus", "JobPosting", "PersonalizationResult", "SkillMatch"]

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from . import SessionStatus
 from .feedback import Feedback, Resume
+from .job_posting import JobPosting, PersonalizationResult
 from .portfolio import PortfolioItem
 
 
@@ -28,6 +29,8 @@ class ReviewSession(BaseModel):
     screenshot_url: Optional[str] = None
     max_validation_retries: int = 3
     strict_validation: bool = False
+    job_posting: Optional[JobPosting] = None
+    personalization_result: Optional[PersonalizationResult] = None
 
     @field_validator("score_threshold")
     @classmethod
