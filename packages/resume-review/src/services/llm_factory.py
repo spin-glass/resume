@@ -17,6 +17,19 @@ from src.services.llm_client import (
 )
 
 
+def create_gemini_client(api_key: str, model: str) -> GeminiClient:
+    """Convenience function to create a GeminiClient directly.
+
+    Args:
+        api_key: Google Gemini API key
+        model: Model identifier (e.g., "gemini-2.0-flash-exp")
+
+    Returns:
+        Configured GeminiClient instance
+    """
+    return GeminiClient(api_key=api_key, model=model)
+
+
 class LLMClientFactory:
     """Factory for creating appropriate LLM clients based on agent role.
 
