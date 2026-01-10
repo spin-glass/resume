@@ -41,7 +41,7 @@ class TestReviewWorkflowWrapper:
 
     def test_wrapper_initializes_compiled_workflow(self):
         """Verify wrapper creates compiled workflow."""
-        with patch("src.workflow.workflow.build_review_workflow") as mock_build:
+        with patch("src.workflow.runner.build_review_workflow") as mock_build:
             mock_build.return_value = MagicMock()
             wrapper = ReviewWorkflow(api_key="test-key")
             assert wrapper.compiled_workflow is not None
@@ -49,13 +49,13 @@ class TestReviewWorkflowWrapper:
 
     def test_wrapper_stores_api_key(self):
         """Verify API key is stored."""
-        with patch("src.workflow.workflow.build_review_workflow"):
+        with patch("src.workflow.runner.build_review_workflow"):
             wrapper = ReviewWorkflow(api_key="test-key-123")
             assert wrapper.api_key == "test-key-123"
 
     def test_wrapper_stores_options(self):
         """Verify all options are stored."""
-        with patch("src.workflow.workflow.build_review_workflow"):
+        with patch("src.workflow.runner.build_review_workflow"):
             wrapper = ReviewWorkflow(
                 api_key="test-key",
                 save_iterations=True,
@@ -218,10 +218,14 @@ class TestAsyncNodeFunctions:
             "current_iteration": 0,
         }
 
-        # Mock the agents to avoid actual API calls
-        with patch("src.workflow.workflow.RecruiterAgent") as mock_recruiter, \
-             patch("src.workflow.workflow.TechnicalWriterAgent") as mock_tech, \
-             patch("src.workflow.workflow.CopywriterAgent") as mock_copy:
+        # Mock the LLM factory and agents to avoid actual API calls
+        with patch("src.workflow.nodes.supervisor.LLMClientFactory") as mock_factory, \
+             patch("src.workflow.nodes.supervisor.RecruiterAgent") as mock_recruiter, \
+             patch("src.workflow.nodes.supervisor.TechnicalWriterAgent") as mock_tech, \
+             patch("src.workflow.nodes.supervisor.CopywriterAgent") as mock_copy:
+
+            # Mock factory to return a mock client
+            mock_factory.create_client.return_value = MagicMock()
 
             # Setup mock feedback
             mock_feedback = Feedback(
