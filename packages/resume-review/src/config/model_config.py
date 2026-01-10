@@ -16,6 +16,7 @@ class AgentName(Enum):
     UX_DESIGNER = "ux_designer"
     VISUAL_DESIGNER = "visual_designer"
     REVISOR = "revisor"
+    CSS_GENERATOR = "css_generator"  # Design auto-fix feature
 
 
 # Agent-to-model mapping for optimal cost and quality
@@ -44,6 +45,10 @@ AGENT_MODEL_MAP = {
     AgentName.REVISOR: {
         "provider": "gemini",
         "model_id": "gemini-3-flash-preview",
+    },
+    AgentName.CSS_GENERATOR: {
+        "provider": "anthropic",
+        "model_id": "claude-sonnet-4-5-20250929",
     },
 }
 

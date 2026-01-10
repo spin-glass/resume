@@ -2,8 +2,13 @@
 
 from typing import Annotated, Optional, TypedDict
 
+from ..models.design import (
+    CSSModification,
+    DesignPreview,
+    SectionReorder,
+    ThemeRecommendation,
+)
 from ..models.feedback import Feedback, Resume
-from ..models.job_posting import JobPosting, PersonalizationResult
 from ..models.portfolio import PortfolioItem
 
 
@@ -60,11 +65,6 @@ class ReviewState(TypedDict, total=False):
     feedback_history: Annotated[list[list[Feedback]], add_feedback]
     current_feedback: list[Feedback]
 
-    # Per-agent feedback (NEW: for separate agent nodes)
-    recruiter_feedback: Optional[Feedback]
-    tech_writer_feedback: Optional[Feedback]
-    copywriter_feedback: Optional[Feedback]
-
     # Score tracking
     integrated_score: float
     threshold_met: bool
@@ -93,9 +93,21 @@ class ReviewState(TypedDict, total=False):
     strict_validation: bool
     current_retry_attempts: list[dict]  # Serialized RetryAttempt records
 
-    # Job personalization (optional fields for job-specific review)
-    job_posting_file: Optional[str]  # Path to job posting file
-    job_url: Optional[str]  # Job posting URL
-    job_posting: Optional[JobPosting]
-    personalization_result: Optional[PersonalizationResult]
-    job_source_type: Optional[str]  # 'file' or 'url'
+    # Design modification flags (from CLI)
+    auto_design_enabled: bool  # --auto-design flag
+    design_preview_enabled: bool  # --design-preview flag
+    css_output_path: Optional[str]  # --css-output override
+
+    # Design modification outputs
+    css_modification: Optional[CSSModification]
+    section_reorder: Optional[SectionReorder]
+    theme_recommendation: Optional[ThemeRecommendation]
+    design_preview_paths: Optional[DesignPreview]
+
+    # Design modification status
+    design_changes_applied: bool  # Were modifications actually applied?
+    design_changes_pending: bool  # Are modifications ready but not applied (preview mode)?
+    design_changes_list: list[str]  # Human-readable list of applied changes
+
+    # Backup tracking
+    design_backup_paths: dict[str, str]  # {original_path: backup_path} for rollback

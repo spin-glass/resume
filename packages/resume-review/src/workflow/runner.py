@@ -26,9 +26,7 @@ class ReviewWorkflow:
                  gemini_api_key: Optional[str] = None,
                  openai_api_key: Optional[str] = None,
                  anthropic_api_key: Optional[str] = None,
-                 override_model: Optional[str] = None,
-                 job_posting_file: Optional[Path] = None,
-                 job_url: Optional[str] = None):
+                 override_model: Optional[str] = None):
         """Initialize workflow wrapper.
 
         Args:
@@ -40,8 +38,6 @@ class ReviewWorkflow:
             openai_api_key: OpenAI API key (optional)
             anthropic_api_key: Anthropic API key (optional, overrides api_key)
             override_model: Force all agents to use this model (optional, for testing)
-            job_posting_file: Path to job posting file for personalized review (optional)
-            job_url: Job posting URL for personalized review (optional)
         """
         self.api_key = api_key  # Legacy
         self.gemini_api_key = gemini_api_key
@@ -51,8 +47,6 @@ class ReviewWorkflow:
         self.save_iterations = save_iterations
         self.output_dir = output_dir
         self.on_iteration_complete = on_iteration_complete
-        self.job_posting_file = job_posting_file
-        self.job_url = job_url
         self.session_dir: Optional[Path] = None
         self.session_timestamp: Optional[str] = None
         self.compiled_workflow = build_review_workflow()
@@ -86,7 +80,7 @@ class ReviewWorkflow:
 
     def _create_initial_state(self, session: ReviewSession) -> ReviewState:
         """Create initial state dictionary for workflow."""
-        state = {
+        return {
             "resume": session.resume, "resume_content": session.resume.content,
             "target_role": session.target_role, "score_threshold": session.score_threshold,
             "max_iterations": session.max_iterations, "api_key": self.api_key,
@@ -109,25 +103,17 @@ class ReviewWorkflow:
             "max_validation_retries": session.max_validation_retries,
             "strict_validation": session.strict_validation,
             "current_retry_attempts": [],
+            # Design auto-fix flags (013-design-auto-fix)
+            "auto_design_enabled": session.auto_design_enabled,
+            "design_preview_enabled": session.design_preview_enabled,
+            "css_output_path": session.css_output_path,
         }
-
-        # Add job posting file/URL if provided (for personalized review)
-        if self.job_posting_file:
-            state["job_posting_file"] = str(self.job_posting_file)
-        if self.job_url:
-            state["job_url"] = self.job_url
-
-        return state
 
     async def _run_workflow_async(self, initial_state: ReviewState) -> ReviewState:
         """Execute the workflow asynchronously."""
         accumulated_state = dict(initial_state)
         async for state in self.compiled_workflow.astream(initial_state):
-            if state is None:
-                continue
             for node_name, node_state in state.items():
-                if node_state is None:
-                    continue
                 self._update_accumulated_state(accumulated_state, node_state)
                 await self._handle_node_persistence(node_name, node_state, accumulated_state)
         return accumulated_state
@@ -391,11 +377,49 @@ class ReviewWorkflow:
         session.final_score = final_score
         session.current_iteration = state.get("current_iteration", 0)
 
-        # Update job personalization fields
-        if state.get("job_posting"):
-            session.job_posting = state["job_posting"]
-        if state.get("personalization_result"):
-            session.personalization_result = state["personalization_result"]
+        # Update design auto-fix output (013-design-auto-fix)
+        session.design_changes_applied = state.get("design_changes_applied", False)
+        session.design_changes_pending = state.get("design_changes_pending", False)
+        session.design_changes_list = state.get("design_changes_list", [])
+        session.design_backup_paths = state.get("design_backup_paths", {})
+
+        # Serialize CSSModification if present
+        css_mod = state.get("css_modification")
+        if css_mod and hasattr(css_mod, "model_dump"):
+            # Convert Path objects to strings for JSON serialization
+            css_dict = css_mod.model_dump()
+            if "target_file" in css_dict and css_dict["target_file"]:
+                css_dict["target_file"] = str(css_dict["target_file"])
+            if "backup_path" in css_dict and css_dict["backup_path"]:
+                css_dict["backup_path"] = str(css_dict["backup_path"])
+            session.css_modification = css_dict
+
+        # Serialize DesignPreview if present (T046)
+        design_preview = state.get("design_preview")
+        if design_preview and hasattr(design_preview, "model_dump"):
+            preview_dict = design_preview.model_dump()
+            # Convert Path objects to strings
+            for key in ["before_screenshot", "after_screenshot", "diff_screenshot", "composite_screenshot"]:
+                if key in preview_dict and preview_dict[key]:
+                    preview_dict[key] = str(preview_dict[key])
+            session.design_preview = preview_dict
+
+        # Copy preview paths if present
+        design_preview_paths = state.get("design_preview_paths")
+        if design_preview_paths:
+            session.design_preview_paths = design_preview_paths
+
+        # Serialize SectionReorder if present
+        section_reorder = state.get("section_reorder")
+        if section_reorder and hasattr(section_reorder, "model_dump"):
+            session.section_reorder = section_reorder.model_dump()
+        elif isinstance(section_reorder, dict):
+            session.section_reorder = section_reorder
+
+        # Copy theme recommendation if present (already a dict from _recommend_theme)
+        theme_recommendation = state.get("theme_recommendation")
+        if theme_recommendation:
+            session.theme_recommendation = theme_recommendation
 
         logger.debug(f"Session updated: final_score={session.final_score}, iteration={session.current_iteration}")
         return session

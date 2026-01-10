@@ -13,16 +13,14 @@
     "quarto:preview:html": "cd resume && quarto preview resume-ja.qmd --to html",
     "sync": "python3 scripts/sync_qmd_to_mdx.py",
     "resume:build": "pnpm quarto:pdf && pnpm quarto:html && pnpm sync",
-    "review": "cd packages/resume-review && .venv/bin/python -m src.cli review --input ../../resume/resume-ja.qmd --save-iterations --verbose",
-    "review:dry": "cd packages/resume-review && .venv/bin/python -m src.cli review --input ../../resume/resume-ja.qmd --dry-run --verbose",
-    "review:full": "cd packages/resume-review && .venv/bin/python -m src.cli review --input ../../resume/resume-ja.qmd --screenshot-url http://localhost:3000/ja --save-iterations --verbose",
+    "review": "cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --save-iterations --verbose",
+    "review:dry": "cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --dry-run --verbose",
+    "review:full": "cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --screenshot-url http://localhost:3000/ja --save-iterations --verbose",
+    "review:design": "bash scripts/run-with-server.sh 'cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --screenshot-url http://localhost:3000/ja --save-iterations --verbose --auto-design'",
+    "review:design-preview": "bash scripts/run-with-server.sh 'cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --screenshot-url http://localhost:3000/ja --save-iterations --verbose --design-preview'",
     "review:build": "pnpm review && pnpm resume:build",
-    "test:python": "cd packages/resume-review && .venv/bin/pytest",
-    "lint:python": "cd packages/resume-review && .venv/bin/ruff check .",
-    "graph:view": "cd packages/resume-review && python3 scripts/visualize_graph.py --format ascii",
-    "graph:mermaid": "cd packages/resume-review && python3 scripts/visualize_graph.py --format mermaid",
-    "graph:png": "cd packages/resume-review && python3 scripts/visualize_graph.py --format png --output workflow.png",
-    "graph:langsmith": "cd packages/resume-review && python3 scripts/visualize_graph.py --format langsmith"
+    "test:python": "cd packages/resume-review && python3 -m pytest",
+    "lint:python": "cd packages/resume-review && python3 -m ruff check ."
   },
   "repository": {
     "type": "git",
@@ -37,9 +35,8 @@
   "engines": {
     "node": "22.x"
   },
-  "pnpm": {
-    "overrides": {
-      "cross-spawn": "^7.0.3"
-    }
+  "devDependencies": {
+    "pixelmatch": "^5.3.0",
+    "pngjs": "^7.0.0"
   }
 }

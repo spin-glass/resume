@@ -149,7 +149,7 @@ async def design_supervisor_node(state: ReviewState) -> dict[str, Any]:
     try:
         # Capture screenshot
         screenshot_service = ScreenshotService()
-        screenshot_path = screenshot_service.capture(screenshot_url)
+        screenshot_path = await screenshot_service.capture(screenshot_url)
 
         if not screenshot_path:
             logger.warning("Design Supervisor: Failed to capture screenshot")
