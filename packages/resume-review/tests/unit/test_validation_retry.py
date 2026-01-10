@@ -55,7 +55,7 @@ async def test_max_validation_retries_zero_skips_retry_loop(mock_session):
     }
 
     # Mock validator to always fail
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         mock_validator.validate.return_value = (False, "Validation error")
         mock_validator_class.return_value = mock_validator
@@ -83,7 +83,7 @@ async def test_custom_max_validation_retries_respected(mock_session):
     }
 
     # Mock validator to always fail
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         mock_validator.validate.return_value = (False, "Validation error")
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[])
@@ -117,7 +117,7 @@ async def test_strict_validation_true_raises_on_failure(mock_session):
     }
 
     # Mock validator to always fail
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         mock_validator.validate.return_value = (False, "Validation error")
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[])
@@ -147,7 +147,7 @@ async def test_strict_validation_false_continues_on_failure(mock_session):
     }
 
     # Mock validator to always fail
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         mock_validator.validate.return_value = (False, "Validation error")
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[])
@@ -177,7 +177,7 @@ async def test_validation_success_stops_retry_loop():
     }
 
     # Mock validator to succeed on first attempt
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         mock_validator.validate.return_value = (True, None)
         mock_validator_class.return_value = mock_validator

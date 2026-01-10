@@ -29,6 +29,7 @@ async def supervisor_node(state: ReviewState) -> dict[str, Any]:
 
     resume = state["resume"]
     target_role = state["target_role"]
+    job_posting = state.get("job_posting")
 
     # Get API keys (new multi-provider support)
     gemini_api_key = state.get("gemini_api_key")
@@ -71,9 +72,9 @@ async def supervisor_node(state: ReviewState) -> dict[str, Any]:
     # Run all agents in parallel using asyncio.gather
     try:
         results = await asyncio.gather(
-            recruiter.evaluate_async(resume, target_role),
-            tech_writer.evaluate_async(resume, target_role),
-            copywriter.evaluate_async(resume, target_role),
+            recruiter.evaluate_async(resume, target_role, job_posting=job_posting),
+            tech_writer.evaluate_async(resume, target_role, job_posting=job_posting),
+            copywriter.evaluate_async(resume, target_role, job_posting=job_posting),
             return_exceptions=True,
         )
 

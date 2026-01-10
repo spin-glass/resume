@@ -32,7 +32,7 @@ async def test_quarto_timeout_handled_as_validation_failure():
     }
 
     # Mock validator to simulate timeout
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         # First call returns timeout error
         mock_validator.validate.return_value = (False, "Validation timed out after 30 seconds")
@@ -62,16 +62,21 @@ async def test_revisor_introduces_new_validation_errors():
     }
 
     # Mock validator to return different errors
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
 
-        # First validation: error A
-        # Second validation (after first retry): error B (new error!)
-        # Third validation (after second retry): success
+        # The retry loop structure:
+        # - Line 231: initial validation in while loop
+        # - Line 302: post-fix validation (for logging)
+        # - retry_count++ then loop continues
+        # So for max_retries=2 with success on 3rd attempt:
+        # 231(0):fail -> 302:any -> 231(1):fail -> 302:any -> 231(2):success
         validation_results = [
-            (False, "Error A: Invalid heading"),
-            (False, "Error B: YAML syntax error"),  # New error introduced
-            (True, None),  # Finally succeeds
+            (False, "Error A: Invalid heading"),  # 231: initial (retry_count=0)
+            (False, "Error B: YAML syntax error"),  # 302: post-fix log (new error introduced!)
+            (False, "Error B: YAML syntax error"),  # 231: loop iteration (retry_count=1)
+            (True, None),  # 302: post-fix log (success)
+            (True, None),  # 231: loop iteration (retry_count=2) - success!
         ]
         mock_validator.validate.side_effect = validation_results
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[MagicMock()])
@@ -104,13 +109,16 @@ async def test_retry_artifacts_saved_correctly(temp_session_dir):
         "current_iteration": 1,
     }
 
-    # Mock validator to fail twice then succeed
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    # Mock validator: for 2 retries then success, we need 5 validate calls
+    # 231(0):fail -> 302 -> 231(1):fail -> 302 -> 231(2):success
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         validation_results = [
-            (False, "Error 1"),
-            (False, "Error 2"),
-            (True, None),
+            (False, "Error 1"),  # 231: retry_count=0
+            (False, "Error 2"),  # 302: post-fix log
+            (False, "Error 2"),  # 231: retry_count=1
+            (True, None),        # 302: post-fix log
+            (True, None),        # 231: retry_count=2 - success
         ]
         mock_validator.validate.side_effect = validation_results
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[MagicMock()])
@@ -146,13 +154,17 @@ async def test_retry_count_resets_across_iterations():
         "current_iteration": 1,
     }
 
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
-        # Fail validation to trigger retries
+        # For exhausting 2 retries (all failures):
+        # 231(0):fail -> 302 -> 231(1):fail -> 302 -> 231(2):fail -> exit
+        # = 5 validate calls
         validation_results_iter1 = [
-            (False, "Error"),
-            (False, "Error"),
-            (False, "Error"),
+            (False, "Error"),  # 231: retry_count=0
+            (False, "Error"),  # 302: post-fix log
+            (False, "Error"),  # 231: retry_count=1
+            (False, "Error"),  # 302: post-fix log
+            (False, "Error"),  # 231: retry_count=2 -> exhausted
         ]
         mock_validator.validate.side_effect = validation_results_iter1
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[MagicMock()])
@@ -174,7 +186,7 @@ async def test_retry_count_resets_across_iterations():
         "current_iteration": 2,
     }
 
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         mock_validator.validate.return_value = (True, None)  # Success immediately
         mock_validator_class.return_value = mock_validator
@@ -224,11 +236,14 @@ async def test_state_current_retry_attempts_serialization():
         "current_iteration": 1,
     }
 
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
+        # For max_retries=1 with success on 2nd loop iteration:
+        # 231(0):fail -> 302 -> 231(1):success = 3 validate calls
         validation_results = [
-            (False, "Error 1"),
-            (True, None),
+            (False, "Error 1"),  # 231: retry_count=0
+            (True, None),       # 302: post-fix log
+            (True, None),       # 231: retry_count=1 - success
         ]
         mock_validator.validate.side_effect = validation_results
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[MagicMock()])
@@ -263,7 +278,7 @@ async def test_max_retries_exhausted_with_strict_false_saves_last_attempt():
         "current_iteration": 1,
     }
 
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         # Always fail validation
         mock_validator.validate.return_value = (False, "Persistent error")

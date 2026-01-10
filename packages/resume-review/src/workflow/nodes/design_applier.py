@@ -96,10 +96,26 @@ async def _generate_preview(
         logger.warning("Preview mode enabled but no screenshot_url provided")
         return None
 
+    # Determine cache directory
+    cache_dir = None
+    session_dir = state.get("session_dir")
+    current_iteration = state.get("current_iteration", 0)
+    
+    if session_dir:
+        # Save to iter folder
+        cache_dir = Path(session_dir) / f"iter{current_iteration}"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Saving design preview to {cache_dir}")
+    
     try:
+        # Initialize screenshot service with custom cache dir
+        # Note: We create a new instance here to use the correct directory
+        # The passed screenshot_service might have default cache
+        service = ScreenshotService(cache_dir=cache_dir)
+        
         # Step 1: Capture "before" screenshot
         logger.info(f"Capturing 'before' screenshot from {screenshot_url}")
-        before_path = await screenshot_service.capture(
+        before_path = await service.capture(
             url=screenshot_url,
             output_filename="preview_before.png",
         )
@@ -119,7 +135,7 @@ async def _generate_preview(
         # In practice, this requires server-side support or browser extension
         # For now, we simulate by capturing the same URL (TODO: inject CSS)
         logger.info("Capturing 'after' screenshot (simulated - CSS not injected)")
-        after_path = await screenshot_service.capture(
+        after_path = await service.capture(
             url=screenshot_url,
             output_filename="preview_after.png",
         )
@@ -135,8 +151,8 @@ async def _generate_preview(
             return None
 
         # Step 4: Generate diff image
-        diff_path = screenshot_service.cache_dir / "preview_diff.png"
-        diff_result_path, diff_stats = screenshot_service.generate_diff(
+        diff_path = service.cache_dir / "preview_diff.png"
+        diff_result_path, diff_stats = service.generate_diff(
             before_path, after_path, diff_path
         )
 
@@ -147,11 +163,11 @@ async def _generate_preview(
         # Step 5: Create composite image
         composite_path = None
         if diff_result_path and diff_result_path.exists():
-            composite_path = screenshot_service.create_composite(
+            composite_path = service.create_composite(
                 before_path,
                 diff_result_path,
                 after_path,
-                screenshot_service.cache_dir / "preview_composite.png",
+                service.cache_dir / "preview_composite.png",
             )
 
         # Step 6: Build and return DesignPreview

@@ -9,6 +9,7 @@ from ..models.design import (
     ThemeRecommendation,
 )
 from ..models.feedback import Feedback, Resume
+from ..models.job_posting import JobPosting, PersonalizationResult
 from ..models.portfolio import PortfolioItem
 
 
@@ -56,6 +57,7 @@ class ReviewState(TypedDict, total=False):
     screenshot_url: Optional[str]
     save_iterations: bool
     output_dir: Optional[str]
+    session_dir: Optional[str]  # New: Specific session directory (timestamped)
     session_id: str
 
     # Iteration tracking
@@ -111,3 +113,10 @@ class ReviewState(TypedDict, total=False):
 
     # Backup tracking
     design_backup_paths: dict[str, str]  # {original_path: backup_path} for rollback
+
+    # Job personalization (optional fields for job-specific review)
+    job_posting_file: Optional[str]  # Path to job posting file
+    job_url: Optional[str]  # Job posting URL
+    job_posting: Optional[JobPosting]
+    personalization_result: Optional[PersonalizationResult]
+    job_source_type: Optional[str]  # 'file' or 'url'

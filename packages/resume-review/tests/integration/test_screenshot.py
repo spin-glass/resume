@@ -7,7 +7,8 @@ from src.services.screenshot import ScreenshotService
 
 
 @pytest.mark.integration
-def test_screenshot_capture():
+@pytest.mark.asyncio
+async def test_screenshot_capture():
     """
     Test T042: Verify Playwright captures image from URL.
     """
@@ -17,7 +18,7 @@ def test_screenshot_capture():
     url = "https://example.com"
 
     # Capture screenshot
-    screenshot_path = service.capture(url)
+    screenshot_path = await service.capture(url)
 
     # Verify screenshot was created
     assert screenshot_path is not None
@@ -32,7 +33,8 @@ def test_screenshot_capture():
 
 
 @pytest.mark.integration
-def test_screenshot_caching():
+@pytest.mark.asyncio
+async def test_screenshot_caching():
     """
     Test that screenshots are cached.
     """
@@ -40,12 +42,12 @@ def test_screenshot_caching():
     url = "https://example.com"
 
     # First capture
-    path1 = service.capture(url)
+    path1 = await service.capture(url)
     assert path1 is not None
     assert path1.exists()
 
     # Second capture should use cache (same path)
-    path2 = service.capture(url)
+    path2 = await service.capture(url)
     assert path2 == path1
 
     # Cleanup
@@ -54,21 +56,23 @@ def test_screenshot_caching():
 
 
 @pytest.mark.integration
-def test_screenshot_invalid_url():
+@pytest.mark.asyncio
+async def test_screenshot_invalid_url():
     """
     Test handling of invalid URL.
     """
     service = ScreenshotService()
 
     # Try to capture from invalid URL
-    screenshot_path = service.capture("http://this-url-does-not-exist-12345.invalid")
+    screenshot_path = await service.capture("http://this-url-does-not-exist-12345.invalid")
 
     # Should return None for failed captures
     assert screenshot_path is None
 
 
 @pytest.mark.integration
-def test_clear_cache():
+@pytest.mark.asyncio
+async def test_clear_cache():
     """
     Test clearing screenshot cache.
     """
@@ -76,7 +80,7 @@ def test_clear_cache():
     url = "https://example.com"
 
     # Capture a screenshot
-    path = service.capture(url)
+    path = await service.capture(url)
     assert path is not None
     assert path.exists()
 

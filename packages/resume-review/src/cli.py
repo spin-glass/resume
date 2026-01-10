@@ -247,6 +247,17 @@ def cli():
     help="URL for visual design review (optional, FR-013)",
 )
 @click.option(
+    "--job-posting",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to job posting file (Markdown/Text) for personalized review",
+)
+@click.option(
+    "--job-url",
+    default=None,
+    help="URL of job posting page for personalized review",
+)
+@click.option(
     "--save-iterations",
     is_flag=True,
     default=False,
@@ -322,6 +333,8 @@ def review(
     threshold: float,
     max_iterations: int,
     screenshot_url: Optional[str],
+    job_posting: Optional[Path],
+    job_url: Optional[str],
     save_iterations: bool,
     iterations_dir: Optional[Path],
     api_key: Optional[str],
@@ -417,6 +430,12 @@ def review(
             err=True,
         )
 
+    # Validate job posting options (mutual exclusivity)
+    if job_posting and job_url:
+        click.echo("Error: Cannot specify both --job-posting and --job-url. Choose one.", err=True)
+        sys.exit(2)
+
+
     # Get API keys from config if not provided
     if not anthropic_api_key and not api_key:
         try:
@@ -446,6 +465,10 @@ def review(
     click.echo(f"Max Iterations: {max_iterations}")
     if screenshot_url:
         click.echo(f"Screenshot URL: {screenshot_url}")
+    if job_posting:
+        click.echo(f"Job Posting File: {job_posting}")
+    if job_url:
+        click.echo(f"Job URL: {job_url}")
 
     # Verbose: Display model configuration
     if verbose:
@@ -513,6 +536,8 @@ def review(
             openai_api_key=openai_api_key,
             anthropic_api_key=anthropic_api_key,
             override_model=model,
+            job_posting_file=job_posting,
+            job_url=job_url,
         )
         session = workflow.run_review(session)
 
@@ -554,6 +579,59 @@ def review(
             _display_design_changes(session, verbose=verbose)
         elif session.design_changes_pending:
             _display_design_preview(session, verbose=verbose)
+
+        # Show job personalization results
+        if hasattr(session, 'personalization_result') and session.personalization_result:
+            result = session.personalization_result
+            source_type = "URL" if job_url else "File"
+            click.echo("\n" + "=" * 60)
+            click.echo(f"JOB MATCH ANALYSIS (Source: {source_type})")
+            click.echo("=" * 60)
+
+            # Overall match score
+            click.echo(f"\n📊 Overall Match Score: {result.match_score:.1f}% ({result.match_level})")
+            click.echo(f"   Required Skills: {result.required_match_score:.1f}%")
+            click.echo(f"   Preferred Skills: {result.preferred_match_score:.1f}%")
+
+            # Required skills
+            matched_req = len(result.matched_required_skills)
+            missing_req = len(result.missing_required_skills)
+            total_req = matched_req + missing_req
+            click.echo(f"\n✅ Required Skills Matched: {matched_req}/{total_req}")
+            if verbose and result.matched_required_skills:
+                for skill_match in result.matched_required_skills[:5]:
+                    confidence_pct = int(skill_match.confidence * 100)
+                    click.echo(f"   • {skill_match.skill} ({confidence_pct}%)")
+            if result.missing_required_skills:
+                click.echo(f"❌ Missing Required Skills: {missing_req}")
+                if verbose:
+                    for skill in result.missing_required_skills[:5]:
+                        click.echo(f"   • {skill}")
+
+            # Preferred skills
+            matched_pref = len(result.matched_preferred_skills)
+            missing_pref = len(result.missing_preferred_skills)
+            total_pref = matched_pref + missing_pref
+            if total_pref > 0:
+                click.echo(f"\n⭐ Preferred Skills Matched: {matched_pref}/{total_pref}")
+                if verbose and result.matched_preferred_skills:
+                    for skill_match in result.matched_preferred_skills[:5]:
+                        confidence_pct = int(skill_match.confidence * 100)
+                        click.echo(f"   • {skill_match.skill} ({confidence_pct}%)")
+
+            # Emphasis suggestions
+            if result.emphasis_suggestions:
+                click.echo(f"\n💡 Emphasis Suggestions ({len(result.emphasis_suggestions)}):")
+                for i, suggestion in enumerate(result.emphasis_suggestions, 1):
+                    click.echo(f"   {i}. {suggestion}")
+
+            # Keyword additions
+            if result.keyword_additions and verbose:
+                click.echo(f"\n🔑 Keywords to Add ({len(result.keyword_additions)}):")
+                keywords_preview = ", ".join(result.keyword_additions[:8])
+                if len(result.keyword_additions) > 8:
+                    keywords_preview += f" ... and {len(result.keyword_additions) - 8} more"
+                click.echo(f"   {keywords_preview}")
 
         # Show detailed feedback if verbose
         if verbose and session.feedback_history:

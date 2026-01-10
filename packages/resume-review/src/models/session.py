@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from . import SessionStatus
 from .feedback import Feedback, Resume
+from .job_posting import JobPosting, PersonalizationResult
 from .portfolio import PortfolioItem
 
 
@@ -43,6 +44,10 @@ class ReviewSession(BaseModel):
     theme_recommendation: Optional[dict] = None  # Serialized ThemeRecommendation
     design_preview_paths: Optional[dict] = None  # Preview screenshot paths
     design_preview: Optional[dict] = None  # Serialized DesignPreview with stats
+
+    # Job Personalization (010-job-personalization)
+    job_posting: Optional[JobPosting] = None
+    personalization_result: Optional[PersonalizationResult] = None
 
     @field_validator("score_threshold")
     @classmethod

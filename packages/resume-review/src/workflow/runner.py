@@ -26,7 +26,9 @@ class ReviewWorkflow:
                  gemini_api_key: Optional[str] = None,
                  openai_api_key: Optional[str] = None,
                  anthropic_api_key: Optional[str] = None,
-                 override_model: Optional[str] = None):
+                 override_model: Optional[str] = None,
+                 job_posting_file: Optional[Path] = None,
+                 job_url: Optional[str] = None):
         """Initialize workflow wrapper.
 
         Args:
@@ -38,6 +40,8 @@ class ReviewWorkflow:
             openai_api_key: OpenAI API key (optional)
             anthropic_api_key: Anthropic API key (optional, overrides api_key)
             override_model: Force all agents to use this model (optional, for testing)
+            job_posting_file: Path to job posting file for personalized review (optional)
+            job_url: Job posting URL for personalized review (optional)
         """
         self.api_key = api_key  # Legacy
         self.gemini_api_key = gemini_api_key
@@ -47,6 +51,8 @@ class ReviewWorkflow:
         self.save_iterations = save_iterations
         self.output_dir = output_dir
         self.on_iteration_complete = on_iteration_complete
+        self.job_posting_file = job_posting_file
+        self.job_url = job_url
         self.session_dir: Optional[Path] = None
         self.session_timestamp: Optional[str] = None
         self.compiled_workflow = build_review_workflow()
@@ -74,13 +80,13 @@ class ReviewWorkflow:
             self._log_cost_summary(final_state)
 
         except Exception as e:
-            logger.error(f"Workflow execution failed: {e}")
+            logger.exception(f"Workflow execution failed: {e}")
             session.status = SessionStatus.FAILED
         return session
 
     def _create_initial_state(self, session: ReviewSession) -> ReviewState:
         """Create initial state dictionary for workflow."""
-        return {
+        state = {
             "resume": session.resume, "resume_content": session.resume.content,
             "target_role": session.target_role, "score_threshold": session.score_threshold,
             "max_iterations": session.max_iterations, "api_key": self.api_key,
@@ -92,6 +98,7 @@ class ReviewWorkflow:
             "dry_run": session.dry_run, "screenshot_url": session.screenshot_url,
             "save_iterations": self.save_iterations,
             "output_dir": str(self.output_dir) if self.output_dir else None,
+            "session_dir": str(self.session_dir) if self.session_dir else None,
             "session_id": session.session_id, "current_iteration": 0,
             "feedback_history": [], "current_feedback": [],
             "integrated_score": 0.0, "threshold_met": False,
@@ -109,11 +116,24 @@ class ReviewWorkflow:
             "css_output_path": session.css_output_path,
         }
 
+        # Add job posting file/URL if provided (for personalized review)
+        if self.job_posting_file:
+            state["job_posting_file"] = str(self.job_posting_file)
+        if self.job_url:
+            state["job_url"] = self.job_url
+
+        return state
+
     async def _run_workflow_async(self, initial_state: ReviewState) -> ReviewState:
         """Execute the workflow asynchronously."""
         accumulated_state = dict(initial_state)
         async for state in self.compiled_workflow.astream(initial_state):
+            if state is None:
+                continue
             for node_name, node_state in state.items():
+                if node_state is None:
+                    logger.warning(f"Node {node_name} returned None state")
+                    continue
                 self._update_accumulated_state(accumulated_state, node_state)
                 await self._handle_node_persistence(node_name, node_state, accumulated_state)
         return accumulated_state
@@ -420,6 +440,12 @@ class ReviewWorkflow:
         theme_recommendation = state.get("theme_recommendation")
         if theme_recommendation:
             session.theme_recommendation = theme_recommendation
+
+        # Update job personalization fields
+        if state.get("job_posting"):
+            session.job_posting = state["job_posting"]
+        if state.get("personalization_result"):
+            session.personalization_result = state["personalization_result"]
 
         logger.debug(f"Session updated: final_score={session.final_score}, iteration={session.current_iteration}")
         return session
