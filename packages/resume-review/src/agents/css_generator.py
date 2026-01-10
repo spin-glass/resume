@@ -285,9 +285,9 @@ Please generate CSS rules that address these specific issues. Focus on minimal, 
 
             # Call LLM
             logger.info(f"Generating CSS for {len(issue_types)} issue types: {issue_types}")
-            response = await self.llm_client.generate(
-                messages=[{"role": "user", "content": user_prompt}],
-                system=system_prompt,
+            response = await self.llm_client.generate_async(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
             )
 
             # Extract CSS from response

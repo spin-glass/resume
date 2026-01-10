@@ -23,7 +23,7 @@ class ScreenshotService:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     async def capture(
-        self, url: str, output_filename: Optional[str] = None, wait_time: int = 2000
+        self, url: str, output_filename: Optional[str] = None, wait_time: int = 2000, full_page: bool = False
     ) -> Optional[Path]:
         """
         Capture screenshot of URL using Playwright.
@@ -32,6 +32,7 @@ class ScreenshotService:
             url: URL to capture
             output_filename: Optional output filename (default: auto-generated from URL)
             wait_time: Milliseconds to wait for page load (default: 2000ms)
+            full_page: Whether to capture full page (default: False for Vision API compatibility)
 
         Returns:
             Path to screenshot file, or None if capture failed
@@ -77,7 +78,7 @@ class ScreenshotService:
 
                 # Take screenshot
                 logger.debug(f"Saving screenshot to {output_path}")
-                await page.screenshot(path=str(output_path), full_page=True)
+                await page.screenshot(path=str(output_path), full_page=full_page)
 
                 await browser.close()
 

@@ -35,12 +35,12 @@ AGENT_MODEL_MAP = {
         "model_id": "claude-sonnet-4-5-20250929",
     },
     AgentName.UX_DESIGNER: {
-        "provider": "gemini",
-        "model_id": "gemini-3-pro-preview",
+        "provider": "anthropic",
+        "model_id": "claude-sonnet-4-5-20250929",  # Vision requires Anthropic
     },
     AgentName.VISUAL_DESIGNER: {
-        "provider": "gemini",
-        "model_id": "gemini-3-pro-preview",
+        "provider": "anthropic",
+        "model_id": "claude-sonnet-4-5-20250929",  # Vision requires Anthropic
     },
     AgentName.REVISOR: {
         "provider": "gemini",
