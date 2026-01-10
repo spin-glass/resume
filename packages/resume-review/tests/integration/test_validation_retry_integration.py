@@ -62,21 +62,16 @@ async def test_revisor_introduces_new_validation_errors():
     }
 
     # Mock validator to return different errors
+    # Need: initial fail, post-fix1 (for logging), retry2 fail, post-fix2, retry3 succeed
     with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
 
-        # The retry loop structure:
-        # - Line 231: initial validation in while loop
-        # - Line 302: post-fix validation (for logging)
-        # - retry_count++ then loop continues
-        # So for max_retries=2 with success on 3rd attempt:
-        # 231(0):fail -> 302:any -> 231(1):fail -> 302:any -> 231(2):success
         validation_results = [
-            (False, "Error A: Invalid heading"),  # 231: initial (retry_count=0)
-            (False, "Error B: YAML syntax error"),  # 302: post-fix log (new error introduced!)
-            (False, "Error B: YAML syntax error"),  # 231: loop iteration (retry_count=1)
-            (True, None),  # 302: post-fix log (success)
-            (True, None),  # 231: loop iteration (retry_count=2) - success!
+            (False, "Error A: Invalid heading"),    # Initial validation
+            (False, "Error B: YAML syntax error"),  # Post-fix 1 check (new error!)
+            (False, "Error B: YAML syntax error"),  # Loop iteration 2 (retry_count=1)
+            (True, None),                           # Post-fix 2 check
+            (True, None),                           # Loop iteration 3 (retry_count=2)
         ]
         mock_validator.validate.side_effect = validation_results
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[MagicMock()])
@@ -109,16 +104,16 @@ async def test_retry_artifacts_saved_correctly(temp_session_dir):
         "current_iteration": 1,
     }
 
-    # Mock validator: for 2 retries then success, we need 5 validate calls
-    # 231(0):fail -> 302 -> 231(1):fail -> 302 -> 231(2):success
+    # Mock validator to fail twice then succeed
+    # Need: initial fail, post-fix1 fail, retry2 fail, post-fix2 fail, retry3 succeed
     with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         validation_results = [
-            (False, "Error 1"),  # 231: retry_count=0
-            (False, "Error 2"),  # 302: post-fix log
-            (False, "Error 2"),  # 231: retry_count=1
-            (True, None),        # 302: post-fix log
-            (True, None),        # 231: retry_count=2 - success
+            (False, "Error 1"),  # Initial
+            (False, "Error 1a"), # Post-fix 1
+            (False, "Error 2"),  # Loop iteration 2 (retry_count=1)
+            (False, "Error 2a"), # Post-fix 2
+            (True, None),        # Loop iteration 3 (retry_count=2)
         ]
         mock_validator.validate.side_effect = validation_results
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[MagicMock()])
@@ -156,15 +151,14 @@ async def test_retry_count_resets_across_iterations():
 
     with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
-        # For exhausting 2 retries (all failures):
-        # 231(0):fail -> 302 -> 231(1):fail -> 302 -> 231(2):fail -> exit
-        # = 5 validate calls
+        # Fail validation to trigger retries
+        # Need: initial fail, post-fix1 fail, retry2 fail, post-fix2 fail, final check fail (max_retries exhausted)
         validation_results_iter1 = [
-            (False, "Error"),  # 231: retry_count=0
-            (False, "Error"),  # 302: post-fix log
-            (False, "Error"),  # 231: retry_count=1
-            (False, "Error"),  # 302: post-fix log
-            (False, "Error"),  # 231: retry_count=2 -> exhausted
+            (False, "Error"),  # Initial
+            (False, "Error"),  # Post-fix 1
+            (False, "Error"),  # Loop iteration 2 (retry_count=1)
+            (False, "Error"),  # Post-fix 2
+            (False, "Error"),  # Loop iteration 3 (retry_count=2, equals max, exit)
         ]
         mock_validator.validate.side_effect = validation_results_iter1
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[MagicMock()])
@@ -238,12 +232,11 @@ async def test_state_current_retry_attempts_serialization():
 
     with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
-        # For max_retries=1 with success on 2nd loop iteration:
-        # 231(0):fail -> 302 -> 231(1):success = 3 validate calls
+        # Need 3 values: initial validation (fail), post-fix check, next iteration (success)
         validation_results = [
-            (False, "Error 1"),  # 231: retry_count=0
-            (True, None),       # 302: post-fix log
-            (True, None),       # 231: retry_count=1 - success
+            (False, "Error 1"),  # Initial validation fails
+            (True, None),       # Post-fix validation succeeds (for logging)
+            (True, None),       # Next loop iteration succeeds
         ]
         mock_validator.validate.side_effect = validation_results
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[MagicMock()])

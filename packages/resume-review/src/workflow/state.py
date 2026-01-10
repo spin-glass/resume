@@ -60,6 +60,11 @@ class ReviewState(TypedDict, total=False):
     feedback_history: Annotated[list[list[Feedback]], add_feedback]
     current_feedback: list[Feedback]
 
+    # Per-agent feedback (NEW: for separate agent nodes)
+    recruiter_feedback: Optional[Feedback]
+    tech_writer_feedback: Optional[Feedback]
+    copywriter_feedback: Optional[Feedback]
+
     # Score tracking
     integrated_score: float
     threshold_met: bool

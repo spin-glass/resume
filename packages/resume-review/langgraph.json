@@ -1,0 +1,9 @@
+{
+  "$schema": "https://langchain-ai.github.io/langgraph/reference/cli/#configuration-file",
+  "graphs": {
+    "resume_review": "src.workflow.graph:build_review_workflow"
+  },
+  "env": ".env",
+  "dependencies": ["."],
+  "python_version": "3.13"
+}

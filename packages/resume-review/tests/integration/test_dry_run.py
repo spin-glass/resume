@@ -29,9 +29,17 @@ def temp_resume(sample_resume_path, tmp_path):
 
 
 @pytest.fixture
+<<<<<<< HEAD
 def mock_feedback():
     """Create mock feedback for testing."""
     return Feedback(
+=======
+def mock_agents():
+    """Mock all agent API calls to avoid actual API usage."""
+    from unittest.mock import AsyncMock
+
+    mock_feedback_recruiter = Feedback(
+>>>>>>> 011-stategraph-node-separation
         agent_name="recruiter",
         score=7.5,
         strengths=["Strong technical skills"],
