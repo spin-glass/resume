@@ -140,6 +140,7 @@ async def _generate_preview(
         after_path = await service.capture(
             url=screenshot_url,
             output_filename="preview_after.png",
+            full_page=True,  # Match before screenshot dimensions
         )
 
         # Clean up temp CSS
