@@ -120,7 +120,7 @@ section {
             mock_client = Mock()
             mock_response = Mock()
             mock_response.content = mock_css_response
-            mock_client.generate = AsyncMock(return_value=mock_response)
+            mock_client.generate_async = AsyncMock(return_value=mock_response)
             mock_factory.create_client.return_value = mock_client
 
             # Run the design applier node
@@ -196,7 +196,7 @@ section {
             mock_client = Mock()
             mock_response = Mock()
             mock_response.content = mock_css_response
-            mock_client.generate = AsyncMock(return_value=mock_response)
+            mock_client.generate_async = AsyncMock(return_value=mock_response)
             mock_factory.create_client.return_value = mock_client
 
             result = await design_applier_node(sample_state)
@@ -226,7 +226,7 @@ h2 {
             mock_client = Mock()
             mock_response = Mock()
             mock_response.content = invalid_css_response
-            mock_client.generate = AsyncMock(return_value=mock_response)
+            mock_client.generate_async = AsyncMock(return_value=mock_response)
             mock_factory.create_client.return_value = mock_client
 
             result = await design_applier_node(sample_state)
@@ -255,7 +255,7 @@ h2 {
             mock_client = Mock()
             mock_response = Mock()
             mock_response.content = mock_css_response
-            mock_client.generate = AsyncMock(return_value=mock_response)
+            mock_client.generate_async = AsyncMock(return_value=mock_response)
             mock_factory.create_client.return_value = mock_client
 
             result = await design_applier_node(sample_state)
@@ -440,7 +440,7 @@ h2 {
             mock_client = Mock()
             mock_response = Mock()
             mock_response.content = mock_css
-            mock_client.generate = AsyncMock(return_value=mock_response)
+            mock_client.generate_async = AsyncMock(return_value=mock_response)
             mock_factory.create_client.return_value = mock_client
 
             result = await design_applier_node(state)
@@ -518,7 +518,7 @@ h2 {
             mock_client = Mock()
             mock_response = Mock()
             mock_response.content = mock_css_response
-            mock_client.generate = AsyncMock(return_value=mock_response)
+            mock_client.generate_async = AsyncMock(return_value=mock_response)
             mock_factory.create_client.return_value = mock_client
 
             result = await design_applier_node(state)
@@ -552,7 +552,7 @@ h2 {
             mock_client = Mock()
             mock_response = Mock()
             mock_response.content = mock_css_response
-            mock_client.generate = AsyncMock(return_value=mock_response)
+            mock_client.generate_async = AsyncMock(return_value=mock_response)
             mock_factory.create_client.return_value = mock_client
 
             await design_applier_node(state)
@@ -583,7 +583,7 @@ h2 {
             mock_client = Mock()
             mock_response = Mock()
             mock_response.content = mock_css_response
-            mock_client.generate = AsyncMock(return_value=mock_response)
+            mock_client.generate_async = AsyncMock(return_value=mock_response)
             mock_factory.create_client.return_value = mock_client
 
             result = await design_applier_node(state)
@@ -623,7 +623,7 @@ h2 {
             mock_client = Mock()
             mock_response = Mock()
             mock_response.content = mock_css_response
-            mock_client.generate = AsyncMock(return_value=mock_response)
+            mock_client.generate_async = AsyncMock(return_value=mock_response)
             mock_factory.create_client.return_value = mock_client
 
             await design_applier_node(state)
@@ -655,7 +655,7 @@ h2 {
             mock_client = Mock()
             mock_response = Mock()
             mock_response.content = mock_css_response
-            mock_client.generate = AsyncMock(return_value=mock_response)
+            mock_client.generate_async = AsyncMock(return_value=mock_response)
             mock_factory.create_client.return_value = mock_client
 
             result = await design_applier_node(state)

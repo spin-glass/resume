@@ -8,6 +8,7 @@ Reference: specs/003-multi-model-hybrid/contracts/llm-client-interface.md
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Any
 
 from anthropic import AsyncAnthropic
 from google import genai
@@ -42,6 +43,12 @@ class BaseLLMClient(ABC):
     All concrete implementations MUST implement generate_async().
     Agents use this interface without knowing the specific provider.
     """
+
+    @property
+    @abstractmethod
+    def provider(self) -> str:
+        """Get provider name."""
+        pass
 
     def __init__(self, api_key: str, model: str) -> None:
         """Initialize client with API credentials.
@@ -102,7 +109,11 @@ class GeminiClient(BaseLLMClient):
 
         self.client = genai.Client(api_key=api_key)
         self.model = model
-        self.provider = "gemini"
+
+    @property
+    def provider(self) -> str:
+        """Get provider name."""
+        return "gemini"
 
     async def generate_async(
         self,
@@ -143,11 +154,18 @@ class GeminiClient(BaseLLMClient):
             model=self.model, contents=user_prompt, config=config
         )
 
+        # Handle potential None for usage_metadata
+        input_tokens = 0
+        output_tokens = 0
+        if response.usage_metadata:
+            input_tokens = response.usage_metadata.prompt_token_count or 0
+            output_tokens = response.usage_metadata.candidates_token_count or 0
+
         return LLMResponse(
-            content=response.text,
+            content=response.text or "",
             model=self.model,
-            input_tokens=response.usage_metadata.prompt_token_count,
-            output_tokens=response.usage_metadata.candidates_token_count,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
             provider=self.provider,
         )
 
@@ -170,7 +188,11 @@ class OpenAIClient(BaseLLMClient):
 
         self.client = AsyncOpenAI(api_key=api_key)
         self.model = model
-        self.provider = "openai"
+
+    @property
+    def provider(self) -> str:
+        """Get provider name."""
+        return "openai"
 
     async def generate_async(
         self,
@@ -213,11 +235,17 @@ class OpenAIClient(BaseLLMClient):
             response_format={"type": "json_object"},
         )
 
+        tokens_in = 0
+        tokens_out = 0
+        if response.usage:
+            tokens_in = response.usage.prompt_tokens
+            tokens_out = response.usage.completion_tokens
+
         return LLMResponse(
             content=response.choices[0].message.content or "",
             model=self.model,
-            input_tokens=response.usage.prompt_tokens,
-            output_tokens=response.usage.completion_tokens,
+            input_tokens=tokens_in,
+            output_tokens=tokens_out,
             provider=self.provider,
         )
 
@@ -240,7 +268,11 @@ class AnthropicClient(BaseLLMClient):
 
         self.client = AsyncAnthropic(api_key=api_key)
         self.model = model
-        self.provider = "anthropic"
+
+    @property
+    def provider(self) -> str:
+        """Get provider name."""
+        return "anthropic"
 
     async def generate_async(
         self,
@@ -283,12 +315,18 @@ class AnthropicClient(BaseLLMClient):
         # Include cache tokens in input count
         input_tokens = (
             response.usage.input_tokens
-            + response.usage.cache_creation_input_tokens
-            + response.usage.cache_read_input_tokens
+            + (getattr(response.usage, 'cache_creation_input_tokens', 0) or 0)
+            + (getattr(response.usage, 'cache_read_input_tokens', 0) or 0)
         )
 
+        from anthropic.types import TextBlock
+        content_text = ""
+        for block in response.content:
+            if isinstance(block, TextBlock):
+                content_text += block.text
+
         return LLMResponse(
-            content=response.content[0].text,
+            content=content_text,
             model=self.model,
             input_tokens=input_tokens,
             output_tokens=response.usage.output_tokens,

@@ -8,9 +8,9 @@
 
 | # | 機能 | ステータス | 優先度 | 備考 |
 |---|------|-----------|--------|------|
-| 12 | デザイン自動修正機能 | 🔵 未着手 | 低 | CSS自動生成、セクション順序調整 |
-| 13 | ReviewState Pydantic化 | 🔵 未着手 | 中 | TypedDict → BaseModel |
-| 14 | Webサイトのデザイン修正 | 🔵 未着手 | 中 | 左側余白の調整、モバイル対応等 |
+| 12 | デザイン自動修正機能 | ✅ 完了 | 低 | CSS自動生成、セクション順序調整 |
+| 13 | ReviewState Pydantic化 | ✅ 完了 | 中 | TypedDict → BaseModel |
+| 14 | Webサイトのデザイン刷新(Astro移行) | 🔵 未着手 | 中 | astro-example参照、Astro5+TailwindCSS4 |
 
 ---
 
@@ -68,77 +68,45 @@ packages/resume-review/src/
 
 ---
 
-### 13. ReviewState Pydantic リファクタリング
+### 14. Webサイトのデザイン刷新 - Astro移行 (Web Design Overhaul)
 
 **優先度**: 中
-**目的**: LangGraph Studio でのデフォルト入力サポートと型安全性の向上
+**目的**: 履歴書表示サイトをNextra/Next.jsからAstroベースに移行し、デザイン・パフォーマンスを大幅改善
 
 #### 背景
 
-現在の `ReviewState` は `TypedDict` で定義されているため:
+現在のWeb表示において、左側の余白が極端に大きく、全体のコンテンツバランスが崩れている。
+暫定対応として `--nextra-sidebar-width` を調整したが、根本的なデザイン刷新が必要。
 
-1. **デフォルト値が設定できない**: Studio から実行時に全フィールドを手動入力する必要がある
-2. **バリデーションがない**: 不正な値が渡されてもランタイムまでエラーが発生しない
-3. **シリアライズが手動**: JSON との相互変換に追加コードが必要
+#### 移行元リポジトリ
 
-#### 提案する変更
+- **参照**: [spin-glass/astro-example](https://github.com/spin-glass/astro-example)
+- **デモ**: https://spin-glass.github.io/astro-example/
 
-**Before: TypedDict**
-```python
-class ReviewState(TypedDict, total=False):
-    resume: Resume
-    target_role: str
-    score_threshold: float
-    # ...
-```
+#### 技術スタック（移行後）
 
-**After: Pydantic BaseModel**
-```python
-class ReviewState(BaseModel):
-    resume: Resume
-    target_role: str = "LLM/Multi-Agent Engineer"
-    score_threshold: float = Field(default=8.0, ge=0, le=10)
-    max_iterations: int = Field(default=3, ge=1)
-    dry_run: bool = False
-    # ...
-```
+| 項目 | 現在 | 移行後 |
+|------|------|--------|
+| フレームワーク | Next.js 14 + Nextra | Astro 5 |
+| CSS | Tailwind CSS 3 | Tailwind CSS 4 |
+| プレゼン | なし | Slidev |
+| ブログ | なし | Quarto |
+| PDF出力 | Quarto | Puppeteer |
 
-#### 期待される効果
+#### 機能要件
 
-| 項目 | Before | After |
-|------|--------|-------|
-| デフォルト値 | ❌ 不可 | ✅ 可能 |
-| バリデーション | ❌ なし | ✅ 自動 |
-| Studio での UX | 全フィールド入力必須 | 必須のみ入力 |
+1. **Astro移行** (FR-W01)
+   - `packages/web` をAstroベースに再構築
+   - 既存のmdxコンテンツをAstroに移行
+2. **レイアウト最適化** (FR-W02)
+   - サイドバーの廃止またはコンパクト化
+   - メインコンテンツ中心のレイアウト
+3. **レスポンシブ対応の強化** (FR-W03)
+   - モバイル・タブレット環境での最適表示
+4. **Slidev統合** (FR-W04) - 任意
+   - プレゼンテーションスライドの追加
 
-#### 実装フェーズ
 
-1. Phase 1: State の Pydantic 化
-2. Phase 2: ノード関数の更新 (`state["key"]` → `state.key`)
-3. Phase 3: テストの更新
-
----
-
-### 14. Webサイトのデザイン修正 (Web Design Fix)
-
-**優先度**: 中
-**目的**: 履歴書表示サイトのレイアウトを改善し、視覚的なバランスを整える
-
-#### 背景
-
-現在のWeb表示において、左側の余白が極端に大きく、全体のコンテンツバランスが崩れている（特に広いディスプレイ環境）。
-
-#### 修正内容
-
-1. **左側レイアウトの調整** (FR-W01)
-   - サイドバーが不要な場合のレイアウト最適化
-   - メインコンテンツの最大幅とマージンの見直し
-2. **レスポンシブ対応の強化** (FR-W02)
-   - モバイル・タブレット環境での最適な余白設定
-3. **テーマ設定の最適化** (FR-W03)
-   - `nextra-theme-docs` のレイアウトパターンの再検討
-
----
 
 ### 完了済み機能
 
@@ -150,9 +118,11 @@ class ReviewState(BaseModel):
 | 2 | 求人パーソナライズ機能 | 2026-01-09 | `specs/010-job-personalization/` |
 | 3 | モノレポリファクタリング | 2026-01-08 | `specs/002-monorepo-refactor/` |
 | 4 | マルチモデル・ハイブリッド構成 | 2026-01-09 | `specs/003-multi-model-hybrid/` |
+| 5 | デザイン自動修正機能 | 2026-01-10 | (013-design-auto-fix) |
 | 6 | 構造検証・自動修復機能 | 2026-01-09 | (組み込み) |
 | 7 | Quarto構文検証機能 | 2026-01-09 | (組み込み) |
 | 8 | Quarto検証失敗時の自動リトライ | 2026-01-09 | `specs/009-quarto-retry-loop/` |
+| 9 | ReviewState Pydantic化 | 2026-01-10 | (feature/013-*) |
 
 ---
 

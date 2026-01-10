@@ -12,7 +12,14 @@ from dotenv import load_dotenv
 class Config:
     """Configuration manager for the resume review system."""
 
-    def __init__(self):
+    _instance: Optional["Config"] = None
+
+    def __new__(cls) -> "Config":
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self) -> None:
         """Initialize configuration from environment variables."""
         # Load .env file if it exists
         load_dotenv()
@@ -53,10 +60,14 @@ class Config:
 
     def get_api_key(self) -> str:
         """Get Anthropic API key."""
+        if not self.anthropic_api_key:
+             raise ValueError("Anthropic API key not configured")
         return self.anthropic_api_key
 
     def get_anthropic_api_key(self) -> str:
         """Get Anthropic API key."""
+        if not self.anthropic_api_key:
+             raise ValueError("Anthropic API key not configured")
         return self.anthropic_api_key
 
     def get_gemini_api_key(self) -> Optional[str]:
@@ -113,6 +124,4 @@ def setup_logging(verbose: bool = False, log_file: Optional[Path] = None) -> log
 
 def get_config() -> Config:
     """Get or create singleton configuration instance."""
-    if not hasattr(get_config, "_instance"):
-        get_config._instance = Config()
-    return get_config._instance
+    return Config()

@@ -16,7 +16,7 @@ import logging
 import re
 from typing import Optional
 
-import frontmatter
+import frontmatter  # type: ignore[import-untyped]
 from anthropic import Anthropic
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -130,9 +130,9 @@ class RevisionService:
         validation_issues = self._validate_structure(revised_content, resume.content)
         if validation_issues:
             logger.warning(f"Structural validation found {len(validation_issues)} issues")
-            for issue in validation_issues:
-                logger.warning(f"  - {issue}")
-                revisions_applied.append(f"[VALIDATION WARNING] {issue}")
+            for v_issue in validation_issues:
+                logger.warning(f"  - {v_issue}")
+                revisions_applied.append(f"[VALIDATION WARNING] {v_issue}")
 
         # Create new Resume with revised content (preserving YAML)
         # Use frontmatter library to properly serialize YAML
@@ -189,7 +189,12 @@ CRITICAL RULES:
             messages=[{"role": "user", "content": prompt}],
         )
 
-        revised_section = response.content[0].text.strip()
+        from anthropic.types import TextBlock
+        revised_section = ""
+        for block in response.content:
+            if isinstance(block, TextBlock):
+                revised_section += block.text
+        revised_section = revised_section.strip()
 
         # Clean up response - remove any accidental full resume returns
         revised_section = self._clean_revision_response(revised_section, issue.location)

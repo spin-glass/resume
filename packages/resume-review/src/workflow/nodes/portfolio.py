@@ -9,10 +9,14 @@ from ...models import ActionType
 from ...models.portfolio import PortfolioItem
 from ..state import ReviewState
 
+from ...config.model_config import AgentName
+from ...services.llm_factory import LLMClientFactory
+from ..state import ReviewState
+
 logger = logging.getLogger("resume_review")
 
 
-def portfolio_analyzer_node(state: ReviewState) -> dict[str, Any]:
+async def portfolio_analyzer_node(state: ReviewState) -> dict[str, Any]:
     """
     Portfolio analyzer node that identifies skill gaps and suggests projects.
 
@@ -20,9 +24,9 @@ def portfolio_analyzer_node(state: ReviewState) -> dict[str, Any]:
     """
     logger.info("Portfolio Analyzer: Identifying skill gaps")
 
-    api_key = state["api_key"]
-    target_role = state["target_role"]
-    feedback_history = state.get("feedback_history", [])
+    api_key = state.api_key
+    target_role = state.target_role
+    feedback_history = state.feedback_history
 
     # Collect all ADD_PORTFOLIO issues
     portfolio_issues = []
@@ -44,9 +48,14 @@ def portfolio_analyzer_node(state: ReviewState) -> dict[str, Any]:
     suggestions = []
     skill_gaps = []
 
-    from anthropic import Anthropic
-
-    client = Anthropic(api_key=api_key)
+    # Create LLM client for Portfolio Analyzer
+    client = LLMClientFactory.create_client(
+        agent_name=AgentName.RECRUITER, # Reuse recruiter settings or generic
+        gemini_api_key=state.gemini_api_key,
+        openai_api_key=state.openai_api_key,
+        anthropic_api_key=state.anthropic_api_key or state.api_key,
+        override_model=state.override_model,
+    )
 
     for agent_name, issue in portfolio_issues:
         skill_gaps.append(issue.description)
@@ -72,14 +81,14 @@ Format your response as JSON:
   "priority": 1
 }}"""
 
-            response = client.messages.create(
-                model="claude-opus-4-5-20251101",
+            response = await client.generate_async(
+                system_prompt="You are an expert at identifying valuable portfolio projects for software engineers.",
+                user_prompt=prompt,
                 max_tokens=1000,
-                system="You are an expert at identifying valuable portfolio projects for software engineers.",
-                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
             )
-
-            response_text = response.content[0].text
+ 
+            response_text = response.content
             json_match = re.search(r"\{.*\}", response_text, re.DOTALL)
 
             if json_match:

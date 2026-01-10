@@ -5,18 +5,20 @@ import re
 
 from ..models import Severity
 from ..models.feedback import Feedback, Issue
+from ..models.job_posting import JobPosting
+from ..services import BaseLLMClient
 from .base import BaseAgent
 
 
 class VisualDesignerAgent(BaseAgent):
     """Evaluates resume from visual design perspective."""
 
-    def __init__(self, llm_client, agent_name=None):
+    def __init__(self, llm_client: BaseLLMClient, agent_name: str | None = None) -> None:
         """Initialize visual designer agent."""
         super().__init__(llm_client, agent_name)
         self.agent_name = "visual_designer"
 
-    def get_system_prompt(self, target_role: str) -> str:
+    def get_system_prompt(self, target_role: str, job_posting: JobPosting | None = None) -> str:
         """Get visual designer-specific system prompt."""
         return f"""You are an expert visual designer specializing in professional documents and typography.
 
@@ -164,5 +166,9 @@ IMPORTANT:
             ],
         )
 
-        feedback_text = response.content[0].text
+        from anthropic.types import TextBlock
+        feedback_text = ""
+        for block in response.content:
+            if isinstance(block, TextBlock):
+                feedback_text += block.text
         return self.parse_feedback(feedback_text)

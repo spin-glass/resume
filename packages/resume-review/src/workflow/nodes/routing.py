@@ -22,7 +22,7 @@ async def router_node(state: ReviewState) -> dict[str, Any]:
     Returns:
         Empty dict (no state changes) - parallel execution triggered by edges
     """
-    current_iteration = state.get("current_iteration", 0)
+    current_iteration = state.current_iteration
     logger.info(f"Router: Starting agent evaluation (iteration {current_iteration + 1})")
 
     return {}  # LangGraph executes all outgoing edges in parallel

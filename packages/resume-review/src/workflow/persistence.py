@@ -4,7 +4,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 from ..models.feedback import Feedback
 from ..models.session import ReviewSession
 from ..services.qmd_parser import QMDParser
@@ -109,7 +109,7 @@ def _format_feedback_markdown(feedback_list: list[Feedback], iteration: int,
 
 
 def _format_feedback_json(feedback_list: list[Feedback], iteration: int,
-                           integrated_score: float) -> dict:
+                           integrated_score: float) -> dict[str, Any]:
     """Format feedback list as JSON-serializable dict."""
     return {
         "iteration": iteration, "integrated_score": integrated_score,

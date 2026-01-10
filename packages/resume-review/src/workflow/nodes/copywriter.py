@@ -28,16 +28,16 @@ async def copywriter_node(state: ReviewState) -> dict[str, Any]:
 
     try:
         # Extract required fields
-        resume = state["resume"]
-        target_role = state["target_role"]
+        resume = state.resume
+        target_role = state.target_role
 
         # Create LLM client for this agent
         client = LLMClientFactory.create_client(
             agent_name=AgentName.COPYWRITER,
-            gemini_api_key=state.get("gemini_api_key"),
-            openai_api_key=state.get("openai_api_key"),
-            anthropic_api_key=state.get("anthropic_api_key"),
-            override_model=state.get("override_model"),
+            gemini_api_key=state.gemini_api_key,
+            openai_api_key=state.openai_api_key,
+            anthropic_api_key=state.anthropic_api_key,
+            override_model=state.override_model,
         )
 
         # Initialize agent with client

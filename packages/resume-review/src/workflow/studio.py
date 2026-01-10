@@ -3,12 +3,14 @@
 import os
 from pathlib import Path
 
+from typing import Any
+from langgraph.graph.state import CompiledStateGraph
 from .graph import build_review_workflow
 from .state import ReviewState
 from ..services.qmd_parser import QMDParser
 
 
-def build_studio_workflow():
+def build_studio_workflow() -> CompiledStateGraph[ReviewState, Any, Any]:
     """
     Build workflow with default inputs pre-loaded for LangGraph Studio testing.
     
@@ -19,7 +21,7 @@ def build_studio_workflow():
     return build_review_workflow()
 
 
-def get_default_studio_input() -> dict:
+def get_default_studio_input() -> dict[str, Any]:
     """
     Get default input state for Studio testing.
     

@@ -47,7 +47,7 @@ class Resume(BaseModel):
         if not file_path.is_file():
             raise ValueError(f"Path is not a file: {file_path}")
 
-        import frontmatter
+        import frontmatter  # type: ignore[import-untyped]
         with open(file_path, "r", encoding="utf-8") as f:
             post = frontmatter.load(f)
 
@@ -100,12 +100,12 @@ class Feedback(BaseModel):
 
     @field_validator("strengths", "issues", "suggestions")
     @classmethod
-    def validate_has_content(cls, v: list, info) -> list:
+    def validate_has_content(cls, v: list[Any], info: Any) -> list[Any]:
         """Ensure at least one strength or issue is provided."""
         # This is validated at the model level rather than field level
         return v
 
-    def model_post_init(self, __context):
+    def model_post_init(self, __context: Any) -> None:
         """Post-initialization validation."""
         if not self.strengths and not self.issues:
             raise ValueError("Feedback must have at least one strength or issue")

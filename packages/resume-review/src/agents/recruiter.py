@@ -7,13 +7,14 @@ from typing import Optional
 from ..models import Severity
 from ..models.feedback import Feedback, Issue
 from ..models.job_posting import JobPosting
+from ..services import BaseLLMClient
 from .base import BaseAgent
 
 
 class RecruiterAgent(BaseAgent):
     """Evaluates resume from recruiter/contract acquisition perspective."""
 
-    def __init__(self, llm_client, agent_name=None):
+    def __init__(self, llm_client: BaseLLMClient, agent_name: str | None = None) -> None:
         """Initialize recruiter agent."""
         super().__init__(llm_client, agent_name)
         self.agent_name = "recruiter"

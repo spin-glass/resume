@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from src.models.feedback import Feedback, Resume
 from src.workflow.nodes.tech_writer import tech_writer_node
+from src.workflow.state import ReviewState
 
 
 @pytest.fixture
@@ -35,11 +36,12 @@ def mock_feedback():
 async def test_tech_writer_node_success(mock_resume, mock_feedback):
     """Tech writer node returns feedback on success."""
     # Setup
-    state = {
-        "resume": mock_resume,
-        "target_role": "Engineer",
-        "openai_api_key": "test-key",
-    }
+    # Setup
+    state = ReviewState(
+        resume=mock_resume,
+        target_role="Engineer",
+        openai_api_key="test-key",
+    )
 
     # Mock LLMClientFactory and TechnicalWriterAgent
     with patch("src.workflow.nodes.tech_writer.LLMClientFactory.create_client") as mock_factory:
@@ -64,11 +66,12 @@ async def test_tech_writer_node_success(mock_resume, mock_feedback):
 async def test_tech_writer_node_handles_exception(mock_resume):
     """Tech writer node returns minimal feedback on exception."""
     # Setup
-    state = {
-        "resume": mock_resume,
-        "target_role": "Engineer",
-        "openai_api_key": "test-key",
-    }
+    # Setup
+    state = ReviewState(
+        resume=mock_resume,
+        target_role="Engineer",
+        openai_api_key="test-key",
+    )
 
     # Mock LLMClientFactory to raise exception
     with patch("src.workflow.nodes.tech_writer.LLMClientFactory.create_client") as mock_factory:

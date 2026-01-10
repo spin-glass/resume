@@ -26,7 +26,30 @@ These rules ensure that the documentation structure remains clean and compliant 
 
 ## 2. Maintenance of Roadmap
 
-**Action**: Keep the roadmap up-to-date with development progress.
+**Trigger**: When a feature branch is merged or a feature is marked as complete.
 
-1.  **Check Roadmap**: Check `docs/roadmap.md`.
-2.  **Update Status**: If completed features are still listed as "Unstarted", suggest updating the status or archiving them using the consolidation workflow.
+**Action**: You MUST perform ALL of the following updates to `docs/roadmap.md`:
+
+### Required Updates Checklist
+
+1. **Update Status Summary Table** (top of file)
+   - Change status from `🔵 未着手` or `🟡 進行中` to `✅ 完了`
+
+2. **Remove from "未着手機能" Section**
+   - Delete the entire subsection (e.g., `### 13. Feature Name` and all its content)
+   - ⚠️ This is the most commonly missed step!
+
+3. **Add to "完了済み機能" Table**
+   - Add a new row with: `| # | 機能名 | 完了日 | specs フォルダ |`
+   - Use today's date for 完了日
+
+4. **Update Last Modified Date**
+   - Update `**最終更新**:` at the top of the file
+
+### Verification
+
+Before completing the task, verify:
+- [ ] Feature is NOT in "未着手機能" section
+- [ ] Feature IS in "完了済み機能" table
+- [ ] Status summary shows `✅ 完了`
+- [ ] Last modified date is current

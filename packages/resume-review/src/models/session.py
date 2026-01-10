@@ -1,6 +1,6 @@
 """Review session entity for tracking workflow state."""
 
-from typing import Optional
+from typing import Any, Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
@@ -69,7 +69,7 @@ class ReviewSession(BaseModel):
 
     @field_validator("current_iteration")
     @classmethod
-    def validate_current_iteration(cls, v: int, info) -> int:
+    def validate_current_iteration(cls, v: int, info: Any) -> int:
         """Validate current iteration doesn't exceed max iterations."""
         # Note: We can't access max_iterations here during initial validation
         # This will be checked in business logic

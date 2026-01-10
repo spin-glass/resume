@@ -218,7 +218,7 @@ h2 {
 }
 ```
 """
-        mock_client.generate = AsyncMock(return_value=mock_response)
+        mock_client.generate_async = AsyncMock(return_value=mock_response)
         return mock_client
 
     @pytest.fixture
@@ -317,7 +317,7 @@ h2 {
         )
 
         # Verify LLM was called with current CSS in prompt
-        mock_llm_client.generate.assert_called_once()
+        mock_llm_client.generate_async.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_generate_css_handles_invalid_response(self, sample_feedback):
@@ -325,7 +325,7 @@ h2 {
         mock_client = Mock()
         mock_response = Mock()
         mock_response.content = "Here is some text without any CSS code blocks."
-        mock_client.generate = AsyncMock(return_value=mock_response)
+        mock_client.generate_async = AsyncMock(return_value=mock_response)
 
         agent = CSSGeneratorAgent(llm_client=mock_client)
         result = await agent.generate_css(sample_feedback)
@@ -337,7 +337,7 @@ h2 {
     async def test_generate_css_handles_llm_error(self, sample_feedback):
         """generate_css should handle LLM errors gracefully."""
         mock_client = Mock()
-        mock_client.generate = AsyncMock(side_effect=Exception("LLM error"))
+        mock_client.generate_async = AsyncMock(side_effect=Exception("LLM error"))
 
         agent = CSSGeneratorAgent(llm_client=mock_client)
         result = await agent.generate_css(sample_feedback)

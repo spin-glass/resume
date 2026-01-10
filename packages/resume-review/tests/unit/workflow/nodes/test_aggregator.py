@@ -2,8 +2,10 @@
 
 import pytest
 
-from src.models.feedback import Feedback
+from src.models.feedback import Feedback, Resume
 from src.workflow.nodes.aggregator import aggregator_node
+from src.workflow.state import ReviewState
+from unittest.mock import Mock
 
 
 @pytest.fixture
@@ -42,20 +44,23 @@ def copywriter_feedback():
     )
 
 
-def test_aggregator_collects_from_separate_fields(
+@pytest.mark.asyncio
+async def test_aggregator_collects_from_separate_fields(
     recruiter_feedback, tech_writer_feedback, copywriter_feedback
 ):
     """Aggregator merges feedback from three separate state fields."""
     # Setup
-    state = {
-        "recruiter_feedback": recruiter_feedback,
-        "tech_writer_feedback": tech_writer_feedback,
-        "copywriter_feedback": copywriter_feedback,
-        "score_threshold": 8.0,
-    }
+    mock_resume = Mock(spec=Resume)
+    state = ReviewState(
+        resume=mock_resume,
+        recruiter_feedback=recruiter_feedback,
+        tech_writer_feedback=tech_writer_feedback,
+        copywriter_feedback=copywriter_feedback,
+        score_threshold=8.0,
+    )
 
     # Execute
-    result = aggregator_node(state)
+    result = await aggregator_node(state)
 
     # Verify
     assert "current_feedback" in result
@@ -68,18 +73,21 @@ def test_aggregator_collects_from_separate_fields(
     assert "threshold_met" in result
 
 
-def test_aggregator_handles_missing_feedback(recruiter_feedback, copywriter_feedback):
+@pytest.mark.asyncio
+async def test_aggregator_handles_missing_feedback(recruiter_feedback, copywriter_feedback):
     """Aggregator proceeds with partial feedback if one agent failed."""
     # Setup (tech_writer_feedback missing)
-    state = {
-        "recruiter_feedback": recruiter_feedback,
+    mock_resume = Mock(spec=Resume)
+    state = ReviewState(
+        resume=mock_resume,
+        recruiter_feedback=recruiter_feedback,
         # tech_writer_feedback missing (agent failed)
-        "copywriter_feedback": copywriter_feedback,
-        "score_threshold": 8.0,
-    }
+        copywriter_feedback=copywriter_feedback,
+        score_threshold=8.0,
+    )
 
     # Execute
-    result = aggregator_node(state)
+    result = await aggregator_node(state)
 
     # Verify - should have only 2 feedbacks
     assert "current_feedback" in result
@@ -88,55 +96,64 @@ def test_aggregator_handles_missing_feedback(recruiter_feedback, copywriter_feed
     assert result["integrated_score"] > 0
 
 
-def test_aggregator_returns_error_if_no_feedback():
+@pytest.mark.asyncio
+async def test_aggregator_returns_error_if_no_feedback():
     """Aggregator returns error if all agents failed."""
     # Setup (no feedback fields)
-    state = {
-        "score_threshold": 8.0,
-    }
+    mock_resume = Mock(spec=Resume)
+    state = ReviewState(
+        resume=mock_resume,
+        score_threshold=8.0,
+    )
 
     # Execute
-    result = aggregator_node(state)
+    result = await aggregator_node(state)
 
     # Verify
     assert "error" in result
     assert result["error"] == "All agents failed"
 
 
-def test_aggregator_calculates_threshold_met(
+@pytest.mark.asyncio
+async def test_aggregator_calculates_threshold_met(
     recruiter_feedback, tech_writer_feedback, copywriter_feedback
 ):
     """Aggregator correctly determines threshold_met status."""
     # Setup with low threshold
-    state = {
-        "recruiter_feedback": recruiter_feedback,  # 8.5
-        "tech_writer_feedback": tech_writer_feedback,  # 7.0
-        "copywriter_feedback": copywriter_feedback,  # 9.0
-        "score_threshold": 7.0,  # Should be met
-    }
+    mock_resume = Mock(spec=Resume)
+    state = ReviewState(
+        resume=mock_resume,
+        recruiter_feedback=recruiter_feedback,  # 8.5
+        tech_writer_feedback=tech_writer_feedback,  # 7.0
+        copywriter_feedback=copywriter_feedback,  # 9.0
+        score_threshold=7.0,  # Should be met
+    )
 
     # Execute
-    result = aggregator_node(state)
+    result = await aggregator_node(state)
 
     # Verify
     assert result["threshold_met"] is True
     assert result["integrated_score"] >= 7.0
 
 
-def test_aggregator_calculates_threshold_not_met(
+@pytest.mark.asyncio
+async def test_aggregator_calculates_threshold_not_met(
     recruiter_feedback, tech_writer_feedback, copywriter_feedback
 ):
     """Aggregator correctly determines threshold not met."""
     # Setup with high threshold
-    state = {
-        "recruiter_feedback": recruiter_feedback,  # 8.5
-        "tech_writer_feedback": tech_writer_feedback,  # 7.0
-        "copywriter_feedback": copywriter_feedback,  # 9.0
-        "score_threshold": 10.0,  # Cannot be met
-    }
+    mock_resume = Mock(spec=Resume)
+    state = ReviewState(
+        resume=mock_resume,
+        recruiter_feedback=recruiter_feedback,  # 8.5
+        tech_writer_feedback=tech_writer_feedback,  # 7.0
+        copywriter_feedback=copywriter_feedback,  # 9.0
+        score_threshold=10.0,  # Cannot be met
+    )
 
     # Execute
-    result = aggregator_node(state)
+    result = await aggregator_node(state)
 
     # Verify
     assert result["threshold_met"] is False

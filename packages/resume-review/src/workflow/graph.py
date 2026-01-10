@@ -1,8 +1,9 @@
 """LangGraph StateGraph builder for resume review workflow."""
 
-from typing import Literal
+from typing import Any, Literal, Optional
 
 from langgraph.graph import END, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from .conditions import (
     should_continue_review,
@@ -27,12 +28,12 @@ from .state import ReviewState
 
 def route_after_job_parser(state: ReviewState) -> Literal["supervisor", "design"]:
     """Route after job parser based on design_only flag."""
-    if state.get("design_only", False):
+    if state.design_only:
         return "design"
     return "supervisor"
 
 
-def build_review_workflow() -> StateGraph:
+def build_review_workflow() -> CompiledStateGraph[ReviewState, Any, Any, Any]:
     """
     Build and compile the LangGraph StateGraph for resume review.
 

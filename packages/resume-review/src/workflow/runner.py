@@ -3,7 +3,9 @@
 import asyncio
 import logging
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Optional, Any, cast
+
+from langgraph.graph.state import CompiledStateGraph
 
 from ..config.model_config import calculate_cost
 from ..models import SessionStatus
@@ -20,7 +22,7 @@ logger = logging.getLogger("resume_review")
 class ReviewWorkflow:
     """High-level wrapper for LangGraph workflow integration with CLI."""
 
-    def __init__(self, api_key: str, save_iterations: bool = False,
+    def __init__(self, api_key: str = "", save_iterations: bool = False,
                  output_dir: Optional[Path] = None,
                  on_iteration_complete: Optional[Callable[[int, float, Path], None]] = None,
                  gemini_api_key: Optional[str] = None,
@@ -55,7 +57,7 @@ class ReviewWorkflow:
         self.job_url = job_url
         self.session_dir: Optional[Path] = None
         self.session_timestamp: Optional[str] = None
-        self.compiled_workflow = build_review_workflow()
+        self.compiled_workflow: CompiledStateGraph[ReviewState, Any, Any, Any] = build_review_workflow()
         self.qmd_parser = QMDParser()
 
     def run_review(self, session: ReviewSession) -> ReviewSession:
@@ -85,57 +87,47 @@ class ReviewWorkflow:
         return session
 
     def _create_initial_state(self, session: ReviewSession) -> ReviewState:
-        """Create initial state dictionary for workflow."""
-        state = {
-            "resume": session.resume, "resume_content": session.resume.content,
-            "target_role": session.target_role, "score_threshold": session.score_threshold,
-            "max_iterations": session.max_iterations, "api_key": self.api_key,
+        """Create initial state object for workflow."""
+        return ReviewState(
+            resume=session.resume,
+            resume_content=session.resume.content,
+            target_role=session.target_role,
+            score_threshold=session.score_threshold,
+            max_iterations=session.max_iterations,
+            api_key=self.api_key,
             # New multi-provider API keys
-            "anthropic_api_key": self.anthropic_api_key,
-            "gemini_api_key": self.gemini_api_key,
-            "openai_api_key": self.openai_api_key,
-            "override_model": self.override_model,
-            "dry_run": session.dry_run, "screenshot_url": session.screenshot_url,
-            "save_iterations": self.save_iterations,
-            "output_dir": str(self.output_dir) if self.output_dir else None,
-            "session_dir": str(self.session_dir) if self.session_dir else None,
-            "session_id": session.session_id, "current_iteration": 0,
-            "feedback_history": [], "current_feedback": [],
-            "integrated_score": 0.0, "threshold_met": False,
-            "skill_gaps": [], "portfolio_suggestions": [],
-            "revised_content": "", "applied_revisions": [],
-            "token_usage": {},  # New: token usage tracking
-            "final_score": 0.0, "should_continue": True, "error": None,
-            "validation_retry_count": 0,
-            "max_validation_retries": session.max_validation_retries,
-            "strict_validation": session.strict_validation,
-            "current_retry_attempts": [],
+            anthropic_api_key=self.anthropic_api_key,
+            gemini_api_key=self.gemini_api_key,
+            openai_api_key=self.openai_api_key,
+            override_model=self.override_model,
+            dry_run=session.dry_run,
+            screenshot_url=session.screenshot_url,
+            save_iterations=self.save_iterations,
+            output_dir=str(self.output_dir) if self.output_dir else None,
+            session_dir=str(self.session_dir) if self.session_dir else None,
+            session_id=session.session_id,
+            # Validation settings
+            max_validation_retries=session.max_validation_retries,
+            strict_validation=session.strict_validation,
             # Design auto-fix flags (013-design-auto-fix)
-            "auto_design_enabled": session.auto_design_enabled,
-            "design_preview_enabled": session.design_preview_enabled,
-            "css_output_path": session.css_output_path,
-            "design_only": session.design_only,
-            "design_loop_active": False,
-            "design_iteration": 0,
-            "max_design_iterations": session.max_design_iterations,
-            "design_score": 0.0,
-        }
-
-        # Add job posting file/URL if provided (for personalized review)
-        if self.job_posting_file:
-            state["job_posting_file"] = str(self.job_posting_file)
-        if self.job_url:
-            state["job_url"] = self.job_url
-
-        return state
+            auto_design_enabled=session.auto_design_enabled,
+            design_preview_enabled=session.design_preview_enabled,
+            css_output_path=session.css_output_path,
+            design_only=session.design_only,
+            max_design_iterations=session.max_design_iterations,
+            # Optional fields for job-specific review
+            job_posting_file=str(self.job_posting_file) if self.job_posting_file else None,
+            job_url=self.job_url,
+            # Default values are handled by Pydantic model
+        )
 
     async def _run_workflow_async(self, initial_state: ReviewState) -> ReviewState:
         """Execute the workflow asynchronously."""
-        accumulated_state = dict(initial_state)
-        async for state in self.compiled_workflow.astream(initial_state):
-            if state is None:
+        accumulated_state = initial_state.model_copy()
+        async for state_update in self.compiled_workflow.astream(initial_state.model_dump()):
+            if state_update is None:
                 continue
-            for node_name, node_state in state.items():
+            for node_name, node_state in state_update.items():
                 if node_state is None:
                     logger.warning(f"Node {node_name} returned None state")
                     continue
@@ -143,38 +135,42 @@ class ReviewWorkflow:
                 await self._handle_node_persistence(node_name, node_state, accumulated_state)
         return accumulated_state
 
-    def _update_accumulated_state(self, accumulated_state: dict, node_state: dict) -> None:
+    def _update_accumulated_state(self, accumulated_state: ReviewState, node_state: dict[str, Any]) -> None:
         """Update accumulated state with node outputs, applying reducers."""
         for key, value in node_state.items():
-            if key == "feedback_history" and key in accumulated_state:
-                accumulated_state[key] = add_feedback(accumulated_state[key], value)
-            elif key == "applied_revisions" and key in accumulated_state:
-                accumulated_state[key] = add_revisions(accumulated_state[key], value)
-            elif key == "portfolio_suggestions" and key in accumulated_state:
-                accumulated_state[key] = add_portfolio(accumulated_state[key], value)
+            if key == "feedback_history":
+                accumulated_state.feedback_history = add_feedback(accumulated_state.feedback_history, value)
+            elif key == "applied_revisions":
+                accumulated_state.applied_revisions = add_revisions(accumulated_state.applied_revisions, value)
+            elif key == "portfolio_suggestions":
+                accumulated_state.portfolio_suggestions = add_portfolio(accumulated_state.portfolio_suggestions, value)
             else:
-                accumulated_state[key] = value
+                setattr(accumulated_state, key, value)
 
-    async def _handle_node_persistence(self, node_name: str, node_state: dict,
-                                  accumulated_state: dict) -> None:
+    async def _handle_node_persistence(self, node_name: str, node_state: dict[str, Any],
+                                  accumulated_state: ReviewState) -> None:
         """Handle saving artifacts after specific nodes."""
         if not self.save_iterations or not self.session_dir:
             # Still need to run validation retry even if not saving iterations
             if node_name == "revisor":
                 await self._validate_and_retry(accumulated_state)  # T021
             return
+        
+        # At this point self.session_dir is guaranteed to be not None by the check above
+        session_dir = self.session_dir
+
         if node_name == "aggregator":
-            iteration = accumulated_state.get("current_iteration", 0) + 1
-            score = node_state.get("integrated_score", 0.0)
-            feedback = accumulated_state.get("current_feedback", [])
+            iteration = accumulated_state.current_iteration + 1
+            score = cast(float, node_state.get("integrated_score", 0.0))
+            feedback = accumulated_state.current_feedback
             if feedback:
-                save_feedback(self.session_dir, feedback, iteration, score)
+                save_feedback(session_dir, feedback, iteration, score)
                 logger.info(f"Saved feedback for iteration {iteration}")
         elif node_name == "revisor":
-            iteration = node_state.get("current_iteration", 0)
-            save_revisions(self.session_dir, node_state.get("applied_revisions", []), iteration)
+            iteration = cast(int, node_state.get("current_iteration", 0))
+            save_revisions(session_dir, node_state.get("applied_revisions", []), iteration)
             if "resume" in node_state:
-                iter_dir = self.session_dir / f"iter{iteration}"
+                iter_dir = session_dir / f"iter{iteration}"
                 iter_dir.mkdir(exist_ok=True)
                 resume_path = iter_dir / "resume.qmd"
                 QMDParser.save_resume(node_state["resume"], resume_path, create_backup=False)
@@ -185,11 +181,11 @@ class ReviewWorkflow:
 
             # Run validation retry loop after revisor (T021)
             await self._validate_and_retry(accumulated_state)
-        elif node_name == "portfolio" and "resume" in accumulated_state:
-            iteration = accumulated_state.get("current_iteration", 0) + 1
-            iter_dir = self.session_dir / f"iter{iteration}"
-            iter_dir.mkdir(exist_ok=True)
-            QMDParser.save_resume(accumulated_state["resume"], iter_dir / "resume.qmd", create_backup=False)
+        elif node_name == "portfolio" and accumulated_state.resume:
+            iteration = accumulated_state.current_iteration + 1
+            iter_dir = session_dir / f"iter{iteration}"
+            iter_dir. mkdir(exist_ok=True)
+            QMDParser.save_resume(accumulated_state.resume, iter_dir / "resume.qmd", create_backup=False)
             logger.info(f"Saved final resume for iteration {iteration}")
 
     def _validate_quarto_syntax(self, resume_path: Path, iteration: int) -> None:
@@ -205,7 +201,7 @@ class ReviewWorkflow:
         else:
             logger.info(f"Quarto validation passed for iteration {iteration}")
 
-    async def _validate_and_retry(self, state: dict) -> None:
+    async def _validate_and_retry(self, state: ReviewState) -> None:
         """
         Execute validation retry loop after revisor node (T017, T018, T032-T036).
 
@@ -216,13 +212,13 @@ class ReviewWorkflow:
         from ..services.quarto_validator import QuartoValidator
         from ..services.retry_logger import RetryLogger
 
-        max_retries = state.get("max_validation_retries", 3)
-        strict_validation = state.get("strict_validation", False)
-        current_iteration = state.get("current_iteration", 0)
+        max_retries = state.max_validation_retries
+        strict_validation = state.strict_validation
+        current_iteration = state.current_iteration
 
         # Reset retry count for this iteration (T023)
-        state["validation_retry_count"] = 0
-        state["current_retry_attempts"] = []
+        state.validation_retry_count = 0
+        state.current_retry_attempts = []
 
         validator = QuartoValidator()
         retry_count = 0
@@ -237,7 +233,7 @@ class ReviewWorkflow:
 
         while retry_count <= max_retries:
             # Get current QMD content
-            qmd_content = state.get("revised_content", "")
+            qmd_content = state.revised_content
             if not qmd_content:
                 logger.warning("No revised content to validate, skipping retry loop")
                 return
@@ -265,7 +261,7 @@ class ReviewWorkflow:
                 # Finalize log on success (T035)
                 if retry_logger:
                     try:
-                        final_file = self.session_dir / f"iter{current_iteration}" / "resume.qmd"
+                        final_file = cast(Path, self.session_dir) / f"iter{current_iteration}" / "resume.qmd"
                         retry_logger.finalize_log(
                             success=True,
                             total_retries=retry_count,
@@ -284,7 +280,7 @@ class ReviewWorkflow:
                 # Finalize log on failure (T035)
                 if retry_logger:
                     try:
-                        final_file = self.session_dir / f"iter{current_iteration}" / "resume.qmd"
+                        final_file = cast(Path, self.session_dir) / f"iter{current_iteration}" / "resume.qmd"
                         retry_logger.finalize_log(
                             success=False,
                             total_retries=retry_count,
@@ -300,12 +296,12 @@ class ReviewWorkflow:
                 return
 
             # Generate validation feedback
-            validation_feedback = validator.create_validation_feedback(error_msg)
+            validation_feedback = validator.create_validation_feedback(error_msg or "Unknown error")
             logger.info(f"Generated validation feedback with {len(validation_feedback.issues)} issues")
 
             # Re-invoke revisor to fix validation issues (T019)
             revised_content = await self._invoke_revisor_for_retry(state, validation_feedback)
-            state["revised_content"] = revised_content
+            state.revised_content = revised_content
 
             # Save retry artifact (T020)
             retry_path = None
@@ -319,18 +315,18 @@ class ReviewWorkflow:
             # Record retry attempt
             retry_attempt = RetryAttempt(
                 attempt_number=retry_count + 1,
-                error_detected=error_msg[:500],  # Limit error message length
+                error_detected=(error_msg or "")[:500],  # Limit error message length
                 correction_applied=f"Applied {len(validation_feedback.issues)} validation fixes",
                 validation_result=ValidationResult(
                     is_valid=is_valid_after_fix,
-                    error_message=error_msg_after_fix,
+                    error_message=error_msg_after_fix or "",
                     timestamp=__import__('datetime').datetime.now(),
                     attempt_number=retry_count + 1
                 ),
                 qmd_snapshot_path=retry_path if self.session_dir else None
             )
-            state["current_retry_attempts"].append(retry_attempt.model_dump())
-            state["validation_retry_count"] = retry_count + 1
+            state.current_retry_attempts.append(retry_attempt.model_dump())
+            state.validation_retry_count = retry_count + 1
 
             # Log retry attempt (T034)
             if retry_logger:
@@ -341,7 +337,7 @@ class ReviewWorkflow:
 
             retry_count += 1
 
-    async def _invoke_revisor_for_retry(self, state: dict, validation_feedback) -> str:
+    async def _invoke_revisor_for_retry(self, state: ReviewState, validation_feedback: Any) -> str:
         """
         Re-invoke revisor node with validation feedback (T019).
 
@@ -354,17 +350,17 @@ class ReviewWorkflow:
         """
         # Import revisor node dynamically to avoid circular imports
         from .graph import build_review_workflow
-        from ..agents.revisor import revisor_node
+        from .nodes.revisor import revisor_node
 
         # Create temporary state with validation feedback
-        temp_state = dict(state)
-        temp_state["current_feedback"] = [validation_feedback]
+        # Use model_copy(update=...) for Pydantic v2
+        temp_state = state.model_copy(update={"current_feedback": [validation_feedback]})
 
         # Call revisor node directly
         result = await revisor_node(temp_state)
 
         # Extract revised content
-        revised_content = result.get("revised_content", state.get("revised_content", ""))
+        revised_content = cast(str, result.get("revised_content", state.revised_content))
         return revised_content
 
     def _save_retry_artifact(self, qmd_content: str, iteration: int, retry_count: int) -> Path:
@@ -389,27 +385,27 @@ class ReviewWorkflow:
 
     def _update_session_from_state(self, session: ReviewSession, state: ReviewState) -> ReviewSession:
         """Update ReviewSession from final LangGraph state."""
-        logger.debug(f"Updating session from state. Keys: {list(state.keys())}")
+        logger.debug(f"Updating session from state. Keys: {state.model_dump().keys()}")
         # NEVER update resume object - user will manually copy from session directory
         # This prevents accidental overwrites of the original file
-        for feedback_iteration in state.get("feedback_history", []):
+        for feedback_iteration in state.feedback_history:
             session.add_feedback(feedback_iteration)
-        for revision in state.get("applied_revisions", []):
+        for revision in state.applied_revisions:
             session.add_revision(revision)
-        for portfolio in state.get("portfolio_suggestions", []):
+        for portfolio in state.portfolio_suggestions:
             session.add_portfolio_suggestion(portfolio)
-        final_score = state.get("final_score") or state.get("integrated_score") or 0.0
+        final_score = state.final_score or state.integrated_score or 0.0
         session.final_score = final_score
-        session.current_iteration = state.get("current_iteration", 0)
+        session.current_iteration = state.current_iteration
 
         # Update design auto-fix output (013-design-auto-fix)
-        session.design_changes_applied = state.get("design_changes_applied", False)
-        session.design_changes_pending = state.get("design_changes_pending", False)
-        session.design_changes_list = state.get("design_changes_list", [])
-        session.design_backup_paths = state.get("design_backup_paths", {})
+        session.design_changes_applied = state.design_changes_applied
+        session.design_changes_pending = state.design_changes_pending
+        session.design_changes_list = state.design_changes_list
+        session.design_backup_paths = state.design_backup_paths
 
         # Serialize CSSModification if present
-        css_mod = state.get("css_modification")
+        css_mod = state.css_modification
         if css_mod and hasattr(css_mod, "model_dump"):
             # Convert Path objects to strings for JSON serialization
             css_dict = css_mod.model_dump()
@@ -420,7 +416,7 @@ class ReviewWorkflow:
             session.css_modification = css_dict
 
         # Serialize DesignPreview if present (T046)
-        design_preview = state.get("design_preview")
+        design_preview = state.design_preview_paths  # Note: attribute access
         if design_preview and hasattr(design_preview, "model_dump"):
             preview_dict = design_preview.model_dump()
             # Convert Path objects to strings
@@ -430,27 +426,27 @@ class ReviewWorkflow:
             session.design_preview = preview_dict
 
         # Copy preview paths if present
-        design_preview_paths = state.get("design_preview_paths")
+        design_preview_paths = state.design_preview_paths
         if design_preview_paths:
             session.design_preview_paths = design_preview_paths
 
         # Serialize SectionReorder if present
-        section_reorder = state.get("section_reorder")
+        section_reorder = state.section_reorder
         if section_reorder and hasattr(section_reorder, "model_dump"):
             session.section_reorder = section_reorder.model_dump()
         elif isinstance(section_reorder, dict):
             session.section_reorder = section_reorder
 
         # Copy theme recommendation if present (already a dict from _recommend_theme)
-        theme_recommendation = state.get("theme_recommendation")
+        theme_recommendation = state.theme_recommendation
         if theme_recommendation:
             session.theme_recommendation = theme_recommendation
 
         # Update job personalization fields
-        if state.get("job_posting"):
-            session.job_posting = state["job_posting"]
-        if state.get("personalization_result"):
-            session.personalization_result = state["personalization_result"]
+        if state.job_posting:
+            session.job_posting = state.job_posting
+        if state.personalization_result:
+            session.personalization_result = state.personalization_result
 
         logger.debug(f"Session updated: final_score={session.final_score}, iteration={session.current_iteration}")
         return session
@@ -461,7 +457,7 @@ class ReviewWorkflow:
         Args:
             state: Final workflow state with token_usage data
         """
-        token_usage = state.get("token_usage", {})
+        token_usage = state.token_usage
         if not token_usage:
             return
 
