@@ -8,50 +8,46 @@
 
 | # | 機能 | ステータス | 優先度 | 備考 |
 |---|------|-----------|--------|------|
-| 14 | Webサイトのデザイン刷新(Astro移行) | 🔵 未着手 | 中 | astro-example参照、Astro5+TailwindCSS4 |
+| 14 | Webサイトのデザイン刷新(Astro移行) | ✅ 完了 | 中 | Astro 5 + TailwindCSS 4 |
+| 15 | Slidev統合 (プレゼンスライド) | 🔵 未着手 | 低 | |
+| 16 | 多言語対応 (i18n) | 🔵 未着手 | 中 | |
+| 17 | データ視覚化 (Timeline/Charts) | 🔵 未着手 | 中 | |
 
 ---
 
 ## 未着手機能
 
-### 14. Webサイトのデザイン刷新 - Astro移行 (Web Design Overhaul)
+### 15. Slidev統合 (Presentation Slides)
 
-**優先度**: 中
-**目的**: 履歴書表示サイトをNextra/Next.jsからAstroベースに移行し、デザイン・パフォーマンスを大幅改善
-
-#### 背景
-
-現在のWeb表示において、左側の余白が極端に大きく、全体のコンテンツバランスが崩れている。
-暫定対応として `--nextra-sidebar-width` を調整したが、根本的なデザイン刷新が必要。
-
-#### 移行元リポジトリ
-
-- **参照**: [spin-glass/astro-example](https://github.com/spin-glass/astro-example)
-- **デモ**: https://spin-glass.github.io/astro-example/
-
-#### 技術スタック（移行後）
-
-| 項目 | 現在 | 移行後 |
-|------|------|--------|
-| フレームワーク | Next.js 14 + Nextra | Astro 5 |
-| CSS | Tailwind CSS 3 | Tailwind CSS 4 |
-| プレゼン | なし | Slidev |
-| ブログ | なし | Quarto |
-| PDF出力 | Quarto | Puppeteer |
+**優先度**: 低
+**目的**: 職務経歴書の内容からSlidevを使用してプレゼンテーションスライドを自動生成・表示する
 
 #### 機能要件
+1. `packages/web` 内に Slidev を統合
+2. `resume-ja.qmd` または構造化データからスライド用マークダウンを生成
+3. Webサイト上でスライドとして閲覧可能にする
 
-1. **Astro移行** (FR-W01)
-   - `packages/web` をAstroベースに再構築
-   - 既存のmdxコンテンツをAstroに移行
-2. **レイアウト最適化** (FR-W02)
-   - サイドバーの廃止またはコンパクト化
-   - メインコンテンツ中心のレイアウト
-3. **レスポンシブ対応の強化** (FR-W03)
-   - モバイル・タブレット環境での最適表示
-4. **Slidev統合** (FR-W04) - 任意
-   - プレゼンテーションスライドの追加
 
+### 16. 多言語対応の強化 (Multi-language Support)
+
+**優先度**: 中
+**目的**: Astroサイトを多言語（日本語・英語）に完全対応させる
+
+#### 機能要件
+1. Astroのi18n機能を活用したルーティング (`/ja`, `/en`)
+2. 英語版 `resume-en.qmd` の作成と同期フローの構築
+3. 言語切り替えスイッチのUI実装
+
+
+### 17. タイムライン・視覚化機能の強化 (Data Visualization)
+
+**優先度**: 中
+**目的**: 経歴やスキルセットをチャートやタイムラインで視覚的に表示する
+
+#### 機能要件
+1. Shadcn UI / Tremor 等を利用したグラフ表示
+2. インタラクティブな職歴タイムラインの構築
+3. スキルマトリックスのレーダーチャート表示
 
 
 ### 完了済み機能
@@ -69,6 +65,7 @@
 | 7 | Quarto構文検証機能 | 2026-01-09 | (組み込み) |
 | 8 | Quarto検証失敗時の自動リトライ | 2026-01-09 | `specs/009-quarto-retry-loop/` |
 | 9 | ReviewState Pydantic化 | 2026-01-10 | (feature/013-*) |
+| 14 | Webサイトのデザイン刷新 (Astro移行) | 2026-01-11 | `specs/014-astro-migration/` |
 
 ---
 
