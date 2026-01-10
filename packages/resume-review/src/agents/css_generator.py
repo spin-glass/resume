@@ -190,22 +190,28 @@ class CSSGeneratorAgent(BaseAgent):
         Raises:
             ValueError: If no CSS code found in response
         """
-        # Try to extract CSS from code blocks (```css ... ```)
-        css_pattern = r"```css\s*(.*?)\s*```"
-        matches = re.findall(css_pattern, response_content, re.DOTALL | re.IGNORECASE)
+        # 1. Try to extract CSS from specific css code blocks (```css ... ```)
+        css_pattern = r"```css\s*\n?(.*?)\n?```"
+        match = re.search(css_pattern, response_content, re.DOTALL | re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
 
-        if matches:
-            return matches[0].strip()
-
-        # Fallback: try generic code blocks (``` ... ```)
-        generic_pattern = r"```\s*(.*?)\s*```"
-        matches = re.findall(generic_pattern, response_content, re.DOTALL)
-
-        if matches:
-            # Check if it looks like CSS
-            content = matches[0].strip()
+        # 2. Try generic code blocks (``` ... ```)
+        generic_pattern = r"```\s*\n?(.*?)\n?```"
+        match = re.search(generic_pattern, response_content, re.DOTALL)
+        if match:
+            content = match.group(1).strip()
+            # Basic heuristic: if it has { and }, it's probably CSS
             if "{" in content and "}" in content:
                 return content
+
+        # 3. Fallback: find the first { and last } (riskier for CSS, but better than failing)
+        # We look for a pattern that looks like a selector { property: value; }
+        braced_pattern = r"([^{]+\s*\{.*?\})"
+        matches = re.findall(braced_pattern, response_content, re.DOTALL)
+        if matches:
+            # Join all matched blocks
+            return "\n\n".join([m.strip() for m in matches])
 
         raise ValueError("No CSS code found in response")
 

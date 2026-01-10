@@ -53,12 +53,19 @@ IMPORTANT:
     def parse_feedback(self, feedback_text: str) -> Feedback:
         """Parse UX designer feedback from Claude response."""
         try:
-            # Extract JSON from response
-            json_match = re.search(r"\{.*\}", feedback_text, re.DOTALL)
-            if not json_match:
-                raise ValueError("No JSON found in feedback response")
+            # More robust JSON extraction
+            # 1. Try to find JSON inside markdown code blocks first
+            code_block_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", feedback_text, re.DOTALL)
+            if code_block_block := code_block_match:
+                json_str = code_block_block.group(1).strip()
+            else:
+                # 2. Fallback to finding the first { and last }
+                json_match = re.search(r"\{.*\}", feedback_text, re.DOTALL)
+                if not json_match:
+                    raise ValueError("No JSON found in feedback response")
+                json_str = json_match.group().strip()
 
-            data = json.loads(json_match.group())
+            data = json.loads(json_str)
 
             # Parse issues
             issues = []
