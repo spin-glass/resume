@@ -2,10 +2,15 @@
 
 from langgraph.graph import END, StateGraph
 
-from .conditions import should_continue_review, should_do_design_review
+from .conditions import (
+    should_continue_review,
+    should_do_design_review,
+    should_run_design_applier,
+)
 from .nodes import (
     aggregator_node,
     copywriter_node,
+    design_applier_node,
     design_supervisor_node,
     job_parser_node,
     personalizer_node,
@@ -39,6 +44,7 @@ def build_review_workflow() -> StateGraph:
     workflow.add_node("revisor", revisor_node)
     workflow.add_node("portfolio", portfolio_analyzer_node)
     workflow.add_node("design", design_supervisor_node)
+    workflow.add_node("design_applier", design_applier_node)
 
     # Set entry point (job_parser will pass through if no job posting)
     workflow.set_entry_point("job_parser")
@@ -82,8 +88,18 @@ def build_review_workflow() -> StateGraph:
         },
     )
 
-    # Design review ends the workflow
-    workflow.add_edge("design", END)
+    # Conditional edge after design review
+    workflow.add_conditional_edges(
+        "design",
+        should_run_design_applier,
+        {
+            "design_applier": "design_applier",
+            "end": END,
+        },
+    )
+
+    # Design applier ends the workflow
+    workflow.add_edge("design_applier", END)
 
     # Compile the workflow
     return workflow.compile()

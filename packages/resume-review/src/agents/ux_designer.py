@@ -90,7 +90,7 @@ IMPORTANT:
                 suggestions=[f"Error parsing feedback: {e}. Please review manually."],
             )
 
-    def evaluate_from_screenshot(self, screenshot_path: str, target_role: str = "LLM/Multi-Agent Engineer") -> Feedback:
+    async def evaluate_from_screenshot(self, screenshot_path: str, target_role: str = "LLM/Multi-Agent Engineer") -> Feedback:
         """
         Evaluate resume from screenshot instead of text content.
 
@@ -120,9 +120,20 @@ IMPORTANT:
 
         system_prompt = self.get_system_prompt(target_role)
 
-        # Call Claude with vision
-        response = self.client.messages.create(
-            model=self.model,
+        # Call LLM with vision (using underlying client for vision support)
+        # Note: This requires the llm_client to be an Anthropic-based client
+        # TODO: Abstract vision API to support multiple providers (Gemini, OpenAI)
+        if not hasattr(self.llm_client, 'client'):
+            return Feedback(
+                agent_name=self.agent_name,
+                score=5.0,
+                strengths=[],
+                issues=[],
+                suggestions=["Vision evaluation requires Anthropic client"],
+            )
+
+        response = await self.llm_client.client.messages.create(
+            model=self.llm_client.model,
             max_tokens=4000,
             system=system_prompt,
             messages=[

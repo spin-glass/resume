@@ -2,6 +2,12 @@
 
 from typing import Annotated, Optional, TypedDict
 
+from ..models.design import (
+    CSSModification,
+    DesignPreview,
+    SectionReorder,
+    ThemeRecommendation,
+)
 from ..models.feedback import Feedback, Resume
 from ..models.job_posting import JobPosting, PersonalizationResult
 from ..models.portfolio import PortfolioItem
@@ -51,6 +57,7 @@ class ReviewState(TypedDict, total=False):
     screenshot_url: Optional[str]
     save_iterations: bool
     output_dir: Optional[str]
+    session_dir: Optional[str]  # New: Specific session directory (timestamped)
     session_id: str
 
     # Iteration tracking
@@ -92,6 +99,25 @@ class ReviewState(TypedDict, total=False):
     max_validation_retries: int
     strict_validation: bool
     current_retry_attempts: list[dict]  # Serialized RetryAttempt records
+
+    # Design modification flags (from CLI)
+    auto_design_enabled: bool  # --auto-design flag
+    design_preview_enabled: bool  # --design-preview flag
+    css_output_path: Optional[str]  # --css-output override
+
+    # Design modification outputs
+    css_modification: Optional[CSSModification]
+    section_reorder: Optional[SectionReorder]
+    theme_recommendation: Optional[ThemeRecommendation]
+    design_preview_paths: Optional[DesignPreview]
+
+    # Design modification status
+    design_changes_applied: bool  # Were modifications actually applied?
+    design_changes_pending: bool  # Are modifications ready but not applied (preview mode)?
+    design_changes_list: list[str]  # Human-readable list of applied changes
+
+    # Backup tracking
+    design_backup_paths: dict[str, str]  # {original_path: backup_path} for rollback
 
     # Job personalization (optional fields for job-specific review)
     job_posting_file: Optional[str]  # Path to job posting file

@@ -32,3 +32,9 @@ def get_api_key() -> str:
     if not api_key:
         raise ValueError("ANTHROPIC_API_KEY environment variable is required")
     return api_key
+
+
+# Design Auto-Fix Configuration
+CSS_OUTPUT_DEFAULT = "styles/resume-custom.css"
+BACKUP_DIRECTORY = "backups"
+DESIGN_PREVIEW_DIRECTORY = "preview"

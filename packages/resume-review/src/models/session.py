@@ -29,6 +29,23 @@ class ReviewSession(BaseModel):
     screenshot_url: Optional[str] = None
     max_validation_retries: int = 3
     strict_validation: bool = False
+    # Design auto-fix flags (013-design-auto-fix)
+    auto_design_enabled: bool = False
+    design_preview_enabled: bool = False
+    css_output_path: Optional[str] = None
+
+    # Design auto-fix output (013-design-auto-fix)
+    design_changes_applied: bool = False
+    design_changes_pending: bool = False
+    design_changes_list: list[str] = Field(default_factory=list)
+    design_backup_paths: dict[str, str] = Field(default_factory=dict)
+    css_modification: Optional[dict] = None  # Serialized CSSModification
+    section_reorder: Optional[dict] = None  # Serialized SectionReorder
+    theme_recommendation: Optional[dict] = None  # Serialized ThemeRecommendation
+    design_preview_paths: Optional[dict] = None  # Preview screenshot paths
+    design_preview: Optional[dict] = None  # Serialized DesignPreview with stats
+
+    # Job Personalization (010-job-personalization)
     job_posting: Optional[JobPosting] = None
     personalization_result: Optional[PersonalizationResult] = None
 

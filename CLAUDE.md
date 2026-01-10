@@ -32,6 +32,7 @@ resume/                     # Monorepo root
 - Quarto validation with auto-retry (009-quarto-retry-loop)
 - File-based (QMD files, session JSON outputs) - no database (010-job-personalization)
 - N/A (state flows through LangGraph's in-memory StateGraph) (011-stategraph-node-separation)
+- File system (CSS output files, backups, screenshots) (013-design-auto-fix)
 
 - **Web**: Next.js 14, Nextra 3.0 (alpha), React 18, Tailwind CSS
 - **Python**: Python 3.13+ (LangGraph compatibility), LangGraph (multi-agent orchestration), Anthropic SDK (Claude API), Playwright (screenshot capture), pytest (testing)
@@ -165,6 +166,7 @@ __start__ → router → [recruiter, tech_writer, copywriter] → aggregator →
 4. **Future Retry Logic**: Per-agent state enables targeted retry (not yet implemented)
 
 ## Recent Changes
+- 013-design-auto-fix: Design auto-fix with CSS generation, section reorder, theme recommendations
 - 011-stategraph-node-separation: Fan-out/Fan-in agent node separation for visibility and debugging
 - 010-job-personalization: Added job personalization (file/URL input, match scoring, contextual feedback)
 - 003-multi-model-hybrid: Multi-provider LLM support (Gemini, OpenAI, Anthropic)
