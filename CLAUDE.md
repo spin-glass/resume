@@ -125,9 +125,38 @@ pnpm review --max-validation-retries 0 --save-iterations
 - **Commits**: Include `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>`
 
 ## Recent Changes
-- 010-job-personalization: Added Python 3.13 (existing project requirement)
+- 010-job-personalization: Added job personalization (file/URL input, match scoring, contextual feedback)
 - 003-multi-model-hybrid: Multi-provider LLM support (Gemini, OpenAI, Anthropic)
 - 009-quarto-retry-loop: Quarto validation auto-retry with logging
+
+## Job Personalization (010-job-personalization)
+
+**Feature**: Tailor resume reviews to specific job descriptions via file or URL
+
+### Key Capabilities
+- **File Input**: Parse markdown or text job descriptions (`--job-posting`)
+- **URL Input**: Fetch and parse job postings from URLs (LinkedIn, Indeed, etc.) (`--job-url`)
+- **Match Scoring**: Calculate match score (0-100%) and identify skill gaps
+- **Contextual Feedback**: Agents provide feedback specific to job requirements
+- **ATS Optimization**: Suggests keywords and emphasis based on job description
+
+### Usage Commands
+```bash
+# File-based personalization
+pnpm review:dry --job-posting ./job_desc.md
+
+# URL-based personalization
+pnpm review:dry --job-url "https://linkedin.com/jobs/view/..."
+
+# Full review with personalization (updates resume)
+pnpm review --input resume.qmd --job-posting ./job.md
+```
+
+### Output Logic
+- **Detailed Match Analysis**: Shows match level (Excellent, Good, etc.), matched/missing skills
+- **Emphasis Suggestions**: 💡 ideas for highlighting relevant experience
+- **Keyword Additions**: 🔑 recommended keywords to improve ATS ranking
+
 
 
 <!-- MANUAL ADDITIONS START -->
