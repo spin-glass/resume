@@ -102,8 +102,9 @@ async def _generate_preview(
     current_iteration = state.get("current_iteration", 0)
     
     if session_dir:
-        # Save to iter folder (minimum iter1 for consistency with other outputs)
-        iter_num = max(1, current_iteration)
+        # Save to iter folder (consistent with 1-based indexing for user outputs)
+        # current_iteration is 0-indexed (0, 1, 2...), so we add 1
+        iter_num = current_iteration + 1
         cache_dir = Path(session_dir) / f"iter{iter_num}"
         cache_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Saving design preview to {cache_dir}")
