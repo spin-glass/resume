@@ -1,6 +1,6 @@
-"""LangGraph StateGraph builder for resume review workflow."""
-
+from typing import Any, Optional
 from langgraph.graph import END, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from .conditions import should_continue_review, should_do_design_review
 from .nodes import (
@@ -18,7 +18,7 @@ from .nodes import (
 from .state import ReviewState
 
 
-def build_review_workflow() -> StateGraph:
+def build_review_workflow() -> CompiledStateGraph[ReviewState, Any, Any, Any]:
     """
     Build and compile the LangGraph StateGraph for resume review.
 

@@ -5,7 +5,7 @@ This module contains Pydantic models for structured job posting data,
 skill matching results, and personalization analysis.
 """
 
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, computed_field, field_validator, model_validator
 
@@ -109,7 +109,7 @@ class PersonalizationResult(BaseModel):
         description="Keywords from job posting to incorporate into resume"
     )
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def match_score(self) -> float:
         """
@@ -119,7 +119,7 @@ class PersonalizationResult(BaseModel):
         """
         return round((self.required_match_score * 0.7) + (self.preferred_match_score * 0.3), 1)
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def match_level(self) -> Literal["Excellent", "Good", "Moderate", "Weak"]:
         """
@@ -140,13 +140,13 @@ class PersonalizationResult(BaseModel):
         else:
             return "Weak"
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def has_critical_gaps(self) -> bool:
         """Check if there are missing required skills."""
         return len(self.missing_required_skills) > 0
 
-    def get_match_summary(self) -> dict[str, any]:
+    def get_match_summary(self) -> dict[str, Any]:
         """
         Return summary dict with match statistics.
 

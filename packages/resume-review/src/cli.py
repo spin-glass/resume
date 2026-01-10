@@ -11,10 +11,11 @@ from .models.session import ReviewSession
 from .workflow import ReviewWorkflow
 from .services.qmd_parser import QMDParser
 from .utils.config import get_config, setup_logging
+from .config.model_config import AgentName, AGENT_MODEL_MAP
 
 
 @click.group()
-def cli():
+def cli() -> None:
     """Resume Review Multi-Agent System CLI."""
     pass
 
@@ -151,7 +152,7 @@ def review(
     model: Optional[str],
     max_validation_retries: Optional[int],
     strict_validation: bool,
-):
+) -> None:
     """
     Run multi-agent resume review and improvement.
 
@@ -250,7 +251,6 @@ def review(
         else:
             # Hybrid mode
             click.echo("Mode: Hybrid configuration (optimal model per agent)")
-            from .config.model_config import AGENT_MODEL_MAP, AgentName
             click.echo("\nAgent Model Assignments:")
             for agent_name in [
                 AgentName.RECRUITER,
@@ -260,9 +260,9 @@ def review(
                 AgentName.VISUAL_DESIGNER,
                 AgentName.REVISOR,
             ]:
-                config = AGENT_MODEL_MAP.get(agent_name)
-                if config:
-                    click.echo(f"  {agent_name.value:20} → {config['model_id']:30} ({config['provider']})")
+                config_entry = AGENT_MODEL_MAP.get(agent_name)
+                if config_entry:
+                    click.echo(f"  {agent_name.value:20} → {config_entry['model_id']:30} ({config_entry['provider']})")
 
     click.echo()
 
@@ -292,11 +292,10 @@ def review(
         click.echo("\nReview starting...")
 
         # Callback for iteration saves
-        def on_iteration_saved(iteration: int, score: float, path: Path):
+        def on_iteration_saved(iteration: int, score: float, path: Path) -> None:
             click.echo(f"  💾 Iteration {iteration} saved: {path.name} (score: {score:.1f})")
 
         workflow = ReviewWorkflow(
-            api_key=anthropic_api_key,  # Legacy parameter (backward compat)
             save_iterations=save_iterations,
             output_dir=iterations_dir,
             on_iteration_complete=on_iteration_saved if save_iterations else None,
@@ -450,7 +449,7 @@ def review(
 
 
 @cli.command()
-def version():
+def version() -> None:
     """Display version information."""
     from . import __version__
 
@@ -458,7 +457,7 @@ def version():
     click.echo("Powered by LangGraph and Claude Sonnet 4.5")
 
 
-def main():
+def main() -> None:
     """Entry point for console script."""
     cli()
 

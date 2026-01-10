@@ -7,6 +7,7 @@ from pathlib import Path
 from src.workflow.runner import ReviewWorkflow
 from src.models.session import ReviewSession
 from src.models.feedback import Resume
+from src.workflow.state import ReviewState
 
 
 @pytest.fixture
@@ -47,12 +48,14 @@ async def test_max_validation_retries_zero_skips_retry_loop(mock_session):
     workflow = ReviewWorkflow(api_key="test-key", save_iterations=False)
 
     # Mock state with revised content
-    state = {
-        "revised_content": "# Test Content",
-        "max_validation_retries": 0,
-        "strict_validation": False,
-        "current_iteration": 1,
-    }
+    # Mock state with revised_content
+    state = ReviewState(
+        resume=mock_session.resume,
+        revised_content="# Test Content",
+        max_validation_retries=0,
+        strict_validation=False,
+        current_iteration=1,
+    )
 
     # Mock validator to always fail
     with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
@@ -65,7 +68,7 @@ async def test_max_validation_retries_zero_skips_retry_loop(mock_session):
 
         # Validator should be called exactly once (initial validation, no retries)
         assert mock_validator.validate.call_count == 1
-        assert state.get("validation_retry_count", 0) == 0
+        assert state.validation_retry_count == 0
 
 
 @pytest.mark.asyncio
@@ -75,12 +78,13 @@ async def test_custom_max_validation_retries_respected(mock_session):
 
     workflow = ReviewWorkflow(api_key="test-key", save_iterations=False)
 
-    state = {
-        "revised_content": "# Test Content",
-        "max_validation_retries": 2,
-        "strict_validation": False,
-        "current_iteration": 1,
-    }
+    state = ReviewState(
+        resume=mock_session.resume,
+        revised_content="# Test Content",
+        max_validation_retries=2,
+        strict_validation=False,
+        current_iteration=1,
+    )
 
     # Mock validator to always fail
     with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
@@ -99,7 +103,7 @@ async def test_custom_max_validation_retries_respected(mock_session):
             # Initial validation + 2 retries + 2 post-fix validations = 5 calls
             # (initial, retry1_validate_post_fix, retry2_validate_post_fix)
             assert mock_validator.validate.call_count <= 5
-            assert state.get("validation_retry_count", 0) <= 2
+            assert state.validation_retry_count <= 2
 
 
 @pytest.mark.asyncio
@@ -109,12 +113,13 @@ async def test_strict_validation_true_raises_on_failure(mock_session):
 
     workflow = ReviewWorkflow(api_key="test-key", save_iterations=False)
 
-    state = {
-        "revised_content": "# Test Content",
-        "max_validation_retries": 1,
-        "strict_validation": True,
-        "current_iteration": 1,
-    }
+    state = ReviewState(
+        resume=mock_session.resume,
+        revised_content="# Test Content",
+        max_validation_retries=1,
+        strict_validation=True,
+        current_iteration=1,
+    )
 
     # Mock validator to always fail
     with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
@@ -139,12 +144,13 @@ async def test_strict_validation_false_continues_on_failure(mock_session):
 
     workflow = ReviewWorkflow(api_key="test-key", save_iterations=False)
 
-    state = {
-        "revised_content": "# Test Content",
-        "max_validation_retries": 1,
-        "strict_validation": False,
-        "current_iteration": 1,
-    }
+    state = ReviewState(
+        resume=mock_session.resume,
+        revised_content="# Test Content",
+        max_validation_retries=1,
+        strict_validation=False,
+        current_iteration=1,
+    )
 
     # Mock validator to always fail
     with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
@@ -169,12 +175,16 @@ async def test_validation_success_stops_retry_loop():
     """Test that validation success stops retry loop immediately."""
     workflow = ReviewWorkflow(api_key="test-key", save_iterations=False)
 
-    state = {
-        "revised_content": "# Test Content",
-        "max_validation_retries": 3,
-        "strict_validation": False,
-        "current_iteration": 1,
-    }
+    # Setup
+    from unittest.mock import Mock
+    mock_resume = Mock(spec=Resume)
+    state = ReviewState(
+        resume=mock_resume,
+        revised_content="# Test Content",
+        max_validation_retries=3,
+        strict_validation=False,
+        current_iteration=1,
+    )
 
     # Mock validator to succeed on first attempt
     with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
@@ -186,4 +196,4 @@ async def test_validation_success_stops_retry_loop():
 
         # Should only validate once
         assert mock_validator.validate.call_count == 1
-        assert state.get("validation_retry_count", 0) == 0
+        assert state.validation_retry_count == 0

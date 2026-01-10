@@ -20,16 +20,16 @@ async def revisor_node(state: ReviewState) -> dict[str, Any]:
     """
     logger.info("Revisor: Applying content revisions using full-rewrite approach")
 
-    resume = state["resume"]
-    current_feedback = state.get("current_feedback", [])
-    dry_run = state.get("dry_run", False)
-    target_role = state["target_role"]
+    resume = state.resume
+    current_feedback = state.current_feedback
+    dry_run = state.dry_run
+    target_role = state.target_role
 
     # Get API keys
-    gemini_api_key = state.get("gemini_api_key")
-    openai_api_key = state.get("openai_api_key")
-    anthropic_api_key = state.get("anthropic_api_key") or state.get("api_key")
-    override_model = state.get("override_model")
+    gemini_api_key = state.gemini_api_key
+    openai_api_key = state.openai_api_key
+    anthropic_api_key = state.anthropic_api_key or state.api_key
+    override_model = state.override_model
 
     # Create LLM client for Revisor (uses Gemini for cost-effectiveness)
     revisor_client = LLMClientFactory.create_client(
@@ -51,7 +51,7 @@ async def revisor_node(state: ReviewState) -> dict[str, Any]:
         # Update state with revisions
         result = {
             "applied_revisions": revisions,
-            "current_iteration": state.get("current_iteration", 0) + 1,
+            "current_iteration": state.current_iteration + 1,
         }
 
         if not dry_run:

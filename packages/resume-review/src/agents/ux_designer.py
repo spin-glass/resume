@@ -5,18 +5,20 @@ import re
 
 from ..models import Severity
 from ..models.feedback import Feedback, Issue
+from ..models.job_posting import JobPosting
+from ..services import BaseLLMClient
 from .base import BaseAgent
 
 
 class UXDesignerAgent(BaseAgent):
     """Evaluates resume from UX/information hierarchy perspective."""
 
-    def __init__(self, llm_client, agent_name=None):
+    def __init__(self, llm_client: BaseLLMClient, agent_name: str | None = None) -> None:
         """Initialize UX designer agent."""
         super().__init__(llm_client, agent_name)
         self.agent_name = "ux_designer"
 
-    def get_system_prompt(self, target_role: str) -> str:
+    def get_system_prompt(self, target_role: str, job_posting: JobPosting | None = None) -> str:
         """Get UX designer-specific system prompt."""
         return f"""You are an expert UX designer specializing in information architecture and document design.
 
@@ -90,7 +92,7 @@ IMPORTANT:
                 suggestions=[f"Error parsing feedback: {e}. Please review manually."],
             )
 
-    def evaluate_from_screenshot(self, screenshot_path: str, target_role: str = "LLM/Multi-Agent Engineer") -> Feedback:
+    async def evaluate_from_screenshot(self, screenshot_path: str, target_role: str = "LLM/Multi-Agent Engineer") -> Feedback:
         """
         Evaluate resume from screenshot instead of text content.
 
@@ -120,8 +122,11 @@ IMPORTANT:
 
         system_prompt = self.get_system_prompt(target_role)
 
+        if not self.async_client:
+            raise RuntimeError("Vision evaluation requires AsyncAnthropic client")
+
         # Call Claude with vision
-        response = self.client.messages.create(
+        response = await self.async_client.messages.create(
             model=self.model,
             max_tokens=4000,
             system=system_prompt,
@@ -146,5 +151,9 @@ IMPORTANT:
             ],
         )
 
-        feedback_text = response.content[0].text
+        from anthropic.types import TextBlock
+        feedback_text = ""
+        for block in response.content:
+            if isinstance(block, TextBlock):
+                feedback_text += block.text
         return self.parse_feedback(feedback_text)

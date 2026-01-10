@@ -24,22 +24,21 @@ async def supervisor_node(state: ReviewState) -> dict[str, Any]:
     using asyncio.gather for efficiency.
     """
     logger.info(
-        f"Supervisor: Starting parallel agent evaluation (iteration {state.get('current_iteration', 0) + 1})"
+        f"Supervisor: Starting parallel agent evaluation (iteration {state.current_iteration + 1})"
     )
 
-    resume = state["resume"]
-    target_role = state["target_role"]
-    job_posting = state.get("job_posting")
+    resume = state.resume
+    target_role = state.target_role
+    job_posting = state.job_posting
 
     # Get API keys (new multi-provider support)
-    gemini_api_key = state.get("gemini_api_key")
-    openai_api_key = state.get("openai_api_key")
-    anthropic_api_key = state.get("anthropic_api_key") or state.get("api_key")
-    override_model = state.get("override_model")
+    gemini_api_key = state.gemini_api_key
+    openai_api_key = state.openai_api_key
+    anthropic_api_key = state.anthropic_api_key or state.api_key
+    override_model = state.override_model
 
     # Initialize token usage tracking
-    if "token_usage" not in state:
-        state["token_usage"] = {}
+    # Pydantic model ensures token_usage exists as a dict
 
     # Create LLM clients for each agent using factory
     recruiter_client = LLMClientFactory.create_client(
@@ -80,7 +79,7 @@ async def supervisor_node(state: ReviewState) -> dict[str, Any]:
 
         # Process results, handling any exceptions
         feedback_list = []
-        token_usage = state.get("token_usage", {})
+        token_usage = state.token_usage
 
         for i, result in enumerate(results):
             agent_name = ["recruiter", "technical_writer", "copywriter"][i]
@@ -98,13 +97,11 @@ async def supervisor_node(state: ReviewState) -> dict[str, Any]:
                         suggestions=[f"Error: {str(result)}"],
                     )
                 )
-            else:
+            elif isinstance(result, Feedback):
                 feedback_list.append(result)
                 logger.debug(f"Agent {agent_name} score: {result.score}/10.0")
 
                 # Log token usage for cost tracking
-                # Note: In real implementation, we'd capture this from LLMResponse
-                # For now, we track the model used
                 token_usage[agent_name] = {
                     "model": client.model,
                     "provider": client.provider,
@@ -126,20 +123,20 @@ async def design_supervisor_node(state: ReviewState) -> dict[str, Any]:
 
     Only runs if screenshot_url is provided.
     """
-    screenshot_url = state.get("screenshot_url")
+    screenshot_url = state.screenshot_url
     if not screenshot_url:
         logger.info("Design Supervisor: No screenshot URL, skipping design review")
         return {}
 
     logger.info(f"Design Supervisor: Starting design review for {screenshot_url}")
 
-    target_role = state["target_role"]
+    target_role = state.target_role
 
     # Get API keys
-    gemini_api_key = state.get("gemini_api_key")
-    openai_api_key = state.get("openai_api_key")
-    anthropic_api_key = state.get("anthropic_api_key") or state.get("api_key")
-    override_model = state.get("override_model")
+    gemini_api_key = state.gemini_api_key
+    openai_api_key = state.openai_api_key
+    anthropic_api_key = state.anthropic_api_key or state.api_key
+    override_model = state.override_model
 
     # Import design agents and screenshot service
     from ...agents.ux_designer import UXDesignerAgent
@@ -177,21 +174,14 @@ async def design_supervisor_node(state: ReviewState) -> dict[str, Any]:
 
         # Run design agents in parallel
         ux_feedback, visual_feedback = await asyncio.gather(
-            asyncio.get_event_loop().run_in_executor(
-                None, ux_designer.evaluate_from_screenshot, str(screenshot_path), target_role
-            ),
-            asyncio.get_event_loop().run_in_executor(
-                None,
-                visual_designer.evaluate_from_screenshot,
-                str(screenshot_path),
-                target_role,
-            ),
+            ux_designer.evaluate_from_screenshot(str(screenshot_path), target_role),
+            visual_designer.evaluate_from_screenshot(str(screenshot_path), target_role),
         )
 
         design_feedback = [ux_feedback, visual_feedback]
 
         # Recalculate score with design feedback
-        all_feedback = state.get("current_feedback", []) + design_feedback
+        all_feedback = state.current_feedback + design_feedback
         final_score = calculate_integrated_score(all_feedback)
 
         return {

@@ -8,6 +8,7 @@ personalized recommendations for tailoring resumes to specific job postings.
 import json
 import logging
 
+from typing import cast
 from ..models.feedback import Resume
 from ..models.job_posting import JobPosting, PersonalizationResult, SkillMatch
 from ..services.llm_client import BaseLLMClient
@@ -217,7 +218,7 @@ Generate 3-5 prioritized emphasis suggestions."""
             priority_order = {"🔴": 0, "🟡": 1, "🟢": 2}
             suggestions.sort(key=lambda s: priority_order.get(s[0] if s else "x", 3))
 
-            return suggestions[:5]
+            return cast(list[str], suggestions[:5])
 
         except Exception as e:
             logger.error(f"Error generating suggestions: {e}")

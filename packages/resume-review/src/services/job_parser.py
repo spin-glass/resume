@@ -9,7 +9,7 @@ import json
 import logging
 from pathlib import Path
 
-import requests
+import requests  # type: ignore[import-untyped]
 from bs4 import BeautifulSoup
 
 from ..models.job_posting import JobPosting
@@ -215,7 +215,8 @@ Return ONLY the JSON object, no additional text."""
             logger.info(f"Fetching job posting from URL: {url}")
             response = requests.get(url, headers=headers, timeout=10)
             response.raise_for_status()
-            return response.text
+            from typing import cast
+            return cast(str, response.text)
 
         except requests.exceptions.Timeout:
             raise ValueError(

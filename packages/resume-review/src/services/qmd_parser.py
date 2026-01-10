@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
-import frontmatter
+import frontmatter  # type: ignore[import-untyped]
 
 from ..models.feedback import Resume
 

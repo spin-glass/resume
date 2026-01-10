@@ -3,10 +3,11 @@
 import logging
 from typing import Optional
 
-import frontmatter
+import frontmatter  # type: ignore[import-untyped]
 
 from ..models.feedback import Feedback, Resume
-from ..services.llm_client import BaseLLMClient
+from ..models.job_posting import JobPosting
+from ..services import BaseLLMClient
 from .base import BaseAgent
 
 logger = logging.getLogger("resume_review")
@@ -25,7 +26,7 @@ class RevisorAgent(BaseAgent):
         """
         super().__init__(llm_client, agent_name or "revisor")
 
-    def get_system_prompt(self, target_role: str) -> str:
+    def get_system_prompt(self, target_role: str, job_posting: Optional[JobPosting] = None) -> str:
         """Get system prompt for Revisor agent."""
         from ..config.prompts import REVISOR_SYSTEM_PROMPT
 
