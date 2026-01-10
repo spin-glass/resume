@@ -175,17 +175,10 @@ async def design_supervisor_node(state: ReviewState) -> dict[str, Any]:
         ux_designer = UXDesignerAgent(llm_client=ux_client)
         visual_designer = VisualDesignerAgent(llm_client=visual_client)
 
-        # Run design agents in parallel
+        # Run design agents in parallel (both are now async)
         ux_feedback, visual_feedback = await asyncio.gather(
-            asyncio.get_event_loop().run_in_executor(
-                None, ux_designer.evaluate_from_screenshot, str(screenshot_path), target_role
-            ),
-            asyncio.get_event_loop().run_in_executor(
-                None,
-                visual_designer.evaluate_from_screenshot,
-                str(screenshot_path),
-                target_role,
-            ),
+            ux_designer.evaluate_from_screenshot(str(screenshot_path), target_role),
+            visual_designer.evaluate_from_screenshot(str(screenshot_path), target_role),
         )
 
         design_feedback = [ux_feedback, visual_feedback]
