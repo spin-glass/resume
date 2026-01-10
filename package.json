@@ -32,5 +32,10 @@
   "homepage": "https://github.com/spin-glass/resume#README.md",
   "engines": {
     "node": "22.x"
+  },
+  "pnpm": {
+    "overrides": {
+      "cross-spawn": "^7.0.3"
+    }
   }
 }
