@@ -30,6 +30,8 @@ resume/                     # Monorepo root
 - Python 3.13, LangGraph 1.0.0+, Anthropic SDK 0.25.0+, Pydantic 2.0+
 - Multi-model support: Gemini, OpenAI, Anthropic (003-multi-model-hybrid)
 - Quarto validation with auto-retry (009-quarto-retry-loop)
+- Python 3.13 (matching existing resume-review package) (013-design-auto-fix)
+- File system (CSS output files, backups, screenshots) (013-design-auto-fix)
 
 - **Web**: Next.js 14, Nextra 3.0 (alpha), React 18, Tailwind CSS
 - **Python**: Python 3.13+ (LangGraph compatibility), LangGraph (multi-agent orchestration), Anthropic SDK (Claude API), Playwright (screenshot capture), pytest (testing)
@@ -123,11 +125,10 @@ pnpm review --max-validation-retries 0 --save-iterations
 - **Commits**: Include `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>`
 
 ## Recent Changes
+- 013-design-auto-fix: Added Python 3.13 (matching existing resume-review package)
 - 003-multi-model-hybrid: Multi-provider LLM support (Gemini, OpenAI, Anthropic)
 - 009-quarto-retry-loop: Quarto validation auto-retry with logging
 
-- 002-monorepo-refactor: Reorganized repository into pnpm monorepo with packages/web/, packages/resume-review/, and resume/ directories
-- 001-resume-review-agents: Added multi-agent resume review system with LangGraph workflow
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

@@ -18,6 +18,8 @@ dependencies = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.21.0",
     "tenacity>=8.0.0",
+    "cssutils>=2.0.0,<3.0.0",
+    "pillow>=10.0.0",
 ]
 
 [project.optional-dependencies]

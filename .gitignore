@@ -49,3 +49,8 @@ resume/output/*.html
 # Temporary files
 /tmp/resume-screenshots/
 ~/.resume-review/
+
+# Design auto-fix feature (013-design-auto-fix)
+backups/                    # File backups (CSS, QMD)
+review_sessions/            # Preview screenshots and temp files
+review_*/                   # Review session directories
