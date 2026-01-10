@@ -17,19 +17,19 @@ IMPORTANT:
 CRITICAL OUTPUT REQUIREMENT: You MUST respond with valid JSON only. Do not include any text before or after the JSON object.
 
 Response Format (JSON):
-{
+{{
   "score": <float 1-10>,
   "strengths": [<list of specific strengths>],
   "issues": [
-    {
+    {{
       "description": "<specific problem>",
       "action_type": "<add_content|restructure|emphasize|remove|quantify|add_portfolio>",
       "location": "<EXACT markdown header like '## 職務要約' or '### 得意分野' or null for general issues>",
       "severity": "<critical|high|medium|low>"
-    }
+    }}
   ],
   "suggestions": [<list of specific actionable suggestions>]
-}
+}}
 
 CRITICAL: For "location", use EXACT markdown headers from the resume (e.g., "## 職務要約", "### 得意分野").
 Do NOT use content descriptions - use the section header that contains the content.

@@ -1,7 +1,7 @@
 # リファクタリング・機能拡張仕様
 
 **作成日**: 2026-01-09
-**最終更新**: 2026-01-09 (ステータス更新: マルチモデル・ハイブリッド構成完了)
+**最終更新**: 2026-01-10 (011-stategraph-node-separation 完了, Pydantic State リファクタリング追加)
 
 ---
 
@@ -9,14 +9,15 @@
 
 | # | 機能 | ステータス | 進捗 | 備考 |
 |---|------|-----------|------|------|
-| 1 | StateGraph エージェントノード分離 | 🔵 未着手 | 0% | 優先度: 低 |
-| 2 | 求人パーソナライズ機能 | 🔵 未着手 | 0% | 優先度: 中 |
+| 1 | StateGraph エージェントノード分離 | ✅ 完了 | 100% | 011-stategraph-node-separation で実施済み |
+| 2 | 求人パーソナライズ機能 | ✅ 完了 | 100% | 010-job-personalization で実施済み |
 | 3 | リポジトリ全体のディレクトリ構成整理 | ✅ 完了 | 100% | 002-monorepo-refactorで実施済み |
 | 4 | マルチモデル・ハイブリッド構成 | ✅ 完了 | 100% | 003-multi-model-hybridで実施済み |
 | 5 | デザイン自動修正機能 | 🔵 未着手 | 0% | 優先度: 低 |
 | 6 | 構造検証・自動修復機能 | ✅ 完了 | 100% | 2026-01-09 完了 |
 | 7 | Quarto構文検証機能 | ✅ 完了 | 100% | 2026-01-09 完了 |
 | 8 | Quarto検証失敗時の自動リトライ | ✅ 完了 | 100% | 009-quarto-retry-loopで実施済み |
+| 9 | ReviewState Pydantic リファクタリング | 🔵 未着手 | 0% | 優先度: 中 |
 
 ### 凡例
 - ✅ 完了: 実装・テスト完了
@@ -52,21 +53,31 @@
 
 ## 目次
 
-1. [StateGraph エージェントノード分離](#1-stategraph-エージェントノード分離) 🔵
-2. [求人パーソナライズ機能](#2-求人パーソナライズ機能) 🔵
+1. [StateGraph エージェントノード分離](#1-stategraph-エージェントノード分離) ✅ **完了**
+2. [求人パーソナライズ機能](#2-求人パーソナライズ機能) ✅ **完了**
 3. [リポジトリ全体のディレクトリ構成・アーキテクチャ整理](#3-リポジトリ全体のディレクトリ構成アーキテクチャ整理) ✅ **完了**
 4. [マルチモデル・ハイブリッド構成によるコスト最適化と品質向上](#4-マルチモデルハイブリッド構成によるコスト最適化と品質向上) ✅ **完了**
 5. [デザイン自動修正機能](#5-デザイン自動修正機能) 🔵
 6. [構造検証・自動修復機能](#6-構造検証自動修復機能) ✅ **完了**
 7. [Quarto構文検証機能](#7-quarto構文検証機能) ✅ **完了**
 8. [Quarto検証失敗時の自動リトライループ機能](#8-quarto検証失敗時の自動リトライループ機能) ✅ **完了**
+9. [ReviewState Pydantic リファクタリング](#9-reviewstate-pydantic-リファクタリング) 🔵
 
 ---
 
-# 1. StateGraph エージェントノード分離
+# 1. StateGraph エージェントノード分離 ✅ 完了
 
-**優先度**: 低 (機能的には正常動作)
+**優先度**: 低 (機能的には正常動作) → **完了: 2026-01-10**
 **目的**: LangGraph の可視化・デバッグ機能を最大限活用
+
+**実装完了:** 011-stategraph-node-separation
+**マージコミット:** `cecef6c Merge branch '011-stategraph-node-separation' into main`
+
+**実装済み機能:**
+- Fan-out/Fan-in パターンによる並列エージェント実行
+- 個別エージェントノード (router, recruiter, tech_writer, copywriter, aggregator)
+- LangGraph Studio 連携 (`langgraph.json`, Studio wrapper)
+- グラフ可視化スクリプト (`pnpm graph:view`, `pnpm graph:mermaid`)
 
 ---
 
@@ -3120,4 +3131,103 @@ class Settings(BaseSettings):
 - ESLint の `--fix` 機能: 構文エラーを自動修正し、成功するまでリトライ
 - Prettier の Auto-fix: フォーマットエラーを自動的に修正
 - CI/CD の Retry Mechanism: テスト失敗時の自動リトライパターン
+
+---
+
+# 9. ReviewState Pydantic リファクタリング
+
+**優先度**: 中
+**目的**: LangGraph Studio でのデフォルト入力サポートと型安全性の向上
+
+---
+
+## 背景
+
+現在の `ReviewState` は `TypedDict` で定義されているため：
+
+1. **デフォルト値が設定できない**: Studio から実行時に全フィールドを手動入力する必要がある
+2. **バリデーションがない**: 不正な値が渡されてもランタイムまでエラーが発生しない
+3. **シリアライズが手動**: JSON との相互変換に追加コードが必要
+
+---
+
+## 提案する変更
+
+### Before: TypedDict
+
+```python
+class ReviewState(TypedDict, total=False):
+    resume: Resume
+    target_role: str
+    score_threshold: float
+    max_iterations: int
+    dry_run: bool
+    # ... 多数のオプショナルフィールド
+```
+
+### After: Pydantic BaseModel
+
+```python
+from pydantic import BaseModel, Field
+from typing import Optional
+
+class ReviewState(BaseModel):
+    # 必須フィールド
+    resume: Resume
+    target_role: str = "LLM/Multi-Agent Engineer"
+    
+    # オプショナルフィールド（デフォルト値付き）
+    score_threshold: float = Field(default=8.0, ge=0, le=10)
+    max_iterations: int = Field(default=3, ge=1)
+    dry_run: bool = False
+    
+    # API キー（環境変数から自動読み込み）
+    api_key: Optional[str] = Field(default_factory=lambda: os.getenv("ANTHROPIC_API_KEY"))
+    gemini_api_key: Optional[str] = Field(default_factory=lambda: os.getenv("GEMINI_API_KEY"))
+    openai_api_key: Optional[str] = Field(default_factory=lambda: os.getenv("OPENAI_API_KEY"))
+    
+    # ワークフロー状態
+    current_iteration: int = 0
+    integrated_score: Optional[float] = None
+    threshold_met: bool = False
+    
+    class Config:
+        arbitrary_types_allowed = True  # Resume などのカスタム型を許可
+```
+
+---
+
+## 期待される効果
+
+| 項目 | Before (TypedDict) | After (Pydantic) |
+|------|-------------------|-----------------|
+| デフォルト値 | ❌ 不可 | ✅ 可能 |
+| バリデーション | ❌ なし | ✅ 自動 |
+| Studio での UX | 全フィールド入力必須 | 必須のみ入力 |
+| シリアライズ | 手動 | `.model_dump()` |
+| IDE サポート | 基本的 | 完全な型ヒント |
+
+---
+
+## 実装計画
+
+### Phase 1: State の Pydantic 化
+- `ReviewState` を `BaseModel` に変換
+- デフォルト値を設定
+- バリデーションルールを追加
+
+### Phase 2: ノード関数の更新
+- `state["key"]` アクセスを `state.key` に変更
+- `.get()` のフォールバックを削除（デフォルト値があるため不要）
+
+### Phase 3: テストの更新
+- モック State の作成方法を更新
+- バリデーションテストを追加
+
+---
+
+## 参考
+
+- LangGraph 公式ドキュメント: State の定義方法
+- Pydantic v2 ドキュメント: Field のデフォルト値
 
