@@ -23,7 +23,12 @@ class ScreenshotService:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     async def capture(
-        self, url: str, output_filename: Optional[str] = None, wait_time: int = 2000, full_page: bool = False
+        self,
+        url: str,
+        output_filename: Optional[str] = None,
+        wait_time: int = 2000,
+        full_page: bool = False,
+        css: Optional[str] = None,
     ) -> Optional[Path]:
         """
         Capture screenshot of URL using Playwright.
@@ -32,13 +37,11 @@ class ScreenshotService:
             url: URL to capture
             output_filename: Optional output filename (default: auto-generated from URL)
             wait_time: Milliseconds to wait for page load (default: 2000ms)
-            full_page: Whether to capture full page (default: False for Vision API compatibility)
+            full_page: Whether to capture full page
+            css: Optional CSS string to inject before capture
 
         Returns:
             Path to screenshot file, or None if capture failed
-
-        Raises:
-            Exception: If Playwright fails to capture screenshot
         """
         if output_filename is None:
             # Generate filename from URL
@@ -49,44 +52,76 @@ class ScreenshotService:
 
         output_path = self.cache_dir / output_filename
 
-        # Check cache
-        if output_path.exists():
+        # Check cache (Skip cache if injecting CSS)
+        if output_path.exists() and css is None:
             logger.debug(f"Using cached screenshot: {output_path}")
             return output_path
 
-        logger.info(f"Capturing screenshot of {url}")
+        logger.info(f"Capturing screenshot: {url} -> {output_path} (css={'yes' if css else 'no'})")
 
         try:
             async with async_playwright() as p:
                 # Launch browser
                 browser = await p.chromium.launch(headless=True)
-                page = await browser.new_page(
-                    viewport={"width": 1920, "height": 1080},  # Standard desktop resolution
+                # Create context with standard desktop viewport
+                context = await browser.new_context(
+                    viewport={"width": 1920, "height": 1080},
+                    device_scale_factor=1,
                 )
+                page = await context.new_page()
 
                 # Navigate to URL
                 logger.debug(f"Navigating to {url}")
-                response = await page.goto(url, wait_until="networkidle", timeout=30000)
+                try:
+                    response = await page.goto(url, wait_until="networkidle", timeout=30000)
+                except Exception as e:
+                    logger.error(f"Page navigation timed out or failed: {e}")
+                    await browser.close()
+                    return None
 
                 if not response or response.status >= 400:
                     logger.error(f"Failed to load {url}: HTTP {response.status if response else 'None'}")
                     await browser.close()
                     return None
 
+                # Inject CSS if provided
+                if css:
+                    logger.debug(f"Injecting {len(css)} bytes of custom CSS")
+                    try:
+                        await page.add_style_tag(content=css)
+                        # Wait a bit for styles to apply and layout to shift
+                        await page.wait_for_timeout(500)
+                    except Exception as e:
+                        logger.warning(f"Failed to inject CSS: {e}")
+
+                # Wait for React/Next.js hydration to complete
+                # Nextra uses React and may have layout shifts after initial load
+                try:
+                    # Wait for main content area to be visible
+                    await page.wait_for_selector("main, article, .nextra-content", timeout=5000)
+                    # Give additional time for any layout animations
+                    await page.wait_for_timeout(1000)
+                except Exception as e:
+                    logger.debug(f"Selector wait timed out (may be fine): {e}")
+
                 # Wait for additional render time
                 await page.wait_for_timeout(wait_time)
 
                 # Take screenshot
-                logger.debug(f"Saving screenshot to {output_path}")
+                logger.debug(f"Saving screenshot ({'full-page' if full_page else 'viewport'}) to {output_path}")
                 await page.screenshot(path=str(output_path), full_page=full_page)
 
                 await browser.close()
 
-                logger.info(f"Screenshot saved: {output_path}")
-                return output_path
+                if output_path.exists():
+                    logger.info(f"Screenshot successfully saved: {output_path} ({output_path.stat().st_size} bytes)")
+                    return output_path
+                else:
+                    logger.error(f"Screenshot file not found after capture: {output_path}")
+                    return None
 
         except Exception as e:
-            logger.error(f"Screenshot capture failed: {e}")
+            logger.error(f"Screenshot capture failed for {url}: {e}", exc_info=True)
             return None
 
     def clear_cache(self) -> int:
@@ -128,27 +163,61 @@ class ScreenshotService:
     ) -> tuple[Optional[Path], dict]:
         """Generate visual diff between two screenshots using pixelmatch (T038).
 
+        Resilient to dimension mismatches by padding the smaller image.
+
         Args:
             before_path: Path to before screenshot
             after_path: Path to after screenshot
             output_path: Optional output path for diff image
 
         Returns:
-            Tuple of (diff_path, stats_dict) where stats_dict contains:
-            - diffPixels: Number of different pixels
-            - totalPixels: Total pixel count
-            - diffPercentage: Percentage of different pixels
+            Tuple of (diff_path, stats_dict)
         """
         import json
         import subprocess
+        from PIL import Image
 
         if output_path is None:
             output_path = self.cache_dir / "diff.png"
 
+        if not before_path.exists() or not after_path.exists():
+            logger.error(f"Cannot generate diff: missing input images. Before: {before_path.exists()}, After: {after_path.exists()}")
+            return None, {"error": "Missing input images"}
+
+        # Check and handle dimension mismatch
+        try:
+            img_before = Image.open(before_path)
+            img_after = Image.open(after_path)
+
+            if img_before.size != img_after.size:
+                logger.warning(
+                    f"Dimension mismatch detected: Before {img_before.size}, After {img_after.size}. "
+                    "Padding images to match."
+                )
+                
+                # New size is max of both
+                new_width = max(img_before.width, img_after.width)
+                new_height = max(img_before.height, img_after.height)
+                
+                def pad_image(img, w, h, path):
+                    if img.size == (w, h):
+                        return path
+                    new_img = Image.new("RGBA", (w, h), (255, 255, 255, 0))
+                    new_img.paste(img, (0, 0))
+                    padded_path = path.parent / f"padded_{path.name}"
+                    new_img.save(padded_path)
+                    return padded_path
+
+                before_path = pad_image(img_before, new_width, new_height, before_path)
+                after_path = pad_image(img_after, new_width, new_height, after_path)
+                logger.info(f"Using padded images for diff: {before_path.name}, {after_path.name}")
+        except Exception as e:
+            logger.error(f"Error while checking image dimensions: {e}")
+            # Continue and let visual-diff.js fail gracefully if padding failed
+
         # Find visual-diff.js script
         script_path = Path(__file__).parent.parent.parent.parent.parent / "scripts" / "visual-diff.js"
         if not script_path.exists():
-            # Try alternative path from repo root
             script_path = Path("scripts/visual-diff.js")
 
         if not script_path.exists():

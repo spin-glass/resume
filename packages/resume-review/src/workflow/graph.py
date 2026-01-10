@@ -1,5 +1,7 @@
 """LangGraph StateGraph builder for resume review workflow."""
 
+from typing import Literal
+
 from langgraph.graph import END, StateGraph
 
 from .conditions import (
@@ -21,6 +23,13 @@ from .nodes import (
     tech_writer_node,
 )
 from .state import ReviewState
+
+
+def route_after_job_parser(state: ReviewState) -> Literal["supervisor", "design"]:
+    """Route after job parser based on design_only flag."""
+    if state.get("design_only", False):
+        return "design"
+    return "supervisor"
 
 
 def build_review_workflow() -> StateGraph:
@@ -49,8 +58,15 @@ def build_review_workflow() -> StateGraph:
     # Set entry point (job_parser will pass through if no job posting)
     workflow.set_entry_point("job_parser")
 
-    # Job parser flows to router (was supervisor)
-    workflow.add_edge("job_parser", "router")
+    # Job parser routes depending on design_only flag
+    workflow.add_conditional_edges(
+        "job_parser",
+        route_after_job_parser,
+        {
+            "supervisor": "router",
+            "design": "design",
+        },
+    )
 
     # Fan-out: router → three agents (parallel execution)
     workflow.add_edge("router", "recruiter")
@@ -98,8 +114,8 @@ def build_review_workflow() -> StateGraph:
         },
     )
 
-    # Design applier ends the workflow
-    workflow.add_edge("design_applier", END)
+    # Design applier goes back to design supervisor for re-evaluation
+    workflow.add_edge("design_applier", "design")
 
     # Compile the workflow
     return workflow.compile()

@@ -38,3 +38,4 @@ def get_api_key() -> str:
 CSS_OUTPUT_DEFAULT = "styles/resume-custom.css"
 BACKUP_DIRECTORY = "backups"
 DESIGN_PREVIEW_DIRECTORY = "preview"
+DEFAULT_MAX_DESIGN_ITERATIONS = 3

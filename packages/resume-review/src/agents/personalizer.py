@@ -7,6 +7,7 @@ personalized recommendations for tailoring resumes to specific job postings.
 
 import json
 import logging
+import re
 
 from ..models.feedback import Resume
 from ..models.job_posting import JobPosting, PersonalizationResult, SkillMatch
@@ -99,16 +100,19 @@ Return JSON with this structure:
                 temperature=0.3,
             )
 
-            content = response.content.strip()
-            if content.startswith("```json"):
-                content = content[7:]
-            if content.startswith("```"):
-                content = content[3:]
-            if content.endswith("```"):
-                content = content[:-3]
-            content = content.strip()
+            # More robust JSON extraction
+            # 1. Try to find JSON inside markdown code blocks first
+            code_block_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", content, re.DOTALL)
+            if code_block_block := code_block_match:
+                json_str = code_block_block.group(1).strip()
+            else:
+                # 2. Fallback to finding the first { and last }
+                json_match = re.search(r"\{.*\}", content, re.DOTALL)
+                if not json_match:
+                    raise ValueError("No JSON found in response")
+                json_str = json_match.group().strip()
 
-            data = json.loads(content)
+            data = json.loads(json_str)
             required_matches = [SkillMatch(**m) for m in data.get("required_matches", [])]
             preferred_matches = [SkillMatch(**m) for m in data.get("preferred_matches", [])]
 
@@ -204,14 +208,19 @@ Generate 3-5 prioritized emphasis suggestions."""
                 temperature=0.7,
             )
 
-            content = response.content.strip()
-            if content.startswith("```json"):
-                content = content[7:]
-            if content.startswith("```"):
-                content = content[3:]
-            if content.endswith("```"):
-                content = content[:-3]
-            suggestions = json.loads(content.strip())
+            # More robust JSON extraction
+            # 1. Try to find JSON inside markdown code blocks first
+            code_block_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", content, re.DOTALL)
+            if code_block_block := code_block_match:
+                json_str = code_block_block.group(1).strip()
+            else:
+                # 2. Fallback to finding the first { and last }
+                json_match = re.search(r"\{.*\}", content, re.DOTALL)
+                if not json_match:
+                    raise ValueError("No JSON found in response")
+                json_str = json_match.group().strip()
+
+            suggestions = json.loads(json_str.strip())
 
             # Sort by priority (🔴 > 🟡 > 🟢)
             priority_order = {"🔴": 0, "🟡": 1, "🟢": 2}
@@ -262,14 +271,19 @@ Generate 5-10 bilingual ATS keywords."""
                 temperature=0.5,
             )
 
-            content = response.content.strip()
-            if content.startswith("```json"):
-                content = content[7:]
-            if content.startswith("```"):
-                content = content[3:]
-            if content.endswith("```"):
-                content = content[:-3]
-            keywords = json.loads(content.strip())
+            # More robust JSON extraction
+            # 1. Try to find JSON inside markdown code blocks first
+            code_block_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", content, re.DOTALL)
+            if code_block_block := code_block_match:
+                json_str = code_block_block.group(1).strip()
+            else:
+                # 2. Fallback to finding the first { and last }
+                json_match = re.search(r"\{.*\}", content, re.DOTALL)
+                if not json_match:
+                    raise ValueError("No JSON found in response")
+                json_str = json_match.group().strip()
+
+            keywords = json.loads(json_str.strip())
 
             # Deduplicate and limit to 10
             return list(set(keywords))[:10]

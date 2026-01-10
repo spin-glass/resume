@@ -104,6 +104,8 @@ class ReviewState(TypedDict, total=False):
     auto_design_enabled: bool  # --auto-design flag
     design_preview_enabled: bool  # --design-preview flag
     css_output_path: Optional[str]  # --css-output override
+    design_only: bool  # --design-only flag
+
 
     # Design modification outputs
     css_modification: Optional[CSSModification]
@@ -118,6 +120,12 @@ class ReviewState(TypedDict, total=False):
 
     # Backup tracking
     design_backup_paths: dict[str, str]  # {original_path: backup_path} for rollback
+
+    # Design Loop Control
+    design_loop_active: bool
+    design_iteration: int
+    max_design_iterations: int
+    design_score: float  # Score from Design Supervisor
 
     # Job personalization (optional fields for job-specific review)
     job_posting_file: Optional[str]  # Path to job posting file
