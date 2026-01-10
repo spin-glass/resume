@@ -123,7 +123,11 @@ class ReviewWorkflow:
         """Execute the workflow asynchronously."""
         accumulated_state = dict(initial_state)
         async for state in self.compiled_workflow.astream(initial_state):
+            if state is None:
+                continue
             for node_name, node_state in state.items():
+                if node_state is None:
+                    continue
                 self._update_accumulated_state(accumulated_state, node_state)
                 await self._handle_node_persistence(node_name, node_state, accumulated_state)
         return accumulated_state
