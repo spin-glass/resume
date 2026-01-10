@@ -96,14 +96,15 @@ async def _generate_preview(
         logger.warning("Preview mode enabled but no screenshot_url provided")
         return None
 
-    # Determine cache directory
+    # Determine cache directory  
     cache_dir = None
     session_dir = state.get("session_dir")
     current_iteration = state.get("current_iteration", 0)
     
     if session_dir:
-        # Save to iter folder
-        cache_dir = Path(session_dir) / f"iter{current_iteration}"
+        # Save to iter folder (minimum iter1 for consistency with other outputs)
+        iter_num = max(1, current_iteration)
+        cache_dir = Path(session_dir) / f"iter{iter_num}"
         cache_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Saving design preview to {cache_dir}")
     
@@ -113,11 +114,12 @@ async def _generate_preview(
         # The passed screenshot_service might have default cache
         service = ScreenshotService(cache_dir=cache_dir)
         
-        # Step 1: Capture "before" screenshot
+        # Step 1: Capture "before" screenshot (full page for user review)
         logger.info(f"Capturing 'before' screenshot from {screenshot_url}")
         before_path = await service.capture(
             url=screenshot_url,
             output_filename="preview_before.png",
+            full_page=True,  # Full page for design preview
         )
 
         if not before_path or not before_path.exists():
