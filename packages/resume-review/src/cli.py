@@ -11,185 +11,11 @@ from .models.session import ReviewSession
 from .workflow import ReviewWorkflow
 from .services.qmd_parser import QMDParser
 from .utils.config import get_config, setup_logging
-
-
-def _display_design_changes(session: ReviewSession, verbose: bool = False) -> None:
-    """Display design changes that were applied (T033).
-
-    Args:
-        session: Review session with design output data
-        verbose: Whether to show detailed output
-    """
-    click.echo("\n" + "=" * 60)
-    click.echo("DESIGN MODIFICATIONS")
-    click.echo("=" * 60)
-
-    if not session.design_changes_applied:
-        click.echo("\nNo design changes were applied.")
-        return
-
-    # Display CSS modifications
-    if session.css_modification:
-        css_mod = session.css_modification
-        target_file = css_mod.get("target_file", "unknown")
-        click.echo(f"\n✓ CSS Generated: {target_file}")
-
-        # Show issue types addressed
-        issue_types = css_mod.get("issue_types", [])
-        if issue_types:
-            click.echo(f"  Issues addressed: {', '.join(issue_types)}")
-
-        # Show changes list
-        changes = css_mod.get("changes", [])
-        if changes and verbose:
-            click.echo("  Changes:")
-            for change in changes[:5]:  # Show first 5 changes
-                click.echo(f"    • {change}")
-
-        # Show validation status
-        if css_mod.get("validation_passed"):
-            click.echo("  Validation: ✓ Passed")
-        else:
-            errors = css_mod.get("validation_errors", [])
-            click.echo(f"  Validation: ✗ Failed ({len(errors)} errors)")
-            if verbose:
-                for error in errors[:3]:
-                    click.echo(f"    - {error}")
-
-    # Display section reorder if applied (T058)
-    if session.section_reorder:
-        reorder = session.section_reorder
-        click.echo(f"\n✓ Section Reorder Applied")
-        if reorder.get("original_order") and reorder.get("new_order"):
-            click.echo(f"  Original: {' → '.join(reorder['original_order'])}")
-            click.echo(f"  New:      {' → '.join(reorder['new_order'])}")
-        if verbose and reorder.get("rationale"):
-            click.echo(f"  Rationale: {reorder['rationale'][:100]}...")
-
-    # Display backup paths
-    if session.design_backup_paths:
-        click.echo("\nBackups created:")
-        for original, backup in session.design_backup_paths.items():
-            click.echo(f"  {original} → {backup}")
-
-    # Display summary of changes
-    if session.design_changes_list:
-        click.echo("\nChanges applied:")
-        for change in session.design_changes_list:
-            click.echo(f"  • {change}")
-
-    # Display theme recommendation (T067) - advisory only
-    if session.theme_recommendation:
-        theme = session.theme_recommendation
-        click.echo(f"\n💡 Theme Recommendation (Advisory):")
-        click.echo(f"  Theme: {theme.get('theme_name')}")
-        if theme.get('rationale'):
-            click.echo(f"  Reason: {theme['rationale'][:100]}...")
-        if theme.get('installation_command'):
-            click.echo(f"  To apply: {theme['installation_command']}")
-        if verbose and theme.get('preview_url'):
-            click.echo(f"  Preview: {theme['preview_url']}")
-
-
-def _display_design_preview(session: ReviewSession, verbose: bool = False) -> None:
-    """Display design preview information without applying changes (T045).
-
-    Args:
-        session: Review session with pending design changes
-        verbose: Whether to show detailed output
-    """
-    click.echo("\n" + "=" * 60)
-    click.echo("DESIGN PREVIEW (Not Applied)")
-    click.echo("=" * 60)
-
-    if not session.design_changes_pending:
-        click.echo("\nNo design changes to preview.")
-        return
-
-    # Display visual preview if available
-    preview_paths = getattr(session, "design_preview_paths", None)
-    if preview_paths:
-        click.echo("\n📷 Visual Preview Generated:")
-        if preview_paths.get("before"):
-            click.echo(f"  Before: {preview_paths['before']}")
-        if preview_paths.get("after"):
-            click.echo(f"  After:  {preview_paths['after']}")
-        if preview_paths.get("diff"):
-            click.echo(f"  Diff:   {preview_paths['diff']}")
-        if preview_paths.get("composite"):
-            click.echo(f"  Composite: {preview_paths['composite']}")
-
-    # Display diff statistics
-    design_preview = getattr(session, "design_preview", None)
-    if design_preview:
-        diff_pct = design_preview.get("diff_percentage")
-        diff_pixels = design_preview.get("diff_pixel_count")
-        if diff_pct is not None:
-            click.echo(f"\n📊 Change Statistics:")
-            click.echo(f"  Pixels Changed: {diff_pixels:,} ({diff_pct:.2f}%)")
-            if diff_pct > 5.0:
-                click.echo("  ⚠ Significant visual changes detected")
-            elif diff_pct > 0:
-                click.echo("  ✓ Minor visual changes")
-            else:
-                click.echo("  ℹ No visual changes (CSS may not affect current page)")
-
-    # Display CSS modifications preview
-    if session.css_modification:
-        css_mod = session.css_modification
-        target_file = css_mod.get("target_file", "unknown")
-        click.echo(f"\n📝 CSS Will Be Generated: {target_file}")
-
-        # Show issue types that would be addressed
-        issue_types = css_mod.get("issue_types", [])
-        if issue_types:
-            click.echo(f"  Issues to address: {', '.join(issue_types)}")
-
-        # Show proposed changes
-        changes = css_mod.get("changes", [])
-        if changes:
-            click.echo("  Proposed changes:")
-            for change in changes[:5]:
-                click.echo(f"    • {change}")
-
-        # Show CSS content preview if verbose
-        if verbose and css_mod.get("css_content"):
-            css_content = css_mod.get("css_content", "")
-            preview_lines = css_content.split("\n")[:15]
-            click.echo("\n  CSS Preview:")
-            for line in preview_lines:
-                click.echo(f"    {line}")
-            if len(css_content.split("\n")) > 15:
-                click.echo("    ...")
-
-    # Display proposed section reorder (T059)
-    if session.section_reorder:
-        reorder = session.section_reorder
-        click.echo(f"\n🔄 Section Reorder Recommended:")
-        if reorder.get("original_order") and reorder.get("new_order"):
-            click.echo(f"  Current: {' → '.join(reorder['original_order'])}")
-            click.echo(f"  Proposed: {' → '.join(reorder['new_order'])}")
-        if verbose and reorder.get("rationale"):
-            click.echo(f"  Rationale: {reorder['rationale'][:150]}...")
-
-    # Display theme recommendation in preview (T068)
-    if session.theme_recommendation:
-        theme = session.theme_recommendation
-        click.echo(f"\n💡 Theme Recommendation (Advisory):")
-        click.echo(f"  Theme: {theme.get('theme_name')}")
-        if theme.get('rationale'):
-            click.echo(f"  Reason: {theme['rationale'][:100]}...")
-        if theme.get('installation_command'):
-            click.echo(f"  To apply: {theme['installation_command']}")
-
-    # Instructions for applying
-    click.echo("\n" + "-" * 40)
-    click.echo("To apply these changes, run:")
-    click.echo("  resume-review review --input <file> --auto-design")
+from .config.model_config import AgentName, AGENT_MODEL_MAP
 
 
 @click.group()
-def cli():
+def cli() -> None:
     """Resume Review Multi-Agent System CLI."""
     pass
 
@@ -247,6 +73,17 @@ def cli():
     help="URL for visual design review (optional, FR-013)",
 )
 @click.option(
+    "--job-posting",
+    type=click.Path(exists=True, path_type=Path),
+    default=None,
+    help="Path to job posting file (Markdown/Text) for personalized review",
+)
+@click.option(
+    "--job-url",
+    default=None,
+    help="URL of job posting page for personalized review",
+)
+@click.option(
     "--save-iterations",
     is_flag=True,
     default=False,
@@ -295,36 +132,6 @@ def cli():
     default=False,
     help="Exit workflow if Quarto validation fails after all retries (default: continue with warning)",
 )
-@click.option(
-    "--auto-design",
-    is_flag=True,
-    default=False,
-    help="Automatically apply design improvements from feedback (013-design-auto-fix)",
-)
-@click.option(
-    "--design-preview",
-    is_flag=True,
-    default=False,
-    help="Generate before/after preview without applying changes (013-design-auto-fix)",
-)
-@click.option(
-    "--design-only",
-    is_flag=True,
-    default=False,
-    help="Skip text review and only run design improvement loop (013-design-auto-fix)",
-)
-@click.option(
-    "--max-design-iterations",
-    type=int,
-    default=None,
-    help="Maximum design iterations (default: 3)",
-)
-@click.option(
-    "--css-output",
-    type=click.Path(dir_okay=False, writable=True, path_type=Path),
-    default=None,
-    help="Custom output path for generated CSS (default: styles/resume-custom.css)",
-)
 def review(
     input_file: Path,
     output_file: Optional[Path],
@@ -334,6 +141,8 @@ def review(
     threshold: float,
     max_iterations: int,
     screenshot_url: Optional[str],
+    job_posting: Optional[Path],
+    job_url: Optional[str],
     save_iterations: bool,
     iterations_dir: Optional[Path],
     api_key: Optional[str],
@@ -343,12 +152,7 @@ def review(
     model: Optional[str],
     max_validation_retries: Optional[int],
     strict_validation: bool,
-    auto_design: bool,
-    design_preview: bool,
-    design_only: bool,
-    max_design_iterations: Optional[int],
-    css_output: Optional[Path],
-):
+) -> None:
     """
     Run multi-agent resume review and improvement.
 
@@ -399,31 +203,10 @@ def review(
         click.echo("Error: Max iterations must be >= 1", err=True)
         sys.exit(2)
 
-    # Validate design flags (T031)
-
-
-    if css_output and not (auto_design or design_preview):
-        click.echo(
-            "Error: --css-output requires either --auto-design or --design-preview",
-            err=True,
-        )
+    # Validate job posting options (mutual exclusivity)
+    if job_posting and job_url:
+        click.echo("Error: Cannot specify both --job-posting and --job-url. Choose one.", err=True)
         sys.exit(2)
-
-    # Dry run precedence over auto-design
-    if dry_run and auto_design:
-        click.echo(
-            "Note: --dry-run enabled. Design modifications will be generated but not applied.",
-            err=True,
-        )
-        auto_design = False
-
-    # Warning for design-preview without screenshot-url
-    if design_preview and not screenshot_url:
-        click.echo(
-            "Warning: --design-preview works best with --screenshot-url. "
-            "Preview will be text-only without screenshots.",
-            err=True,
-        )
 
     # Get API keys from config if not provided
     if not anthropic_api_key and not api_key:
@@ -454,6 +237,10 @@ def review(
     click.echo(f"Max Iterations: {max_iterations}")
     if screenshot_url:
         click.echo(f"Screenshot URL: {screenshot_url}")
+    if job_posting:
+        click.echo(f"Job Posting File: {job_posting}")
+    if job_url:
+        click.echo(f"Job URL: {job_url}")
 
     # Verbose: Display model configuration
     if verbose:
@@ -464,7 +251,6 @@ def review(
         else:
             # Hybrid mode
             click.echo("Mode: Hybrid configuration (optimal model per agent)")
-            from .config.model_config import AGENT_MODEL_MAP, AgentName
             click.echo("\nAgent Model Assignments:")
             for agent_name in [
                 AgentName.RECRUITER,
@@ -474,9 +260,9 @@ def review(
                 AgentName.VISUAL_DESIGNER,
                 AgentName.REVISOR,
             ]:
-                config = AGENT_MODEL_MAP.get(agent_name)
-                if config:
-                    click.echo(f"  {agent_name.value:20} → {config['model_id']:30} ({config['provider']})")
+                config_entry = AGENT_MODEL_MAP.get(agent_name)
+                if config_entry:
+                    click.echo(f"  {agent_name.value:20} → {config_entry['model_id']:30} ({config_entry['provider']})")
 
     click.echo()
 
@@ -488,7 +274,7 @@ def review(
         click.echo(f"✓ Resume loaded ({len(resume.content)} characters)")
 
         # Create review session
-        from .config.settings import CSS_OUTPUT_DEFAULT, DEFAULT_MAX_VALIDATION_RETRIES
+        from .config.settings import DEFAULT_MAX_VALIDATION_RETRIES
 
         session = ReviewSession(
             resume=resume,
@@ -499,11 +285,6 @@ def review(
             screenshot_url=screenshot_url,
             max_validation_retries=max_validation_retries if max_validation_retries is not None else DEFAULT_MAX_VALIDATION_RETRIES,
             strict_validation=strict_validation,
-            auto_design_enabled=auto_design,
-            design_preview_enabled=design_preview,
-            design_only=design_only,
-            max_design_iterations=max_design_iterations if max_design_iterations is not None else DEFAULT_MAX_DESIGN_ITERATIONS,
-            css_output_path=str(css_output) if css_output else CSS_OUTPUT_DEFAULT,
         )
 
         # Run workflow
@@ -511,11 +292,10 @@ def review(
         click.echo("\nReview starting...")
 
         # Callback for iteration saves
-        def on_iteration_saved(iteration: int, score: float, path: Path):
+        def on_iteration_saved(iteration: int, score: float, path: Path) -> None:
             click.echo(f"  💾 Iteration {iteration} saved: {path.name} (score: {score:.1f})")
 
         workflow = ReviewWorkflow(
-            api_key=anthropic_api_key,  # Legacy parameter (backward compat)
             save_iterations=save_iterations,
             output_dir=iterations_dir,
             on_iteration_complete=on_iteration_saved if save_iterations else None,
@@ -523,6 +303,8 @@ def review(
             openai_api_key=openai_api_key,
             anthropic_api_key=anthropic_api_key,
             override_model=model,
+            job_posting_file=job_posting,
+            job_url=job_url,
         )
         session = workflow.run_review(session)
 
@@ -559,11 +341,58 @@ def review(
         else:
             click.echo("\nPortfolio Projects Suggested: 0")
 
-        # Show design changes (T034: Call _display_design_changes after workflow)
-        if session.design_changes_applied:
-            _display_design_changes(session, verbose=verbose)
-        elif session.design_changes_pending:
-            _display_design_preview(session, verbose=verbose)
+        # Show job personalization results
+        if hasattr(session, 'personalization_result') and session.personalization_result:
+            result = session.personalization_result
+            source_type = "URL" if job_url else "File"
+            click.echo("\n" + "=" * 60)
+            click.echo(f"JOB MATCH ANALYSIS (Source: {source_type})")
+            click.echo("=" * 60)
+
+            # Overall match score
+            click.echo(f"\n📊 Overall Match Score: {result.match_score:.1f}% ({result.match_level})")
+            click.echo(f"   Required Skills: {result.required_match_score:.1f}%")
+            click.echo(f"   Preferred Skills: {result.preferred_match_score:.1f}%")
+
+            # Required skills
+            matched_req = len(result.matched_required_skills)
+            missing_req = len(result.missing_required_skills)
+            total_req = matched_req + missing_req
+            click.echo(f"\n✅ Required Skills Matched: {matched_req}/{total_req}")
+            if verbose and result.matched_required_skills:
+                for skill_match in result.matched_required_skills[:5]:
+                    confidence_pct = int(skill_match.confidence * 100)
+                    click.echo(f"   • {skill_match.skill} ({confidence_pct}%)")
+            if result.missing_required_skills:
+                click.echo(f"❌ Missing Required Skills: {missing_req}")
+                if verbose:
+                    for skill in result.missing_required_skills[:5]:
+                        click.echo(f"   • {skill}")
+
+            # Preferred skills
+            matched_pref = len(result.matched_preferred_skills)
+            missing_pref = len(result.missing_preferred_skills)
+            total_pref = matched_pref + missing_pref
+            if total_pref > 0:
+                click.echo(f"\n⭐ Preferred Skills Matched: {matched_pref}/{total_pref}")
+                if verbose and result.matched_preferred_skills:
+                    for skill_match in result.matched_preferred_skills[:5]:
+                        confidence_pct = int(skill_match.confidence * 100)
+                        click.echo(f"   • {skill_match.skill} ({confidence_pct}%)")
+
+            # Emphasis suggestions
+            if result.emphasis_suggestions:
+                click.echo(f"\n💡 Emphasis Suggestions ({len(result.emphasis_suggestions)}):")
+                for i, suggestion in enumerate(result.emphasis_suggestions, 1):
+                    click.echo(f"   {i}. {suggestion}")
+
+            # Keyword additions
+            if result.keyword_additions and verbose:
+                click.echo(f"\n🔑 Keywords to Add ({len(result.keyword_additions)}):")
+                keywords_preview = ", ".join(result.keyword_additions[:8])
+                if len(result.keyword_additions) > 8:
+                    keywords_preview += f" ... and {len(result.keyword_additions) - 8} more"
+                click.echo(f"   {keywords_preview}")
 
         # Show detailed feedback if verbose
         if verbose and session.feedback_history:
@@ -620,7 +449,7 @@ def review(
 
 
 @cli.command()
-def version():
+def version() -> None:
     """Display version information."""
     from . import __version__
 
@@ -628,7 +457,7 @@ def version():
     click.echo("Powered by LangGraph and Claude Sonnet 4.5")
 
 
-def main():
+def main() -> None:
     """Entry point for console script."""
     cli()
 

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -17,7 +17,7 @@ class ValidationResult(BaseModel):
 
     @field_validator("error_message")
     @classmethod
-    def validate_error_message(cls, v: Optional[str], info) -> Optional[str]:
+    def validate_error_message(cls, v: Optional[str], info: Any) -> Optional[str]:
         """Ensure error_message is non-empty when is_valid=False."""
         is_valid = info.data.get("is_valid", True)
         if not is_valid and not v:

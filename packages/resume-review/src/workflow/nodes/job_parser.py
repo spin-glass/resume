@@ -6,6 +6,7 @@ the LangGraph workflow.
 """
 
 import logging
+from typing import Any, cast
 from pathlib import Path
 
 from ...services.job_parser import JobParserService
@@ -15,7 +16,7 @@ from ..state import ReviewState
 logger = logging.getLogger(__name__)
 
 
-async def job_parser_node(state: ReviewState) -> dict:
+async def job_parser_node(state: ReviewState) -> dict[str, Any]:
     """
     Parse job posting from file or URL and add to state.
 
@@ -32,8 +33,8 @@ async def job_parser_node(state: ReviewState) -> dict:
     Raises:
         ValueError: If job posting file/URL is invalid
     """
-    job_posting_file = state.get("job_posting_file")
-    job_url = state.get("job_url")
+    job_posting_file = state.job_posting_file
+    job_url = state.job_url
 
     # If no job posting provided, this is a standard (non-personalized) review
     if not job_posting_file and not job_url:
@@ -44,7 +45,7 @@ async def job_parser_node(state: ReviewState) -> dict:
     logger.info("=" * 60)
 
     # Initialize parser with Gemini (fast and cost-effective for parsing)
-    gemini_api_key = state.get("gemini_api_key")
+    gemini_api_key = state.gemini_api_key
     if not gemini_api_key:
         raise ValueError("Gemini API key required for job parsing")
 
@@ -63,7 +64,7 @@ async def job_parser_node(state: ReviewState) -> dict:
             source_type = "url"
         else:
             # Parse from file
-            file_path = Path(job_posting_file)
+            file_path = Path(cast(str, job_posting_file))
             job_posting = await parser.parse_file(file_path)
             source_type = "file"
 

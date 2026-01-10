@@ -11,10 +11,11 @@ from ...agents.personalizer import PersonalizerAgent
 from ...services.llm_factory import create_gemini_client
 from ..state import ReviewState
 
+from typing import Any
 logger = logging.getLogger(__name__)
 
 
-async def personalizer_node(state: ReviewState) -> dict:
+async def personalizer_node(state: ReviewState) -> dict[str, Any]:
     """
     Analyze resume-job match and generate personalization recommendations.
 
@@ -27,7 +28,7 @@ async def personalizer_node(state: ReviewState) -> dict:
         Dict with personalization_result field
     """
     # Only run if job posting is present
-    job_posting = state.get("job_posting")
+    job_posting = state.job_posting
     if not job_posting:
         return {}
 
@@ -36,10 +37,10 @@ async def personalizer_node(state: ReviewState) -> dict:
     logger.info("=" * 60)
 
     # Get resume from state
-    resume = state.get("resume")
+    resume = state.resume
 
     # Initialize personalizer with Gemini (cost-effective for analysis)
-    gemini_api_key = state.get("gemini_api_key")
+    gemini_api_key = state.gemini_api_key
     if not gemini_api_key:
         logger.warning("Gemini API key not available, skipping personalization")
         return {}

@@ -5,18 +5,20 @@ import re
 
 from ..models import Severity
 from ..models.feedback import Feedback, Issue
+from ..models.job_posting import JobPosting
+from ..services import BaseLLMClient
 from .base import BaseAgent
 
 
 class UXDesignerAgent(BaseAgent):
     """Evaluates resume from UX/information hierarchy perspective."""
 
-    def __init__(self, llm_client, agent_name=None):
+    def __init__(self, llm_client: BaseLLMClient, agent_name: str | None = None) -> None:
         """Initialize UX designer agent."""
         super().__init__(llm_client, agent_name)
         self.agent_name = "ux_designer"
 
-    def get_system_prompt(self, target_role: str) -> str:
+    def get_system_prompt(self, target_role: str, job_posting: JobPosting | None = None) -> str:
         """Get UX designer-specific system prompt."""
         return f"""You are an expert UX designer specializing in information architecture and document design.
 
@@ -53,19 +55,12 @@ IMPORTANT:
     def parse_feedback(self, feedback_text: str) -> Feedback:
         """Parse UX designer feedback from Claude response."""
         try:
-            # More robust JSON extraction
-            # 1. Try to find JSON inside markdown code blocks first
-            code_block_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", feedback_text, re.DOTALL)
-            if code_block_block := code_block_match:
-                json_str = code_block_block.group(1).strip()
-            else:
-                # 2. Fallback to finding the first { and last }
-                json_match = re.search(r"\{.*\}", feedback_text, re.DOTALL)
-                if not json_match:
-                    raise ValueError("No JSON found in feedback response")
-                json_str = json_match.group().strip()
+            # Extract JSON from response
+            json_match = re.search(r"\{.*\}", feedback_text, re.DOTALL)
+            if not json_match:
+                raise ValueError("No JSON found in feedback response")
 
-            data = json.loads(json_str)
+            data = json.loads(json_match.group())
 
             # Parse issues
             issues = []
@@ -127,20 +122,12 @@ IMPORTANT:
 
         system_prompt = self.get_system_prompt(target_role)
 
-        # Call LLM with vision (using underlying client for vision support)
-        # Note: This requires the llm_client to be an Anthropic-based client
-        # TODO: Abstract vision API to support multiple providers (Gemini, OpenAI)
-        if not hasattr(self.llm_client, 'client'):
-            return Feedback(
-                agent_name=self.agent_name,
-                score=5.0,
-                strengths=[],
-                issues=[],
-                suggestions=["Vision evaluation requires Anthropic client"],
-            )
+        if not self.async_client:
+            raise RuntimeError("Vision evaluation requires AsyncAnthropic client")
 
-        response = await self.llm_client.client.messages.create(
-            model=self.llm_client.model,
+        # Call Claude with vision
+        response = await self.async_client.messages.create(
+            model=self.model,
             max_tokens=4000,
             system=system_prompt,
             messages=[
@@ -164,5 +151,9 @@ IMPORTANT:
             ],
         )
 
-        feedback_text = response.content[0].text
+        from anthropic.types import TextBlock
+        feedback_text = ""
+        for block in response.content:
+            if isinstance(block, TextBlock):
+                feedback_text += block.text
         return self.parse_feedback(feedback_text)

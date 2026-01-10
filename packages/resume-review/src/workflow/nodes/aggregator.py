@@ -9,7 +9,7 @@ from ..state import ReviewState
 logger = logging.getLogger("resume_review")
 
 
-def aggregator_node(state: ReviewState) -> dict[str, Any]:
+async def aggregator_node(state: ReviewState) -> dict[str, Any]:
     """
     Aggregator node that calculates integrated score from feedback.
 
@@ -23,12 +23,12 @@ def aggregator_node(state: ReviewState) -> dict[str, Any]:
     # NOTE: This per-agent feedback collection enables future per-agent retry logic (US4).
     # If one agent fails, we can retry only that agent while keeping others' feedback.
     current_feedback = []
-    if "recruiter_feedback" in state:
-        current_feedback.append(state["recruiter_feedback"])
-    if "tech_writer_feedback" in state:
-        current_feedback.append(state["tech_writer_feedback"])
-    if "copywriter_feedback" in state:
-        current_feedback.append(state["copywriter_feedback"])
+    if state.recruiter_feedback:
+        current_feedback.append(state.recruiter_feedback)
+    if state.tech_writer_feedback:
+        current_feedback.append(state.tech_writer_feedback)
+    if state.copywriter_feedback:
+        current_feedback.append(state.copywriter_feedback)
 
     if not current_feedback:
         logger.warning("Aggregator: No feedback collected from agent nodes")
@@ -41,7 +41,7 @@ def aggregator_node(state: ReviewState) -> dict[str, Any]:
     integrated_score = calculate_integrated_score(current_feedback)
 
     # Check threshold
-    threshold = state.get("score_threshold", 8.0)
+    threshold = state.score_threshold
     threshold_met = integrated_score >= threshold
 
     logger.info(
