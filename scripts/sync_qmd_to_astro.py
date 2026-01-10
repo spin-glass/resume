@@ -13,13 +13,17 @@ from pathlib import Path
 # パス設定
 PROJECT_ROOT = Path(__file__).parent.parent
 QMD_FILE = PROJECT_ROOT / "resume/resume-ja.qmd"
-MDX_FILE = PROJECT_ROOT / "packages/web/pages/ja/index.mdx"
+MDX_FILE = PROJECT_ROOT / "packages/web/src/pages/index.mdx"
 
-# MDXヘッダーテンプレート
-MDX_HEADER = '''import CurrentDate from "../../components/CurrentDate";
+# Astroヘッダーテンプレート (Layoutの使用を含む)
+# layoutプロパティを使用してMarkdownのレンダリングを安定化
+MDX_HEADER_TOP = '''---
+layout: ../layouts/Layout.astro
+title: "職務経歴書"
+---
+'''
 
-<CurrentDate/>
-
+MDX_FOOTER = '''
 '''
 
 
@@ -35,13 +39,19 @@ def extract_content_from_qmd(qmd_path: Path) -> str:
     return content.strip()
 
 
+def convert_qmd_to_astro(qmd_path: Path, astro_path: Path) -> None:
+    """QMDファイルをAstroファイルに変換"""
+    # QMDからコンテンツを抽出
+    content = extract_content_from_qmd(qmd_path)
+    
 def convert_qmd_to_mdx(qmd_path: Path, mdx_path: Path) -> None:
     """QMDファイルをMDXファイルに変換"""
     # QMDからコンテンツを抽出
     content = extract_content_from_qmd(qmd_path)
     
-    # MDXヘッダーを追加して保存
-    mdx_content = MDX_HEADER + content + "\n"
+    # MDX形式に変換して保存
+    # コンテンツの前後に改行を入れてMarkdownの分離を確実にする
+    mdx_content = MDX_HEADER_TOP + "\n" + content + "\n\n" + MDX_FOOTER
     mdx_path.write_text(mdx_content, encoding="utf-8")
     
     print(f"✅ 変換完了: {qmd_path.name} → {mdx_path.name}")
@@ -58,4 +68,3 @@ def main():
 
 if __name__ == "__main__":
     exit(main())
-

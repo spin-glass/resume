@@ -7,10 +7,11 @@ Auto-generated from all feature plans. Last updated: 2026-01-09
 ```text
 resume/                     # Monorepo root
 ├── packages/
-│   ├── web/               # Next.js/Nextra web application
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── styles/
+│   ├── web/               # Astro web application
+│   │   ├── src/
+│   │   │   ├── pages/
+│   │   │   ├── layouts/
+│   │   │   └── styles/
 │   │   └── package.json
 │   └── resume-review/     # Python AI review tool
 │       ├── src/
@@ -33,7 +34,7 @@ resume/                     # Monorepo root
 - Python 3.13 (matching existing resume-review package) (013-design-auto-fix)
 - File system (CSS output files, backups, screenshots) (013-design-auto-fix)
 
-- **Web**: Next.js 14, Nextra 3.0 (alpha), React 18, Tailwind CSS
+- **Web**: Astro 5, Tailwind CSS 4, React 18 (optional), Puppeteer (PDF generation)
 - **Python**: Python 3.13+ (LangGraph compatibility), LangGraph (multi-agent orchestration), Anthropic SDK (Claude API), Playwright (screenshot capture), pytest (testing)
 - **Resume**: Quarto (QMD → PDF/HTML generation)
 
@@ -43,9 +44,10 @@ All commands run from repository root:
 
 ```bash
 # Web development
-pnpm dev                    # Start Next.js dev server
+pnpm dev                    # Start Astro dev server (port 4321)
 pnpm build                  # Build web application
-pnpm start                  # Start production server
+pnpm preview                # Preview production build
+pnpm pdf                    # Generate PDF from web (Puppeteer)
 
 # Resume generation
 pnpm quarto:pdf            # Generate PDF in resume/output/
