@@ -308,6 +308,18 @@ def cli():
     help="Generate before/after preview without applying changes (013-design-auto-fix)",
 )
 @click.option(
+    "--design-only",
+    is_flag=True,
+    default=False,
+    help="Skip text review and only run design improvement loop (013-design-auto-fix)",
+)
+@click.option(
+    "--max-design-iterations",
+    type=int,
+    default=None,
+    help="Maximum design iterations (default: 3)",
+)
+@click.option(
     "--css-output",
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     default=None,
@@ -333,6 +345,8 @@ def review(
     strict_validation: bool,
     auto_design: bool,
     design_preview: bool,
+    design_only: bool,
+    max_design_iterations: Optional[int],
     css_output: Optional[Path],
 ):
     """
@@ -386,13 +400,7 @@ def review(
         sys.exit(2)
 
     # Validate design flags (T031)
-    if auto_design and design_preview:
-        click.echo(
-            "Error: --auto-design and --design-preview are mutually exclusive. "
-            "Use --design-preview to review changes first, then run with --auto-design to apply.",
-            err=True,
-        )
-        sys.exit(2)
+
 
     if css_output and not (auto_design or design_preview):
         click.echo(
@@ -493,6 +501,8 @@ def review(
             strict_validation=strict_validation,
             auto_design_enabled=auto_design,
             design_preview_enabled=design_preview,
+            design_only=design_only,
+            max_design_iterations=max_design_iterations if max_design_iterations is not None else DEFAULT_MAX_DESIGN_ITERATIONS,
             css_output_path=str(css_output) if css_output else CSS_OUTPUT_DEFAULT,
         )
 

@@ -107,6 +107,11 @@ class ReviewWorkflow:
             "auto_design_enabled": session.auto_design_enabled,
             "design_preview_enabled": session.design_preview_enabled,
             "css_output_path": session.css_output_path,
+            "design_only": session.design_only,
+            "design_loop_active": False,
+            "design_iteration": 0,
+            "max_design_iterations": session.max_design_iterations,
+            "design_score": 0.0,
         }
 
     async def _run_workflow_async(self, initial_state: ReviewState) -> ReviewState:

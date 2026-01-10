@@ -28,9 +28,11 @@ class ReviewSession(BaseModel):
     screenshot_url: Optional[str] = None
     max_validation_retries: int = 3
     strict_validation: bool = False
+    design_only: bool = False
     # Design auto-fix flags (013-design-auto-fix)
     auto_design_enabled: bool = False
     design_preview_enabled: bool = False
+    max_design_iterations: int = 3
     css_output_path: Optional[str] = None
 
     # Design auto-fix output (013-design-auto-fix)

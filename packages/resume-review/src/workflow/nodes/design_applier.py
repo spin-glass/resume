@@ -5,6 +5,7 @@ and preview generation based on design feedback from UX and Visual Designer agen
 """
 
 import logging
+import re
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -101,11 +102,20 @@ async def _generate_preview(
     session_dir = state.get("session_dir")
     current_iteration = state.get("current_iteration", 0)
     
+    design_loop_active = state.get("design_loop_active", False)
+    design_iteration = state.get("design_iteration", 0)
+
     if session_dir:
-        # Save to iter folder (consistent with 1-based indexing for user outputs)
-        # current_iteration is 0-indexed (0, 1, 2...), so we add 1
-        iter_num = current_iteration + 1
-        cache_dir = Path(session_dir) / f"iter{iter_num}"
+        if design_loop_active:
+            # Save to design_iter folder for design loop
+            iter_name = f"design_iter{design_iteration + 1}"
+        else:
+            # Normal iteration (text refinement)
+            # Save to iter folder (consistent with 1-based indexing for user outputs)
+            iter_num = current_iteration + 1
+            iter_name = f"iter{iter_num}"
+
+        cache_dir = Path(session_dir) / iter_name
         cache_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Saving design preview to {cache_dir}")
     
@@ -127,28 +137,14 @@ async def _generate_preview(
             logger.error("Failed to capture 'before' screenshot")
             return None
 
-        # Step 2: Write CSS to temporary file
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".css", delete=False
-        ) as temp_css:
-            temp_css.write(css_modification.css_content)
-            temp_css_path = Path(temp_css.name)
-
-        # Step 3: For preview, we'd need to inject the CSS into the page
-        # In practice, this requires server-side support or browser extension
-        # For now, we simulate by capturing the same URL (TODO: inject CSS)
-        logger.info("Capturing 'after' screenshot (simulated - CSS not injected)")
+        # Step 2: Capture "after" screenshot with injected CSS
+        logger.info("Capturing 'after' screenshot with injected CSS")
         after_path = await service.capture(
             url=screenshot_url,
             output_filename="preview_after.png",
-            full_page=True,  # Match before screenshot dimensions
+            full_page=True,
+            css=css_modification.css_content,
         )
-
-        # Clean up temp CSS
-        try:
-            temp_css_path.unlink()
-        except OSError:
-            pass
 
         if not after_path or not after_path.exists():
             logger.error("Failed to capture 'after' screenshot")
@@ -262,6 +258,44 @@ def _analyze_section_order(
         return None
 
 
+def _inject_css_reference(content: str, css_path: str) -> str:
+    """Inject or update CSS reference in QMD frontmatter.
+    
+    Args:
+        content: Markdown content with YAML frontmatter
+        css_path: Relative path to CSS file
+        
+    Returns:
+        Updated content with CSS reference
+    """
+    # Pattern to find YAML frontmatter at start of file
+    yaml_pattern = r"^---\s*\n(.*?)\n---\s*\n"
+    match = re.search(yaml_pattern, content, re.DOTALL)
+    
+    if match:
+        frontmatter = match.group(1)
+        # Check if css key exists
+        if re.search(r"^css:\s*", frontmatter, re.MULTILINE):
+            # Already has css, check if our path is present
+            if css_path not in frontmatter:
+                # Append to existing css (simplistic handling for list)
+                # If it's a list [a, b], insert c. If single val, make list.
+                # For now, just logging warning or assuming single line replacement might be risky.
+                # Safest: Replace 'css: .*' with 'css: [old, new]'?
+                # Given strict QMD structure, we'll skip if exists to avoid breaking complex YAML
+                logger.warning(f"CSS key exists in frontmatter. Not modifying to avoid YAML errors. Please check manually.")
+                return content
+        else:
+            # Insert css entry at end of frontmatter
+            new_frontmatter = frontmatter + f"\ncss: {css_path}"
+            return content.replace(frontmatter, new_frontmatter)
+    else:
+        # No frontmatter? Create it.
+        return f"---\ncss: {css_path}\n---\n\n{content}"
+    
+    return content
+
+
 async def design_applier_node(state: ReviewState) -> dict[str, Any]:
     """Apply design modifications based on feedback and CLI flags.
 
@@ -279,6 +313,9 @@ async def design_applier_node(state: ReviewState) -> dict[str, Any]:
         State updates dict with design modification results
     """
     logger.info("Design Applier: Starting design modification workflow")
+
+    design_loop_active = state.get("design_loop_active", False)
+    design_iteration = state.get("design_iteration", 0)
 
     # Get design feedback (from current_feedback)
     current_feedback = state.get("current_feedback", [])
@@ -356,9 +393,32 @@ async def design_applier_node(state: ReviewState) -> dict[str, Any]:
         else:
             logger.info("No screenshot URL provided, skipping visual preview")
 
-        result["design_changes_pending"] = True
-        result["design_changes_applied"] = False
-        return result
+        # 6. Save CSS to design_iter folder for history/preview (Independent of auto_design)
+        if design_loop_active and css_mod and css_mod.validation_passed:
+             iter_name = f"design_iter{design_iteration + 1}"
+             session_dir = state.get("session_dir")
+             if session_dir:
+                 iter_dir = Path(session_dir) / iter_name / "styles"
+                 iter_dir.mkdir(parents=True, exist_ok=True)
+                 iter_css_path = iter_dir / "resume-custom.css"
+                 try:
+                     iter_css_path.write_text(css_mod.css_content, encoding="utf-8")
+                     logger.info(f"Saved CSS copy to {iter_css_path}")
+                 except Exception as e:
+                     logger.error(f"Failed to save CSS copy to iteration folder: {e}")
+             else:
+                 logger.debug("No session_dir, skipping CSS artifact save")
+
+        # Increment design iteration
+        if design_loop_active:
+            result["design_iteration"] = design_iteration + 1
+            logger.info(f"Incremented design iteration to {design_iteration + 1}")
+
+        # Only return early if auto-design is NOT enabled (preview only mode)
+        if not auto_design:
+            result["design_changes_pending"] = True
+            result["design_changes_applied"] = False
+            return result
 
     # 3. Analyze Section Reorder (T056, T057)
     ux_feedback = [f for f in design_feedback if f.agent_name == "ux_designer"]
@@ -431,6 +491,22 @@ async def design_applier_node(state: ReviewState) -> dict[str, Any]:
         result["design_changes_applied"] = True
         result["design_changes_list"] = changes_list
         result["design_backup_paths"] = backup_paths
+        
+        # Inject CSS reference into revised_content (or original resume content)
+        # using the LOCAL path (styles/resume-custom.css) which works for both
+        # root and iteration folder if file structure is preserved
+        current_content = state.get("revised_content")
+        if not current_content:
+             resume = state.get("resume")
+             if resume and hasattr(resume, "content"):
+                 current_content = resume.content
+        
+        if current_content:
+            new_content = _inject_css_reference(current_content, "styles/resume-custom.css")
+            if new_content != current_content:
+                result["revised_content"] = new_content
+                logger.info("Injected 'css: styles/resume-custom.css' into resume frontmatter")
+
         logger.info(f"Design modifications applied: {changes_list}")
 
     return result

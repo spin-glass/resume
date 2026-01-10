@@ -187,10 +187,54 @@ async def design_supervisor_node(state: ReviewState) -> dict[str, Any]:
         all_feedback = state.get("current_feedback", []) + design_feedback
         final_score = calculate_integrated_score(all_feedback)
 
+        # Calculate design-specific score (average of design agents)
+        design_scores = [f.score for f in design_feedback]
+        design_score = sum(design_scores) / len(design_scores) if design_scores else 0.0
+        
+        logger.info(f"Design Score: {design_score:.1f}/10.0")
+
+        # Save feedback to design_iter folder if session_dir exists
+        session_dir_raw = state.get("session_dir")
+        if session_dir_raw:
+            from pathlib import Path
+            design_iteration = state.get("design_iteration", 0)
+            session_dir = Path(session_dir_raw)
+            design_dir = session_dir / f"design_iter{design_iteration + 1}"
+            design_dir.mkdir(parents=True, exist_ok=True)
+            
+            feedback_path = design_dir / "feedback.md"
+            with open(feedback_path, "w") as f:
+                f.write(f"# Design Feedback (Score: {design_score:.1f}/10.0)\n\n")
+                
+                for fb in design_feedback:
+                    f.write(f"## {fb.agent_name} (Score: {fb.score}/10.0)\n\n")
+                    
+                    if fb.strengths:
+                        f.write("### Strengths\n")
+                        for s in fb.strengths:
+                            f.write(f"- {s}\n")
+                        f.write("\n")
+                    
+                    if fb.issues:
+                        f.write("### Issues\n")
+                        for issue in fb.issues:
+                            f.write(f"- {issue.description}\n")
+                        f.write("\n")
+                    
+                    if fb.suggestions:
+                        f.write("### Suggestions\n")
+                        for s in fb.suggestions:
+                            f.write(f"- {s}\n")
+                        f.write("\n")
+        else:
+            logger.info("Skipping design feedback file save (no session_dir provided)")
+
         return {
             "current_feedback": all_feedback,
             "feedback_history": [design_feedback],
             "final_score": final_score,
+            "design_score": design_score,
+            "design_loop_active": True,
         }
 
     except Exception as e:

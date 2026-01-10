@@ -7,6 +7,7 @@ extracting structured data using LLM-based semantic extraction.
 
 import json
 import logging
+import re
 from pathlib import Path
 
 import requests
@@ -86,17 +87,19 @@ Return ONLY the JSON object, no additional text."""
                 temperature=0.3,  # Lower temperature for more consistent extraction
             )
 
-            # Parse JSON response
-            content = response.content.strip()
-            if content.startswith("```json"):
-                content = content[7:]
-            if content.startswith("```"):
-                content = content[3:]
-            if content.endswith("```"):
-                content = content[:-3]
-            content = content.strip()
+            # More robust JSON extraction
+            # 1. Try to find JSON inside markdown code blocks first
+            code_block_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", content, re.DOTALL)
+            if code_block_block := code_block_match:
+                json_str = code_block_block.group(1).strip()
+            else:
+                # 2. Fallback to finding the first { and last }
+                json_match = re.search(r"\{.*\}", content, re.DOTALL)
+                if not json_match:
+                    raise ValueError("No JSON found in response")
+                json_str = json_match.group().strip()
 
-            parsed_data = json.loads(content)
+            parsed_data = json.loads(json_str)
 
             # Create JobPosting with extracted data
             job_posting = JobPosting(
