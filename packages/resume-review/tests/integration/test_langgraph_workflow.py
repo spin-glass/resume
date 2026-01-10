@@ -23,11 +23,48 @@ class TestStateGraphCompilation:
         workflow = build_review_workflow()
         # Check nodes exist
         node_names = list(workflow.nodes.keys())
-        assert "supervisor" in node_names
+        # Updated for separate agent nodes (no longer "supervisor")
+        assert "router" in node_names
+        assert "recruiter" in node_names
+        assert "tech_writer" in node_names
+        assert "copywriter" in node_names
         assert "aggregator" in node_names
         assert "revisor" in node_names
         assert "portfolio" in node_names
         assert "design" in node_names
+
+    def test_graph_has_separate_agent_nodes(self):
+        """Verify graph contains router and three separate agent nodes (US2)."""
+        workflow = build_review_workflow()
+        node_names = list(workflow.nodes.keys())
+
+        assert "router" in node_names, "Router node should be present"
+        assert "recruiter" in node_names, "Recruiter node should be present"
+        assert "tech_writer" in node_names, "Tech writer node should be present"
+        assert "copywriter" in node_names, "Copywriter node should be present"
+        assert "supervisor" not in node_names, "Supervisor node should be removed"
+
+    def test_graph_has_fan_out_edges(self):
+        """Verify router fans out to three agent nodes (US2)."""
+        workflow = build_review_workflow()
+        graph = workflow.get_graph()
+        edges = [(e.source, e.target) for e in graph.edges]
+
+        # Router should have edges to all three agents
+        assert ("router", "recruiter") in edges
+        assert ("router", "tech_writer") in edges
+        assert ("router", "copywriter") in edges
+
+    def test_graph_has_fan_in_edges(self):
+        """Verify three agent nodes converge at aggregator (US2)."""
+        workflow = build_review_workflow()
+        graph = workflow.get_graph()
+        edges = [(e.source, e.target) for e in graph.edges]
+
+        # All three agents should have edges to aggregator
+        assert ("recruiter", "aggregator") in edges
+        assert ("tech_writer", "aggregator") in edges
+        assert ("copywriter", "aggregator") in edges
 
     def test_workflow_entry_point(self):
         """Verify entry point is set correctly."""
@@ -41,7 +78,7 @@ class TestReviewWorkflowWrapper:
 
     def test_wrapper_initializes_compiled_workflow(self):
         """Verify wrapper creates compiled workflow."""
-        with patch("src.workflow.workflow.build_review_workflow") as mock_build:
+        with patch("src.workflow.runner.build_review_workflow") as mock_build:
             mock_build.return_value = MagicMock()
             wrapper = ReviewWorkflow(api_key="test-key")
             assert wrapper.compiled_workflow is not None
@@ -49,13 +86,13 @@ class TestReviewWorkflowWrapper:
 
     def test_wrapper_stores_api_key(self):
         """Verify API key is stored."""
-        with patch("src.workflow.workflow.build_review_workflow"):
+        with patch("src.workflow.graph.build_review_workflow"):
             wrapper = ReviewWorkflow(api_key="test-key-123")
             assert wrapper.api_key == "test-key-123"
 
     def test_wrapper_stores_options(self):
         """Verify all options are stored."""
-        with patch("src.workflow.workflow.build_review_workflow"):
+        with patch("src.workflow.graph.build_review_workflow"):
             wrapper = ReviewWorkflow(
                 api_key="test-key",
                 save_iterations=True,
@@ -160,7 +197,7 @@ class TestNodeFunctions:
     """Test individual node functions."""
 
     def test_aggregator_node_calculates_score(self):
-        """Verify aggregator calculates integrated score."""
+        """Verify aggregator calculates integrated score from separate fields."""
         from src.workflow import aggregator_node
 
         # Create mock feedback
@@ -178,23 +215,36 @@ class TestNodeFunctions:
             issues=[],
             suggestions=[],
         )
+        feedback3 = Feedback(
+            agent_name="copywriter",
+            score=9.0,
+            strengths=["Great"],
+            issues=[],
+            suggestions=[],
+        )
 
+        # Updated: Use per-agent feedback fields
         state = {
-            "current_feedback": [feedback1, feedback2],
+            "recruiter_feedback": feedback1,
+            "tech_writer_feedback": feedback2,
+            "copywriter_feedback": feedback3,
             "score_threshold": 7.5,
         }
 
         result = aggregator_node(state)
+        assert "current_feedback" in result  # NEW: Aggregator now returns this
         assert "integrated_score" in result
         assert "threshold_met" in result
         assert "feedback_history" in result
         assert result["integrated_score"] > 0
+        assert len(result["current_feedback"]) == 3
 
     def test_aggregator_node_handles_empty_feedback(self):
         """Verify aggregator handles empty feedback gracefully."""
         from src.workflow import aggregator_node
 
-        state = {"current_feedback": [], "score_threshold": 8.0}
+        # No per-agent feedback fields
+        state = {"score_threshold": 8.0}
         result = aggregator_node(state)
         assert "error" in result
 
@@ -203,40 +253,65 @@ class TestNodeFunctions:
 class TestAsyncNodeFunctions:
     """Test async node functions."""
 
-    async def test_supervisor_node_runs_agents_in_parallel(self):
-        """Verify supervisor runs agents with asyncio.gather."""
-        from src.workflow import supervisor_node
+    async def test_agent_nodes_run_in_parallel(self):
+        """
+        Verify agent nodes run in parallel via LangGraph fan-out (US2).
+
+        This test verifies that the three agent nodes execute concurrently,
+        which is achieved through LangGraph's fan-out edge semantics rather
+        than asyncio.gather as in the old supervisor implementation.
+        """
+        from src.workflow.nodes.recruiter import recruiter_node
+        from src.workflow.nodes.tech_writer import tech_writer_node
+        from src.workflow.nodes.copywriter import copywriter_node
+        import asyncio
+        import time
 
         # Create mock resume
         mock_resume = MagicMock(spec=Resume)
         mock_resume.content = "Test resume content"
 
         state = {
-            "api_key": "test-key",
             "resume": mock_resume,
             "target_role": "LLM Engineer",
-            "current_iteration": 0,
+            "anthropic_api_key": "test-key",
+            "openai_api_key": "test-key",
+            "gemini_api_key": "test-key",
         }
 
-        # Mock the agents to avoid actual API calls
-        with patch("src.workflow.workflow.RecruiterAgent") as mock_recruiter, \
-             patch("src.workflow.workflow.TechnicalWriterAgent") as mock_tech, \
-             patch("src.workflow.workflow.CopywriterAgent") as mock_copy:
+        # Setup mock feedback
+        mock_feedback = Feedback(
+            agent_name="test",
+            score=7.0,
+            strengths=["Test"],
+            issues=[],
+            suggestions=[],
+        )
 
-            # Setup mock feedback
-            mock_feedback = Feedback(
-                agent_name="test",
-                score=7.0,
-                strengths=["Test"],
-                issues=[],
-                suggestions=[],
-            )
+        # Mock all three agents
+        with patch("src.workflow.nodes.recruiter.RecruiterAgent") as mock_recruiter, \
+             patch("src.workflow.nodes.tech_writer.TechnicalWriterAgent") as mock_tech, \
+             patch("src.workflow.nodes.copywriter.CopywriterAgent") as mock_copy:
 
             mock_recruiter.return_value.evaluate_async = AsyncMock(return_value=mock_feedback)
             mock_tech.return_value.evaluate_async = AsyncMock(return_value=mock_feedback)
             mock_copy.return_value.evaluate_async = AsyncMock(return_value=mock_feedback)
 
-            result = await supervisor_node(state)
+            # Execute all three agent nodes in parallel (simulating LangGraph fan-out)
+            start_time = time.perf_counter()
+            results = await asyncio.gather(
+                recruiter_node(state),
+                tech_writer_node(state),
+                copywriter_node(state),
+            )
+            duration = time.perf_counter() - start_time
 
-            assert "current_feedback" in result
-            assert len(result["current_feedback"]) == 3
+            # Verify all three nodes returned feedback
+            assert len(results) == 3
+            assert "recruiter_feedback" in results[0]
+            assert "tech_writer_feedback" in results[1]
+            assert "copywriter_feedback" in results[2]
+
+            # Verify parallel execution (duration should be close to max, not sum)
+            # This is a smoke test - actual timing depends on mock overhead
+            assert duration < 1.0, "Parallel execution should be fast with mocks"

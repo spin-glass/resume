@@ -18,7 +18,11 @@
     "review:full": "cd packages/resume-review && .venv/bin/python -m src.cli review --input ../../resume/resume-ja.qmd --screenshot-url http://localhost:3000/ja --save-iterations --verbose",
     "review:build": "pnpm review && pnpm resume:build",
     "test:python": "cd packages/resume-review && .venv/bin/pytest",
-    "lint:python": "cd packages/resume-review && .venv/bin/ruff check ."
+    "lint:python": "cd packages/resume-review && .venv/bin/ruff check .",
+    "graph:view": "cd packages/resume-review && python3 scripts/visualize_graph.py --format ascii",
+    "graph:mermaid": "cd packages/resume-review && python3 scripts/visualize_graph.py --format mermaid",
+    "graph:png": "cd packages/resume-review && python3 scripts/visualize_graph.py --format png --output workflow.png",
+    "graph:langsmith": "cd packages/resume-review && python3 scripts/visualize_graph.py --format langsmith"
   },
   "repository": {
     "type": "git",

@@ -32,7 +32,9 @@ def temp_resume(sample_resume_path, tmp_path):
 @pytest.fixture
 def mock_agents():
     """Mock all agent API calls to avoid actual API usage."""
-    mock_feedback = Feedback(
+    from unittest.mock import AsyncMock
+
+    mock_feedback_recruiter = Feedback(
         agent_name="recruiter",
         score=7.5,
         strengths=["Strong technical skills"],
@@ -46,10 +48,25 @@ def mock_agents():
         ],
         suggestions=["Quantify impact of projects"],
     )
+    mock_feedback_tech = Feedback(
+        agent_name="technical_writer",
+        score=7.5,
+        strengths=["Strong technical skills"],
+        issues=[],
+        suggestions=["Quantify impact of projects"],
+    )
+    mock_feedback_copy = Feedback(
+        agent_name="copywriter",
+        score=7.5,
+        strengths=["Strong technical skills"],
+        issues=[],
+        suggestions=["Quantify impact of projects"],
+    )
 
-    with patch("src.agents.recruiter.RecruiterAgent.evaluate", return_value=mock_feedback), \
-         patch("src.agents.technical_writer.TechnicalWriterAgent.evaluate", return_value=mock_feedback), \
-         patch("src.agents.copywriter.CopywriterAgent.evaluate", return_value=mock_feedback), \
+    # Mock async evaluate methods for new separate node architecture
+    with patch("src.agents.recruiter.RecruiterAgent.evaluate_async", new_callable=AsyncMock, return_value=mock_feedback_recruiter), \
+         patch("src.agents.technical_writer.TechnicalWriterAgent.evaluate_async", new_callable=AsyncMock, return_value=mock_feedback_tech), \
+         patch("src.agents.copywriter.CopywriterAgent.evaluate_async", new_callable=AsyncMock, return_value=mock_feedback_copy), \
          patch("src.services.revision.RevisionService._apply_single_revision", return_value="revised content"):
         yield
 

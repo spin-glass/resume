@@ -40,6 +40,9 @@ packages/resume-review/dist/
 packages/resume-review/*.egg-info/
 packages/resume-review/.env
 packages/resume-review/*.log
+packages/resume-review/.langgraph_api/
+packages/resume-review/workflow.png
+packages/resume-review/workflow_graph.png
 
 # Resume output (keep directory, ignore generated files)
 resume/output/*.pdf

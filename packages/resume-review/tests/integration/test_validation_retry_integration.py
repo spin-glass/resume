@@ -32,7 +32,7 @@ async def test_quarto_timeout_handled_as_validation_failure():
     }
 
     # Mock validator to simulate timeout
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         # First call returns timeout error
         mock_validator.validate.return_value = (False, "Validation timed out after 30 seconds")
@@ -62,16 +62,16 @@ async def test_revisor_introduces_new_validation_errors():
     }
 
     # Mock validator to return different errors
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    # Need: initial fail, post-fix1 (for logging), retry2 fail, post-fix2, retry3 succeed
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
 
-        # First validation: error A
-        # Second validation (after first retry): error B (new error!)
-        # Third validation (after second retry): success
         validation_results = [
-            (False, "Error A: Invalid heading"),
-            (False, "Error B: YAML syntax error"),  # New error introduced
-            (True, None),  # Finally succeeds
+            (False, "Error A: Invalid heading"),    # Initial validation
+            (False, "Error B: YAML syntax error"),  # Post-fix 1 check (new error!)
+            (False, "Error B: YAML syntax error"),  # Loop iteration 2 (retry_count=1)
+            (True, None),                           # Post-fix 2 check
+            (True, None),                           # Loop iteration 3 (retry_count=2)
         ]
         mock_validator.validate.side_effect = validation_results
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[MagicMock()])
@@ -105,12 +105,15 @@ async def test_retry_artifacts_saved_correctly(temp_session_dir):
     }
 
     # Mock validator to fail twice then succeed
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    # Need: initial fail, post-fix1 fail, retry2 fail, post-fix2 fail, retry3 succeed
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         validation_results = [
-            (False, "Error 1"),
-            (False, "Error 2"),
-            (True, None),
+            (False, "Error 1"),  # Initial
+            (False, "Error 1a"), # Post-fix 1
+            (False, "Error 2"),  # Loop iteration 2 (retry_count=1)
+            (False, "Error 2a"), # Post-fix 2
+            (True, None),        # Loop iteration 3 (retry_count=2)
         ]
         mock_validator.validate.side_effect = validation_results
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[MagicMock()])
@@ -146,13 +149,16 @@ async def test_retry_count_resets_across_iterations():
         "current_iteration": 1,
     }
 
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         # Fail validation to trigger retries
+        # Need: initial fail, post-fix1 fail, retry2 fail, post-fix2 fail, final check fail (max_retries exhausted)
         validation_results_iter1 = [
-            (False, "Error"),
-            (False, "Error"),
-            (False, "Error"),
+            (False, "Error"),  # Initial
+            (False, "Error"),  # Post-fix 1
+            (False, "Error"),  # Loop iteration 2 (retry_count=1)
+            (False, "Error"),  # Post-fix 2
+            (False, "Error"),  # Loop iteration 3 (retry_count=2, equals max, exit)
         ]
         mock_validator.validate.side_effect = validation_results_iter1
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[MagicMock()])
@@ -174,7 +180,7 @@ async def test_retry_count_resets_across_iterations():
         "current_iteration": 2,
     }
 
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         mock_validator.validate.return_value = (True, None)  # Success immediately
         mock_validator_class.return_value = mock_validator
@@ -224,11 +230,13 @@ async def test_state_current_retry_attempts_serialization():
         "current_iteration": 1,
     }
 
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
+        # Need 3 values: initial validation (fail), post-fix check, next iteration (success)
         validation_results = [
-            (False, "Error 1"),
-            (True, None),
+            (False, "Error 1"),  # Initial validation fails
+            (True, None),       # Post-fix validation succeeds (for logging)
+            (True, None),       # Next loop iteration succeeds
         ]
         mock_validator.validate.side_effect = validation_results
         mock_validator.create_validation_feedback.return_value = MagicMock(issues=[MagicMock()])
@@ -263,7 +271,7 @@ async def test_max_retries_exhausted_with_strict_false_saves_last_attempt():
         "current_iteration": 1,
     }
 
-    with patch("src.workflow.runner.QuartoValidator") as mock_validator_class:
+    with patch("src.services.quarto_validator.QuartoValidator") as mock_validator_class:
         mock_validator = MagicMock()
         # Always fail validation
         mock_validator.validate.return_value = (False, "Persistent error")
