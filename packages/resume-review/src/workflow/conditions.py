@@ -54,29 +54,29 @@ def should_run_design_applier(state: ReviewState) -> Literal["design_applier", "
         "design_applier" if design modifications enabled and feedback exists
         "end" otherwise
     """
-    auto_design = state.get("auto_design_enabled", False)
-    preview = state.get("design_preview_enabled", False)
+    auto_design = state.auto_design_enabled
+    preview = state.design_preview_enabled
 
     if not (auto_design or preview):
         logger.info("Condition: Design modifications disabled, ending workflow")
         return "end"
 
-    design_iteration = state.get("design_iteration", 0)
-    max_design_iterations = state.get("max_design_iterations", 3)
+    design_iteration = state.design_iteration
+    max_design_iterations = state.max_design_iterations
 
     if design_iteration >= max_design_iterations:
         logger.info(f"Condition: Max design iterations ({max_design_iterations}) reached, ending workflow")
         return "end"
 
     # Get design-related feedback
-    current_feedback = state.get("current_feedback", [])
+    current_feedback = state.current_feedback
     design_feedback = [
         f for f in current_feedback if f.agent_name in ["ux_designer", "visual_designer"]
     ]
 
     if len(design_feedback) > 0:
-        design_score = state.get("design_score", 0.0)
-        threshold = state.get("score_threshold", 8.0)
+        design_score = state.design_score
+        threshold = state.score_threshold
 
         if design_score >= threshold:
             logger.info(
