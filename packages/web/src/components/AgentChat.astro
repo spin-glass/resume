@@ -1,0 +1,40 @@
+---
+---
+
+<div class="fixed bottom-4 right-4 z-50">
+  <div id="chat-window" class="hidden bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 w-80 h-96 flex flex-col mb-4 transition-all duration-300 transform translate-y-0">
+    <div class="p-3 border-b border-gray-200 dark:border-gray-700 bg-slate-50 dark:bg-slate-900 rounded-t-lg flex justify-between items-center">
+      <span class="font-semibold text-sm">Resume Agent</span>
+      <button id="close-chat" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">&times;</button>
+    </div>
+    <div class="flex-1 p-3 overflow-y-auto text-sm space-y-2" id="chat-messages">
+      <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg rounded-tl-none self-start max-w-[90%]">
+        Hello! I'm the AI agent responsible for this resume. Ask me anything about the architecture or skills!
+      </div>
+    </div>
+    <div class="p-3 border-t border-gray-200 dark:border-gray-700">
+      <input type="text" placeholder="Ask a question..." class="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" disabled />
+      <div class="text-[10px] text-gray-400 mt-1 text-center">Coming soon...</div>
+    </div>
+  </div>
+
+  <button id="toggle-chat" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 shadow-lg transition-transform hover:scale-105 flex items-center justify-center w-12 h-12">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.159 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+    </svg>
+  </button>
+</div>
+
+<script>
+  const toggleBtn = document.getElementById('toggle-chat');
+  const closeBtn = document.getElementById('close-chat');
+  const chatWindow = document.getElementById('chat-window');
+
+  toggleBtn?.addEventListener('click', () => {
+    chatWindow?.classList.toggle('hidden');
+  });
+
+  closeBtn?.addEventListener('click', () => {
+    chatWindow?.classList.add('hidden');
+  });
+</script>

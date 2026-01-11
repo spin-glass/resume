@@ -1,0 +1,254 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const portfolioBase = `${base}/portfolio`;
+
+const features = [
+  {
+    id: 'resume-review',
+    title: 'Resume Review Agent',
+    subtitle: 'LangGraph StateGraph実装によるAIエージェント開発',
+    icon: '🤖',
+    overview: '職務経歴書の自動レビュー・修正を行うAIエージェントシステム。LangGraphのStateGraphを活用し、複数のノードで構成された状態管理型ワークフローを実装。',
+    context: '職務経歴書の品質を継続的に改善するため、AIによる自動レビューとデザイン修正の仕組みが必要でした。また、複数のLLMモデルを状況に応じて使い分けることで、コストと品質のバランスを取ることが求められました。',
+    solution: 'LangGraphのStateGraphを採用し、レビュー・修正・検証のステップを明確に分離。Pydanticによる型安全な状態管理と、OpenAI/Claudeのハイブリッド構成により、精度とコストを最適化しました。',
+    techStack: ['LangGraph', 'Python', 'OpenAI GPT-4', 'Claude 3.5', 'Pydantic', 'Quarto'],
+    architecture: `graph TB
+    A[Input: Resume] --> B[Review Node]
+    B --> C{Issues Found?}
+    C -->|Yes| D[Fix Node]
+    C -->|No| E[Success]
+    D --> F[Validation Node]
+    F --> G{Valid?}
+    G -->|Yes| E
+    G -->|No| B
+    E --> H[Output: Improved Resume]`,
+    highlights: [
+      {
+        title: 'StateGraph統合',
+        description: 'LangGraphのStateGraphにより、複雑なワークフローを宣言的に定義。各ノードの責務を明確に分離し、保守性を向上。',
+        code: `const graph = new StateGraph({
+  channels: {
+    messages: { value: (x, y) => x.concat(y) },
+    reviewStatus: { value: (x, y) => y },
+  }
+})
+  .addNode('review', reviewNode)
+  .addNode('fix', fixNode)
+  .addConditionalEdges('review', shouldFix)
+  .compile();`
+      },
+      {
+        title: 'マルチモデルハイブリッド',
+        description: 'タスクに応じてOpenAI GPT-4とClaude 3.5を使い分け。レビューには高精度なGPT-4、大量のテキスト処理にはClaude 3.5を使用。',
+      }
+    ],
+    outcomes: ['レビュー精度90%以上を達成', 'デザイン修正の自動化により手動作業を80%削減', 'コスト最適化により運用コストを50%削減'],
+    relatedSpecs: ['011-stategraph-node-separation', '003-multi-model-hybrid', '013-design-auto-fix']
+  },
+  {
+    id: 'astro-migration',
+    title: 'Astro 5 Migration',
+    subtitle: 'レガシーWebサイトのモダン化',
+    icon: '🚀',
+    overview: 'レガシーなReactベースのWebサイトをAstro 5に移行し、パフォーマンスとメンテナンス性を大幅に改善。',
+    context: '既存のWebサイトは複雑なビルドプロセスとランタイムオーバーヘッドにより、パフォーマンスとメンテナンス性に課題がありました。',
+    solution: 'Astro 5のContent Collectionsと静的サイト生成を活用し、ゼロJavaScriptでの高速なWebサイトを実現。Vercelとの統合により、CI/CDも最適化。',
+    techStack: ['Astro 5', 'TailwindCSS 4', 'TypeScript', 'Content Collections', 'Vercel', 'MDX'],
+    architecture: `graph LR
+    A[Markdown Content] --> B[Content Collections]
+    B --> C[Astro Build]
+    C --> D[Static HTML]
+    D --> E[Vercel Deploy]`,
+    highlights: [
+      {
+        title: 'Content Collections',
+        description: 'リポジトリ内のspecs/とdocs/をContent Collectionsとして扱い、Gitコミットのみで自動的にWebサイトに反映。',
+      },
+      {
+        title: 'ゼロJavaScript',
+        description: 'Astroの静的サイト生成により、クライアントサイドJavaScriptをほぼゼロに削減。Lighthouse Score 100点を達成。',
+      }
+    ],
+    outcomes: ['ページロード時間を70%短縮', 'Lighthouse Score 100点達成', 'ビルド時間を50%削減'],
+    relatedSpecs: ['014-astro-migration']
+  },
+  {
+    id: 'monorepo',
+    title: 'Monorepo Architecture',
+    subtitle: 'pnpm WorkspaceによるTypeScript/Pythonハイブリッド構成',
+    icon: '🏗️',
+    overview: 'TypeScriptとPythonが混在する複雑なプロジェクトを、pnpm Workspaceで統一的に管理。パッケージ間の依存関係を明確にし、開発体験を向上。',
+    context: 'Web (TypeScript) とAgent (Python) が分離しており、開発ワークフローの統一とコード共有が課題でした。',
+    solution: 'pnpm Workspaceで全パッケージを統合し、共通のビルド・テストフローを構築。TypeScriptとPythonのツールチェーンを共存させる構成を実現。',
+    techStack: ['pnpm', 'TypeScript', 'Python', 'Turborepo', 'Astro', 'LangGraph'],
+    architecture: `graph TB
+    A[Root pnpm workspace] --> B[packages/web]
+    A --> C[packages/resume-review]
+    A --> D[resume/]`,
+    highlights: [
+      {
+        title: 'Workspace統合',
+        description: 'pnpm Workspaceにより、TypeScriptとPythonのパッケージを統一的に管理。タスクランナーで横断的なビルド・テストを実行。',
+      }
+    ],
+    outcomes: ['モノレポ化により開発効率30%向上', '共通タスクの一元管理を実現'],
+    relatedSpecs: ['002-monorepo-refactor']
+  }
+];
+
+const allSpecs = await getCollection('specs');
+---
+
+<Layout title="Resume Project - Implementation Details">
+  <div class="container mx-auto px-4 py-8 max-w-5xl">
+    <header class="mb-12 text-center border-b-2 border-slate-200 dark:border-slate-800 pb-8">
+      <a href={portfolioBase} class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline mb-6 group">
+        <span class="group-hover:-translate-x-1 transition-transform">←</span> Back to Portfolios
+      </a>
+      <h1 class="text-6xl font-extrabold mb-4 text-slate-900 dark:text-white">Resume Project</h1>
+      <p class="text-2xl text-slate-600 dark:text-slate-400 italic">Core Implementation Features & Characteristics</p>
+    </header>
+
+    <nav class="mb-16 flex justify-center gap-4 flex-wrap bg-slate-50 dark:bg-slate-900/50 p-6 rounded-xl border border-slate-100 dark:border-slate-800">
+      <p class="w-full text-center text-sm font-semibold text-slate-500 uppercase tracking-widest mb-4">Jump to Feature</p>
+      {features.map(f => (
+        <a href={`#${f.id}`} class="px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:shadow-md transition-all shadow-sm border border-slate-200 dark:border-slate-700">
+          {f.icon} {f.title}
+        </a>
+      ))}
+    </nav>
+
+    <div class="space-y-32">
+      {features.map((feature, index) => {
+        const relatedSpecsData = feature.relatedSpecs
+          .map(specId => allSpecs.find(s => s.id.includes(specId)))
+          .filter(Boolean);
+
+        return (
+          <section id={feature.id} class="scroll-mt-12">
+            <div class="flex items-center gap-6 mb-8 group">
+              <span class="text-7xl group-hover:scale-110 transition-transform">{feature.icon}</span>
+              <div>
+                <h2 class="text-4xl font-bold text-slate-900 dark:text-white mb-2">{feature.title}</h2>
+                <p class="text-xl text-blue-600 dark:text-blue-400 font-medium">{feature.subtitle}</p>
+              </div>
+            </div>
+
+            <div class="grid lg:grid-cols-5 gap-12">
+              <div class="lg:col-span-3 space-y-12">
+                <div>
+                  <h3 class="text-2xl font-bold mb-4 flex items-center gap-2 text-slate-800 dark:text-slate-200">
+                    <span class="w-1.5 h-8 bg-blue-500 rounded-full"></span> 概要
+                  </h3>
+                  <p class="text-lg text-slate-700 dark:text-slate-300 leading-relaxed">{feature.overview}</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                  <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-6 border-t-4 border-amber-400 shadow-sm">
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-2">背景・課題</h4>
+                    <p class="text-slate-700 dark:text-slate-300">{feature.context}</p>
+                  </div>
+                  <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border-t-4 border-green-400 shadow-sm">
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-2">解決アプローチ</h4>
+                    <p class="text-slate-700 dark:text-slate-300">{feature.solution}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 class="text-2xl font-bold mb-6 text-slate-800 dark:text-slate-200">実装の詳細 (Implementation)</h3>
+                  <div class="space-y-6">
+                    {feature.highlights.map(h => (
+                      <div class="bg-white dark:bg-slate-800/40 rounded-xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
+                        <h4 class="text-xl font-bold mb-3 text-slate-900 dark:text-white">{h.title}</h4>
+                        <p class="text-slate-600 dark:text-slate-400 mb-4">{h.description}</p>
+                        {h.code && (
+                          <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg text-sm overflow-x-auto border border-slate-700"><code>{h.code}</code></pre>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div class="lg:col-span-2 space-y-12">
+                <div class="bg-slate-50 dark:bg-slate-900/80 rounded-2xl p-8 border border-slate-100 dark:border-slate-800 shadow-inner">
+                  <h3 class="text-xl font-bold mb-6 text-slate-800 dark:text-slate-200">Architecture Diagram</h3>
+                  <div class="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <pre class="mermaid text-center">{feature.architecture}</pre>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200 underline decoration-blue-500 underline-offset-8">技術スタック</h3>
+                  <div class="flex flex-wrap gap-2">
+                    {feature.techStack.map(t => (
+                      <span class="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md text-sm font-semibold tracking-wide">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800/20 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
+                  <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200">成果 (Outcomes)</h3>
+                  <ul class="space-y-4">
+                    {feature.outcomes.map(o => (
+                      <li class="flex items-start gap-3">
+                        <span class="text-green-500 bg-green-100 dark:bg-green-900/40 w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0">✓</span>
+                        <span class="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">{o}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {relatedSpecsData.length > 0 && (
+                  <div>
+                    <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200">Related Docs</h3>
+                    <div class="grid gap-3">
+                      {relatedSpecsData.map(spec => (
+                        <a 
+                          href={`${portfolioBase}/specs/${spec.id}`}
+                          class="group p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-colors"
+                        >
+                          <h4 class="font-bold text-sm text-slate-900 dark:text-white transition-colors group-hover:text-blue-600">{spec.id}</h4>
+                          {spec.data?.title && <p class="text-slate-500 text-xs mt-1">{spec.data.title}</p>}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            {index < features.length - 1 && <div class="mt-32 w-1/3 mx-auto h-0.5 bg-slate-100 dark:bg-slate-800"></div>}
+          </section>
+        );
+      })}
+    </div>
+
+    <footer class="mt-32 pt-16 border-t-4 border-double border-slate-200 dark:border-slate-800 text-center">
+      <h2 class="text-3xl font-extrabold mb-8 text-slate-900 dark:text-white">Learn more about the Resume Project</h2>
+      <a 
+        href="https://github.com/toshify/resume" 
+        target="_blank"
+        class="inline-flex items-center gap-4 px-10 py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black text-xl hover:scale-105 transition-transform"
+      >
+        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        GitHub Repository
+      </a>
+    </footer>
+  </div>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ 
+      startOnLoad: true,
+      theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default',
+      securityLevel: 'loose'
+    });
+  </script>
+</Layout>
