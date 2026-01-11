@@ -462,5 +462,105 @@ def main() -> None:
     cli()
 
 
+@cli.command()
+@click.option(
+    "--resume",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="Path to resume QMD file",
+)
+@click.option(
+    "--job-posting",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="Path to job posting text file",
+)
+@click.option(
+    "--output-json",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Save analysis result as JSON",
+)
+@click.option(
+    "--model",
+    default=None,
+    help="Override LLM model (e.g. gemini-2.0-flash-exp)",
+)
+def gap_analyze(
+    resume: Path,
+    job_posting: Path,
+    output_json: Optional[Path],
+    model: Optional[str],
+) -> None:
+    """Analyze gaps between resume and job posting."""
+    from .agents.gap_analyzer import GapAnalyzerAgent
+    from .services.llm_factory import create_gemini_client
+    from .utils.config import get_config, setup_logging
+    
+    setup_logging(verbose=True)
+    
+    # 1. Load Content
+    try:
+        resume_content = resume.read_text(encoding="utf-8")
+        jd_text = job_posting.read_text(encoding="utf-8")
+    except Exception as e:
+        click.echo(f"Error reading files: {e}", err=True)
+        sys.exit(1)
+    
+    click.echo("=== GAP ANALYSIS START ===")
+    click.echo(f"Resume: {resume}")
+    click.echo(f"Job Posting: {job_posting}")
+    
+    # 2. Setup Client
+    config = get_config()
+    api_key = config.get_gemini_api_key()
+    if not api_key:
+        click.echo("Error: Gemini API key required. Set GEMINI_API_KEY env var.", err=True)
+        sys.exit(1)
+        
+    try:
+        # Default to Gemini for gap analysis as it handles long context well
+        client = create_gemini_client(
+            api_key=api_key, 
+            model=model or "gemini-2.0-flash-exp"
+        )
+    except Exception as e:
+        click.echo(f"Error creating LLM client: {e}", err=True)
+        sys.exit(1)
+    
+    agent = GapAnalyzerAgent(client)
+    
+    # 3. Analyze
+    click.echo("Analyzing gaps... (this may take a minute)")
+    try:
+        result = agent.analyze(resume_content, jd_text)
+    except Exception as e:
+        click.echo(f"Error during analysis: {e}", err=True)
+        sys.exit(1)
+        
+    # 4. Output
+    click.echo("\n" + "=" * 60)
+    click.echo(f"MATCH SCORE: {result.match_score:.1f}/10.0")
+    click.echo("=" * 60)
+    click.echo(f"\nSUMMARY:\n{result.summary}\n")
+    
+    if result.missing_skills:
+        click.echo("MISSING SKILLS & ACTION ITEMS:")
+        for skill in result.missing_skills:
+            click.echo(f"\n[ ] {skill.skill_name} ({skill.urgency})")
+            click.echo(f"    Context: {skill.context}")
+            for item in skill.action_items:
+                click.echo(f"    -> Action: {item.description}")
+                if item.estimated_hours:
+                    click.echo(f"       Est: {item.estimated_hours}")
+    
+    click.echo("\nOVERALL RECOMMENDATION:")
+    click.echo(result.overall_recommendation)
+    
+    if output_json:
+        output_json.write_text(result.model_dump_json(indent=2), encoding="utf-8")
+        click.echo(f"\nResult saved to {output_json}")
+
+
 if __name__ == "__main__":
     main()
