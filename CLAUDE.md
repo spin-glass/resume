@@ -31,7 +31,8 @@ resume/                     # Monorepo root
 - Python 3.13, LangGraph 1.0.0+, Anthropic SDK 0.25.0+, Pydantic 2.0+
 - Multi-model support: Gemini, OpenAI, Anthropic (003-multi-model-hybrid)
 - Quarto validation with auto-retry (009-quarto-retry-loop)
-- Python 3.13 (matching existing resume-review package) (013-design-auto-fix)
+- File-based (QMD files, session JSON outputs) - no database (010-job-personalization)
+- N/A (state flows through LangGraph's in-memory StateGraph) (011-stategraph-node-separation)
 - File system (CSS output files, backups, screenshots) (013-design-auto-fix)
 
 - **Web**: Astro 5, Tailwind CSS 4, React 18 (optional), Puppeteer (PDF generation)
@@ -68,6 +69,16 @@ pnpm review --max-validation-retries 0        # Skip retry loop
 # Python testing
 pnpm test:python           # Run pytest
 pnpm lint:python           # Run ruff linter
+
+# Graph visualization (011-stategraph-node-separation)
+pnpm graph:view            # View workflow graph (ASCII)
+pnpm graph:mermaid         # Generate mermaid diagram (LangGraph native)
+pnpm graph:png             # Generate PNG image (requires: pip install grandalf)
+pnpm graph:langsmith       # Show LangSmith trace viewer instructions
+
+# LangGraph Studio (interactive debugging)
+cd packages/resume-review && .venv/bin/langgraph dev  # Start LangGraph Studio server
+# Then open: https://smith.langchain.com/studio/?baseUrl=http://127.0.0.1:2024
 
 # Sync
 pnpm sync                  # Sync QMD to MDX for web
@@ -126,11 +137,71 @@ pnpm review --max-validation-retries 0 --save-iterations
 - **TypeScript/JavaScript**: Follow Next.js conventions
 - **Commits**: Include `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>`
 
+## Workflow Architecture (011-stategraph-node-separation)
+
+**Feature**: Fan-out/Fan-in pattern for parallel agent execution with individual node visibility
+
+### Graph Structure
+
+```
+__start__ → router → [recruiter, tech_writer, copywriter] → aggregator → revisor → router (loop)
+                                                                      ↓
+                                                                  portfolio → design → __end__
+```
+
+### Key Nodes
+
+| Node | Purpose | State Field |
+|------|---------|-------------|
+| `router` | Fan-out coordinator, triggers parallel execution | - |
+| `recruiter` | RecruiterAgent evaluation | `recruiter_feedback` |
+| `tech_writer` | TechnicalWriterAgent evaluation | `tech_writer_feedback` |
+| `copywriter` | CopywriterAgent evaluation | `copywriter_feedback` |
+| `aggregator` | Collects feedback, calculates score | `current_feedback` |
+| `revisor` | Generates revised QMD | `revised_content` |
+
+### Benefits
+
+1. **Real-time Monitoring**: Each agent logs start/completion with timing
+2. **LangSmith Tracing**: Individual nodes visible in trace viewer
+3. **Graph Visualization**: Fan-out/Fan-in pattern clearly shown
+4. **Future Retry Logic**: Per-agent state enables targeted retry (not yet implemented)
+
 ## Recent Changes
-- 013-design-auto-fix: Added Python 3.13 (matching existing resume-review package)
+- 020-ux-improvements: Added Global Navigation, Breadcrumbs, and Footer to Astro site
+- 013-design-auto-fix: Design auto-fix with CSS generation, section reorder, theme recommendations
+- 011-stategraph-node-separation: Fan-out/Fan-in agent node separation for visibility and debugging
+- 010-job-personalization: Added job personalization (file/URL input, match scoring, contextual feedback)
 - 003-multi-model-hybrid: Multi-provider LLM support (Gemini, OpenAI, Anthropic)
 - 009-quarto-retry-loop: Quarto validation auto-retry with logging
 
+## Job Personalization (010-job-personalization)
+
+**Feature**: Tailor resume reviews to specific job descriptions via file or URL
+
+### Key Capabilities
+- **File Input**: Parse markdown or text job descriptions (`--job-posting`)
+- **URL Input**: Fetch and parse job postings from URLs (LinkedIn, Indeed, etc.) (`--job-url`)
+- **Match Scoring**: Calculate match score (0-100%) and identify skill gaps
+- **Contextual Feedback**: Agents provide feedback specific to job requirements
+- **ATS Optimization**: Suggests keywords and emphasis based on job description
+
+### Usage Commands
+```bash
+# File-based personalization
+pnpm review:dry --job-posting ./job_desc.md
+
+# URL-based personalization
+pnpm review:dry --job-url "https://linkedin.com/jobs/view/..."
+
+# Full review with personalization (updates resume)
+pnpm review --input resume.qmd --job-posting ./job.md
+```
+
+### Output Logic
+- **Detailed Match Analysis**: Shows match level (Excellent, Good, etc.), matched/missing skills
+- **Emphasis Suggestions**: 💡 ideas for highlighting relevant experience
+- **Keyword Additions**: 🔑 recommended keywords to improve ATS ranking
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
