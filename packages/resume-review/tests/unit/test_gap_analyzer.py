@@ -70,3 +70,26 @@ def test_gap_analysis_parsing_with_markdown(mock_llm_client):
     response2 = f"```\n{json_str}\n```"
     result2 = agent.parse_result(response2)
     assert result2.match_score == 5.0
+
+@pytest.mark.asyncio
+async def test_gap_analysis_execution(mock_llm_client):
+    """Test full async execution flow."""
+    agent = GapAnalyzerAgent(mock_llm_client)
+    
+    # Mock LLM response
+    mock_response = MagicMock()
+    mock_response.content = json.dumps({
+        "match_score": 9.0,
+        "summary": "Excellent",
+        "missing_skills": [],
+        "strong_points": [],
+        "overall_recommendation": "Hire"
+    })
+    
+    # Setup async mock
+    mock_llm_client.generate_async = AsyncMock(return_value=mock_response)
+    
+    result = await agent.analyze_async("Resume Content", "Job Description")
+    
+    assert result.match_score == 9.0
+    mock_llm_client.generate_async.assert_called_once()
