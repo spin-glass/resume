@@ -57,3 +57,10 @@ resume/output/*.html
 backups/                    # File backups (CSS, QMD)
 review_sessions/            # Preview screenshots and temp files
 review_*/                   # Review session directories
+resume/jobs/                # Real job descriptions (private)
+# Gap analysis output in jobs folder (Legacy)
+resume/jobs/gap_analysis_*/
+# Legacy gap analysis folders
+gap_analysis_*/
+# Gap analysis output folders
+resume/gap_analysis_*

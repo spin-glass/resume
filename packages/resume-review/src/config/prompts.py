@@ -156,6 +156,8 @@ Input:
 1. Resume Content (Markdown)
 2. Job Description (Text)
 
+CRITICAL: The output MUST be in Japanese language (Nihongo), regardless of the input language.
+
 Analyze the following:
 1. **Hard Skill Gaps**: What specific technologies or skills are in the JD but missing from the resume?
 2. **Experience Gaps**: What types of projects or scale of work does the JD imply that the resume lacks?
@@ -164,6 +166,7 @@ Analyze the following:
 
 Action Items:
 For each gap, provide a concrete, actionable suggestion (e.g., "Build a demo app doing X", "Add a section about Y").
+The content of action items, summaries, and recommendations MUST be in Japanese.
 
 CRITICAL OUTPUT REQUIREMENT:
 Respond ONLY with valid JSON matching the following structure:

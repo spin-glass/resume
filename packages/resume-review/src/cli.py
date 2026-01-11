@@ -472,14 +472,25 @@ def main() -> None:
 @click.option(
     "--job-posting",
     type=click.Path(exists=True, path_type=Path),
-    required=True,
+    required=False,
     help="Path to job posting text file",
 )
 @click.option(
-    "--output-json",
+    "--job-url",
+    type=str,
+    required=False,
+    help="URL of the job posting to analyze",
+)
+@click.option(
+    "--save",
+    is_flag=True,
+    help="Save results to a timestamped directory (like review sessions)",
+)
+@click.option(
+    "--output-dir",
     type=click.Path(path_type=Path),
     default=None,
-    help="Save analysis result as JSON",
+    help="Specific directory to save results",
 )
 @click.option(
     "--model",
@@ -488,34 +499,51 @@ def main() -> None:
 )
 def gap_analyze(
     resume: Path,
-    job_posting: Path,
-    output_json: Optional[Path],
+    job_posting: Optional[Path],
+    job_url: Optional[str],
+    save: bool,
+    output_dir: Optional[Path],
     model: Optional[str],
 ) -> None:
-    """Analyze gaps between resume and job posting."""
+    """Analyze gaps between resume and job posting.
+    
+    Can save results to a structured folder containing:
+    - analysis_report.md
+    - job_description.txt
+    - resume_original.qmd
+    - analysis.json
+    """
+    if not job_posting and not job_url:
+        raise click.UsageError("Either --job-posting or --job-url must be provided.")
+
     from .agents.gap_analyzer import GapAnalyzerAgent
     from .services.llm_factory import create_gemini_client
+    from .services.job_parser import JobParserService
     from .utils.config import get_config, setup_logging
+    import json
+    import datetime
     
     setup_logging(verbose=True)
     
     # 1. Load Content
     try:
         resume_content = resume.read_text(encoding="utf-8")
-        jd_text = job_posting.read_text(encoding="utf-8")
     except Exception as e:
-        click.echo(f"Error reading files: {e}", err=True)
+        click.echo(f"Error reading resume: {e}", err=True)
         sys.exit(1)
     
     click.echo("=== GAP ANALYSIS START ===")
     click.echo(f"Resume: {resume}")
-    click.echo(f"Job Posting: {job_posting}")
+    if job_posting:
+        click.echo(f"Job Posting File: {job_posting}")
+    else:
+        click.echo(f"Job URL: {job_url}")
     
     # 2. Setup & 3. Analyze (Wrapper to ensure single event loop)
     import asyncio
 
-    async def run_analysis(resume_text: str, jd_text: str, api_key: str, model: Optional[str]):
-        # Setup Client inside the loop logic
+    async def run_analysis(resume_text: str, jd_path: Optional[Path], jd_url: Optional[str], api_key: str, model: Optional[str]):
+        # Setup Client
         try:
              client = create_gemini_client(
                 api_key=api_key, 
@@ -524,10 +552,27 @@ def gap_analyze(
         except Exception as e:
             raise RuntimeError(f"Error creating LLM client: {e}")
 
+        # Fetch JD text
+        try:
+            if jd_path:
+                jd_text = jd_path.read_text(encoding="utf-8")
+                jd_source = f"File: {jd_path}"
+            elif jd_url:
+                parser = JobParserService(client)
+                jp = await parser.parse_url(jd_url)
+                jd_text = jp.raw_text
+                jd_source = f"URL: {jd_url}"
+            else:
+                raise ValueError("No job posting provided")
+        except Exception as e:
+            raise RuntimeError(f"Error fetching job posting: {e}")
+
+        # Run Gap Analysis
         agent = GapAnalyzerAgent(client)
         
         try:
-            return await agent.analyze_async(resume_text, jd_text)
+            result = await agent.analyze_async(resume_text, jd_text)
+            return result, jd_text, jd_source
         finally:
             await agent.close()
 
@@ -541,33 +586,105 @@ def gap_analyze(
         sys.exit(1)
 
     try:
-        result = asyncio.run(run_analysis(resume_content, jd_text, api_key, model))
+        result, jd_used, jd_source_info = asyncio.run(run_analysis(resume_content, job_posting, job_url, api_key, model))
     except Exception as e:
         click.echo(f"Error during analysis: {e}", err=True)
         sys.exit(1)
         
-    # 4. Output
+    # 4. Output Logic
+    # Build report string
+    report_lines = []
+    report_lines.append("# Gap Analysis Report\n")
+    report_lines.append(f"**Date**: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+    report_lines.append(f"**Resume**: {resume}\n")
+    report_lines.append(f"**Job Source**: {jd_source_info}\n")
+    report_lines.append(f"**Match Score**: {result.match_score:.1f}/10.0\n")
+    report_lines.append("## Summary\n")
+    report_lines.append(f"{result.summary}\n")
+    
+    if result.missing_skills:
+        report_lines.append("## Missing Skills & Action Items\n")
+        for skill in result.missing_skills:
+            report_lines.append(f"### {skill.skill_name} ({skill.urgency})\n")
+            report_lines.append(f"**Context**: {skill.context}\n")
+            if skill.action_items:
+                report_lines.append("**Suggested Actions**:")
+                for item in skill.action_items:
+                    est = f" (Est: {item.estimated_hours})" if item.estimated_hours else ""
+                    report_lines.append(f"- {item.description}{est}")
+            report_lines.append("\n")
+
+    report_lines.append("## Overall Recommendation\n")
+    report_lines.append(result.overall_recommendation)
+    
+    report_content = "\n".join(report_lines)
+
+    # Print to console
     click.echo("\n" + "=" * 60)
     click.echo(f"MATCH SCORE: {result.match_score:.1f}/10.0")
     click.echo("=" * 60)
     click.echo(f"\nSUMMARY:\n{result.summary}\n")
-    
+    click.echo("\nMISSING SKILLS & ACTIONS:")
     if result.missing_skills:
-        click.echo("MISSING SKILLS & ACTION ITEMS:")
         for skill in result.missing_skills:
-            click.echo(f"\n[ ] {skill.skill_name} ({skill.urgency})")
-            click.echo(f"    Context: {skill.context}")
-            for item in skill.action_items:
-                click.echo(f"    -> Action: {item.description}")
-                if item.estimated_hours:
-                    click.echo(f"       Est: {item.estimated_hours}")
-    
+            click.echo(f"- {skill.skill_name} ({skill.urgency})")
+            
     click.echo("\nOVERALL RECOMMENDATION:")
     click.echo(result.overall_recommendation)
     
-    if output_json:
-        output_json.write_text(result.model_dump_json(indent=2), encoding="utf-8")
-        click.echo(f"\nResult saved to {output_json}")
+    # Save to directory if requested
+    if save or output_dir:
+        try:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            # Determine target directory
+            if output_dir:
+                target_dir = Path(output_dir)
+            else:
+                # Default logic:
+                # 1. Determine JD Name for classification
+                #    - If file: use filename stem (e.g. 'company_a.txt' -> 'company_a')
+                #    - If URL: use 'web_job' or parse domain
+                job_name = "unknown_job"
+                if job_posting:
+                    job_name = job_posting.stem
+                elif job_url:
+                    from urllib.parse import urlparse
+                    try:
+                        domain = urlparse(job_url).netloc.split('.')[0]
+                        job_name = f"web_{domain}"
+                    except:
+                        job_name = "web_job"
+
+                # 2. Default to 'resume' folder in project root if it exists
+                cwd = Path.cwd()
+                root_resume_dir = cwd / "resume"
+                
+                if root_resume_dir.exists() and root_resume_dir.is_dir():
+                    base_dir = root_resume_dir
+                else:
+                    base_dir = resume.parent
+                
+                target_dir = base_dir / f"gap_analysis_{job_name}_{timestamp}"
+            
+            target_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Write files
+            (target_dir / "analysis_report.md").write_text(report_content, encoding="utf-8")
+            (target_dir / "job_description.txt").write_text(jd_used, encoding="utf-8")
+            (target_dir / "resume_original.qmd").write_text(resume_content, encoding="utf-8")
+            (target_dir / "analysis.json").write_text(
+                json.dumps(result.model_dump(), indent=2), encoding="utf-8"
+            )
+            
+            click.echo(f"\n✅ Results saved to directory: {target_dir}")
+            click.echo(f"   - analysis_report.md")
+            click.echo(f"   - job_description.txt")
+            click.echo(f"   - resume_original.qmd")
+            click.echo(f"   - analysis.json")
+            
+        except Exception as e:
+            click.echo(f"\n❌ Error saving results: {e}", err=True)
 
 
 if __name__ == "__main__":

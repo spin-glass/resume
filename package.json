@@ -20,6 +20,8 @@
     "review:design": "bash scripts/run-with-server.sh 'cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --screenshot-url http://localhost:4321/resume/ --save-iterations --verbose --auto-design'",
     "review:design-preview": "bash scripts/run-with-server.sh 'cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --screenshot-url http://localhost:4321/resume/ --save-iterations --verbose --design-preview'",
     "review:recommendation": "bash scripts/run-python-server.sh 'cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --target-role \"Recommendation Engineer\" --design-preview --auto-design --screenshot-url http://localhost:8080/resume-ja.html --save-iterations --verbose'",
+    "gap-analyze": "PYTHONPATH=packages/resume-review python3 -m src.cli gap-analyze",
+    "gap:dev": "pnpm gap-analyze --resume packages/resume-review/test_resume.qmd --job-posting packages/resume-review/job_sample.txt --save",
     "review:build": "pnpm review && pnpm resume:build",
     "test:python": "cd packages/resume-review && python3 -m pytest",
     "lint:python": "cd packages/resume-review && python3 -m ruff check ."
