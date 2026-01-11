@@ -65,7 +65,6 @@ class BaseLLMClient(ABC):
         self.api_key = api_key
         self.model = model
 
-    @abstractmethod
     async def generate_async(
         self,
         system_prompt: str,
@@ -88,6 +87,11 @@ class BaseLLMClient(ABC):
             ValueError: If prompts are empty
             RuntimeError: If API call fails after retries
         """
+        pass
+
+    @abstractmethod
+    async def close(self) -> None:
+        """Close underlying client resources."""
         pass
 
 
@@ -169,6 +173,23 @@ class GeminiClient(BaseLLMClient):
             provider=self.provider,
         )
 
+    async def close(self) -> None:
+        """Close Gemini client resources."""
+        # Cleanly close the underlying aiohttp session if accessible
+        try:
+            # Check for direct access to aio.client_session if it exists in this version
+            if hasattr(self.client, "aio"):
+                if hasattr(self.client.aio, "client_session"):
+                     await self.client.aio.client_session.close()
+                elif hasattr(self.client.aio, "_client_session"):
+                     await self.client.aio._client_session.close()
+            
+            # Also try standard close if available
+            if hasattr(self.client, "close"):
+                 await self.client.close() if asyncio.iscoroutinefunction(self.client.close) else self.client.close()
+        except Exception:
+             pass
+
 
 class OpenAIClient(BaseLLMClient):
     """OpenAI API client implementation."""
@@ -248,6 +269,10 @@ class OpenAIClient(BaseLLMClient):
             output_tokens=tokens_out,
             provider=self.provider,
         )
+
+    async def close(self) -> None:
+        """Close OpenAI client."""
+        await self.client.close()
 
 
 class AnthropicClient(BaseLLMClient):
@@ -332,3 +357,7 @@ class AnthropicClient(BaseLLMClient):
             output_tokens=response.usage.output_tokens,
             provider=self.provider,
         )
+
+    async def close(self) -> None:
+        """Close Anthropic client."""
+        await self.client.close()

@@ -511,29 +511,37 @@ def gap_analyze(
     click.echo(f"Resume: {resume}")
     click.echo(f"Job Posting: {job_posting}")
     
-    # 2. Setup Client
+    # 2. Setup & 3. Analyze (Wrapper to ensure single event loop)
+    import asyncio
+
+    async def run_analysis(resume_text: str, jd_text: str, api_key: str, model: Optional[str]):
+        # Setup Client inside the loop logic
+        try:
+             client = create_gemini_client(
+                api_key=api_key, 
+                model=model or "gemini-2.0-flash-exp"
+            )
+        except Exception as e:
+            raise RuntimeError(f"Error creating LLM client: {e}")
+
+        agent = GapAnalyzerAgent(client)
+        
+        try:
+            return await agent.analyze_async(resume_text, jd_text)
+        finally:
+            await agent.close()
+
+    click.echo("Analyzing gaps... (this may take a minute)")
+    
+    # Run the async workflow
     config = get_config()
     api_key = config.get_gemini_api_key()
     if not api_key:
         click.echo("Error: Gemini API key required. Set GEMINI_API_KEY env var.", err=True)
         sys.exit(1)
-        
+
     try:
-        # Default to Gemini for gap analysis as it handles long context well
-        client = create_gemini_client(
-            api_key=api_key, 
-            model=model or "gemini-2.0-flash-exp"
-        )
-    except Exception as e:
-        click.echo(f"Error creating LLM client: {e}", err=True)
-        sys.exit(1)
-    
-    agent = GapAnalyzerAgent(client)
-    
-    # 3. Analyze
-    click.echo("Analyzing gaps... (this may take a minute)")
-    try:
-        result = agent.analyze(resume_content, jd_text)
+        result = asyncio.run(run_analysis(resume_content, jd_text, api_key, model))
     except Exception as e:
         click.echo(f"Error during analysis: {e}", err=True)
         sys.exit(1)

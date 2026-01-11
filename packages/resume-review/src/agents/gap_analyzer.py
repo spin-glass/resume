@@ -14,6 +14,11 @@ class GapAnalyzerAgent(BaseAgent):
         super().__init__(llm_client, agent_name)
         self.agent_name = "gap_analyzer"
         
+    async def close(self) -> None:
+        """Close the agent's resources."""
+        if self.llm_client:
+            await self.llm_client.close()
+
     def parse_feedback(self, feedback_text: str) -> Feedback:
         """Required by BaseAgent, but not used by GapAnalyzer.
         
@@ -35,8 +40,8 @@ class GapAnalyzerAgent(BaseAgent):
         # For simplicity, we stick to the pattern.
         return get_system_prompt("gap_analyzer", target_role)
 
-    def analyze(self, resume_content: str, jd_text: str) -> GapAnalysisResult:
-        """Run gap analysis."""
+    async def analyze_async(self, resume_content: str, jd_text: str) -> GapAnalysisResult:
+        """Run gap analysis asynchronously."""
         
         system_prompt = self.get_system_prompt()
         
@@ -50,11 +55,11 @@ class GapAnalyzerAgent(BaseAgent):
 Perform the Gap Analysis now.
 """
         
-        # Run async generation in sync context
-        response = asyncio.run(self.llm_client.generate_async(
+        # Call generate_async directly
+        response = await self.llm_client.generate_async(
             system_prompt=system_prompt,
             user_prompt=user_message,
-        ))
+        )
 
         return self.parse_result(response.content)
 
