@@ -16,10 +16,13 @@ git checkout main
 git merge [branch_name]
 ```
 
-4. worktree とブランチを削除してクリーンアップします。
+4. `main` ブランチでの動作確認を行います。
+   - テストの実行、または主要機能の動作（CLIのヘルプ表示やドライラン等）を確認します。
+
+5. worktree とブランチを削除してクリーンアップします。
 ```bash
 git worktree remove ../[worktree_dir_name]
 git branch -d [branch_name]
 ```
 
-5. ロードマップのステータスを更新します。
+6. ロードマップのステータスを更新します。
