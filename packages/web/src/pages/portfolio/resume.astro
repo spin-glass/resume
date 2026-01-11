@@ -13,22 +13,37 @@ const features = [
     icon: '🤖',
     overview: '職務経歴書の自動レビュー・修正を行うAIエージェントシステム。LangGraphのStateGraphを活用し、複数のノードで構成された状態管理型ワークフローを実装。',
     context: '職務経歴書の品質を継続的に改善するため、AIによる自動レビューとデザイン修正の仕組みが必要でした。また、複数のLLMモデルを状況に応じて使い分けることで、コストと品質のバランスを取ることが求められました。',
-    solution: 'LangGraphのStateGraphを採用し、レビュー・修正・検証のステップを明確に分離。Pydanticによる型安全な状態管理と、OpenAI/Claudeのハイブリッド構成により、精度とコストを最適化しました。',
-    techStack: ['LangGraph', 'Python', 'OpenAI GPT-4', 'Claude 3.5', 'Pydantic', 'Quarto'],
+    solution: 'LangGraph (by LangChain) を使用して5つの専門AIエージェント（Recruiter, Technical Writer, Copywriter, UX/Visual Designer）を調整。Recruiter, Technical Writer, Copywriter, UX/Visual Designerといった異なる視点から職務経歴書を評価。ハイブリッド・マルチモデル・アーキテクチャを通じて、評価にはコスト効率の高いモデル(Gemini Flash)、専門的な推論にはプレミアムモデル(o3-mini, Claude Sonnet)を使い分けることで大幅なコスト削減とパフォーマンス向上を実現しました。',
+    techStack: ['LangGraph', 'Python 3.13', 'OpenAI o3-mini', 'Claude Sonnet 4.5', 'Gemini 3.0 Flash', 'Pydantic 2.0', 'Playwright'],
     architecture: `graph TB
-    A[Input: Resume] --> B[Review Node]
-    B --> C{Issues Found?}
-    C -->|Yes| D[Fix Node]
-    C -->|No| E[Success]
-    D --> F[Validation Node]
-    F --> G{Valid?}
-    G -->|Yes| E
-    G -->|No| B
-    E --> H[Output: Improved Resume]`,
+    Start([User Input]) --> JobParser[Job Parser]
+    JobParser --> Router[Router<br/>Fan-out Coordinator]
+    
+    Router -.parallel.-> Recruiter[Recruiter<br/>Gemini Flash]
+    Router -.parallel.-> TechWriter[Tech Writer<br/>o3-mini]
+    Router -.parallel.-> Copywriter[Copywriter<br/>Claude Sonnet]
+    
+    Recruiter --> Aggregator[Aggregator<br/>Weighted Scoring]
+    TechWriter --> Aggregator
+    Copywriter --> Aggregator
+    
+    Aggregator --> Personalizer[Personalizer]
+    Personalizer --> Decision{Score >= 8.0?}
+    
+    Decision -->|No| Revisor[Revisor<br/>Apply Changes]
+    Decision -->|Yes| Portfolio[Portfolio<br/>Analysis]
+    
+    Revisor --> Router
+    Portfolio --> Design[Design Review]
+    Design --> End([Complete])
+    
+    style Router fill:#e1f5ff
+    style Aggregator fill:#e1f5ff
+    style Decision fill:#fff4e1`,
     highlights: [
       {
         title: 'StateGraph統合',
-        description: 'LangGraphのStateGraphにより、複雑なワークフローを宣言的に定義。各ノードの責務を明確に分離し、保守性を向上。',
+        description: 'LangGraphのStateGraphにより、並列エージェント実行のためのファンアウト/ファンインパターンを持つ複雑なDAGワークフローを宣言的に定義。',
         code: `const graph = new StateGraph({
   channels: {
     messages: { value: (x, y) => x.concat(y) },
@@ -42,11 +57,16 @@ const features = [
       },
       {
         title: 'マルチモデルハイブリッド',
-        description: 'タスクに応じてOpenAI GPT-4とClaude 3.5を使い分け。レビューには高精度なGPT-4、大量のテキスト処理にはClaude 3.5を使用。',
+        description: '異なる認知タスクに対して異なるLLMプロバイダーを使用。コストを50%削減し、実行速度を70%向上させました。',
+      },
+      {
+        title: '型安全な状態管理',
+        description: 'Pydantic 2.0モデルにより、エージェント間の状態遷移をランタイムで検証し、100%の型カバレッジを実現。',
       }
     ],
-    outcomes: ['レビュー精度90%以上を達成', 'デザイン修正の自動化により手動作業を80%削減', 'コスト最適化により運用コストを50%削減'],
-    relatedSpecs: ['011-stategraph-node-separation', '003-multi-model-hybrid', '013-design-auto-fix']
+    outcomes: ['シングルモデル比で50%のコスト削減 ($1.10 -> $0.50)', '実行速度を70%高速化 (180秒 -> 60秒)', '職務経歴書の平均スコア 8.5/10 を達成'],
+    relatedSpecs: ['011-stategraph-node-separation', '003-multi-model-hybrid', '013-design-auto-fix'],
+    detailLink: `${portfolioBase}/architecture`
   },
   {
     id: 'astro-migration',
@@ -103,7 +123,7 @@ const allSpecs = await getCollection('specs');
 ---
 
 <Layout title="Resume Project - Implementation Details">
-  <div class="container mx-auto px-4 py-8 max-w-5xl">
+  <div class="container mx-auto px-4 py-8 max-w-7xl">
     <header class="mb-12 text-center border-b-2 border-slate-200 dark:border-slate-800 pb-8">
       <a href={portfolioBase} class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline mb-6 group">
         <span class="group-hover:-translate-x-1 transition-transform">←</span> Back to Portfolios
@@ -137,92 +157,123 @@ const allSpecs = await getCollection('specs');
               </div>
             </div>
 
-            <div class="grid lg:grid-cols-5 gap-12">
-              <div class="lg:col-span-3 space-y-12">
-                <div>
-                  <h3 class="text-2xl font-bold mb-4 flex items-center gap-2 text-slate-800 dark:text-slate-200">
-                    <span class="w-1.5 h-8 bg-blue-500 rounded-full"></span> 概要
-                  </h3>
-                  <p class="text-lg text-slate-700 dark:text-slate-300 leading-relaxed">{feature.overview}</p>
+            <div class="space-y-12">
+              {/* Architecture Diagram - Top Priority */}
+              <div class="bg-slate-50 dark:bg-slate-900/80 rounded-2xl p-8 border border-slate-100 dark:border-slate-800 shadow-inner">
+                <h3 class="text-2xl font-bold mb-6 text-slate-800 dark:text-slate-200 flex items-center gap-3">
+                  <span class="text-3xl">🏗️</span> Architecture Diagram
+                </h3>
+                <div class="bg-white dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700 overflow-y-auto max-h-[600px] mb-8 shadow-sm scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600">
+                  <pre class="mermaid text-center">{feature.architecture}</pre>
                 </div>
-
-                <div class="grid md:grid-cols-2 gap-6">
-                  <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-6 border-t-4 border-amber-400 shadow-sm">
-                    <h4 class="font-bold text-slate-900 dark:text-white mb-2">背景・課題</h4>
-                    <p class="text-slate-700 dark:text-slate-300">{feature.context}</p>
-                  </div>
-                  <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border-t-4 border-green-400 shadow-sm">
-                    <h4 class="font-bold text-slate-900 dark:text-white mb-2">解決アプローチ</h4>
-                    <p class="text-slate-700 dark:text-slate-300">{feature.solution}</p>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 class="text-2xl font-bold mb-6 text-slate-800 dark:text-slate-200">実装の詳細 (Implementation)</h3>
-                  <div class="space-y-6">
-                    {feature.highlights.map(h => (
-                      <div class="bg-white dark:bg-slate-800/40 rounded-xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
-                        <h4 class="text-xl font-bold mb-3 text-slate-900 dark:text-white">{h.title}</h4>
-                        <p class="text-slate-600 dark:text-slate-400 mb-4">{h.description}</p>
-                        {h.code && (
-                          <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg text-sm overflow-x-auto border border-slate-700"><code>{h.code}</code></pre>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div class="lg:col-span-2 space-y-12">
-                <div class="bg-slate-50 dark:bg-slate-900/80 rounded-2xl p-8 border border-slate-100 dark:border-slate-800 shadow-inner">
-                  <h3 class="text-xl font-bold mb-6 text-slate-800 dark:text-slate-200">Architecture Diagram</h3>
-                  <div class="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700 overflow-hidden">
-                    <pre class="mermaid text-center">{feature.architecture}</pre>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200 underline decoration-blue-500 underline-offset-8">技術スタック</h3>
-                  <div class="flex flex-wrap gap-2">
-                    {feature.techStack.map(t => (
-                      <span class="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-md text-sm font-semibold tracking-wide">
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-800/20 rounded-xl p-6 border border-slate-100 dark:border-slate-800">
-                  <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200">成果 (Outcomes)</h3>
-                  <ul class="space-y-4">
-                    {feature.outcomes.map(o => (
-                      <li class="flex items-start gap-3">
-                        <span class="text-green-500 bg-green-100 dark:bg-green-900/40 w-6 h-6 rounded-full flex items-center justify-center text-xs flex-shrink-0">✓</span>
-                        <span class="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">{o}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {relatedSpecsData.length > 0 && (
-                  <div>
-                    <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200">Related Docs</h3>
-                    <div class="grid gap-3">
-                      {relatedSpecsData.map(spec => (
-                        <a 
-                          href={`${portfolioBase}/specs/${spec.id}`}
-                          class="group p-3 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-500 transition-colors"
-                        >
-                          <h4 class="font-bold text-sm text-slate-900 dark:text-white transition-colors group-hover:text-blue-600">{spec.id}</h4>
-                          {spec.data?.title && <p class="text-slate-500 text-xs mt-1">{spec.data.title}</p>}
-                        </a>
-                      ))}
-                    </div>
+                {feature.detailLink && (
+                  <div class="text-center">
+                      <a 
+                        href={feature.detailLink} 
+                        class="inline-flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300 group/btn"
+                      >
+                        <span class="border-b border-transparent group-hover/btn:border-white transition-colors">View Architecture Docs</span>
+                        <svg class="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                      </a>
+                      <p class="mt-3 text-sm text-slate-500 dark:text-slate-400 font-medium">
+                        👆 Detailed specs & design rationale available
+                      </p>
                   </div>
                 )}
               </div>
+
+              <div class="grid lg:grid-cols-3 gap-12">
+                {/* Main Content Column */}
+                <div class="lg:col-span-2 space-y-12">
+                  <div>
+                    <h3 class="text-2xl font-bold mb-4 flex items-center gap-2 text-slate-800 dark:text-slate-200">
+                      <span class="w-1.5 h-8 bg-blue-500 rounded-full"></span> 概要
+                    </h3>
+                    <p class="text-lg text-slate-700 dark:text-slate-300 leading-relaxed">{feature.overview}</p>
+                  </div>
+
+                  {/* Context & Solution - Stacked for better readability */}
+                  <div class="space-y-8">
+                    <div class="bg-amber-50 dark:bg-amber-900/10 rounded-xl p-8 border-l-4 border-amber-400 shadow-sm">
+                      <h4 class="text-lg font-bold text-amber-900 dark:text-amber-100 mb-3 flex items-center gap-2">
+                        <span class="text-xl">🤔</span> 背景・課題
+                      </h4>
+                      <p class="text-slate-800 dark:text-slate-200 leading-relaxed">{feature.context}</p>
+                    </div>
+                    <div class="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-8 border-l-4 border-blue-500 shadow-sm">
+                      <h4 class="text-lg font-bold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
+                        <span class="text-xl">💡</span> 解決アプローチ
+                      </h4>
+                      <p class="text-slate-800 dark:text-slate-200 leading-relaxed">{feature.solution}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 class="text-2xl font-bold mb-6 text-slate-800 dark:text-slate-200">実装の詳細 (Implementation)</h3>
+                    <div class="space-y-6">
+                      {feature.highlights.map(h => (
+                        <div class="bg-white dark:bg-slate-800/40 rounded-xl p-6 border border-slate-100 dark:border-slate-800 shadow-sm transition-hover hover:border-blue-200 dark:hover:border-blue-800">
+                          <h4 class="text-xl font-bold mb-3 text-slate-900 dark:text-white">{h.title}</h4>
+                          <p class="text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">{h.description}</p>
+                          {h.code && (
+                            <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg text-sm overflow-x-auto border border-slate-700 shadow-inner"><code>{h.code}</code></pre>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sidebar Column */}
+                <div class="space-y-12">
+                  <div>
+                    <h3 class="text-xl font-bold mb-5 text-slate-800 dark:text-slate-200 border-b pb-2 border-slate-200 dark:border-slate-700">技術スタック</h3>
+                    <div class="flex flex-wrap gap-2">
+                      {feature.techStack.map(t => (
+                        <span class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-md text-sm font-semibold border border-slate-200 dark:border-slate-700">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border border-green-100 dark:border-green-800">
+                    <h3 class="text-xl font-bold mb-4 text-green-900 dark:text-green-100 flex items-center gap-2">
+                      <span>🏆</span> 成果 (Outcomes)
+                    </h3>
+                    <ul class="space-y-4">
+                      {feature.outcomes.map(o => (
+                        <li class="flex items-start gap-3">
+                          <span class="text-green-600 dark:text-green-400 mt-1">✓</span>
+                          <span class="text-slate-800 dark:text-slate-200 text-sm leading-relaxed font-medium">{o}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {relatedSpecsData.length > 0 && (
+                    <div>
+                      <h3 class="text-xl font-bold mb-4 text-slate-800 dark:text-slate-200">Related Docs</h3>
+                      <div class="grid gap-3">
+                        {relatedSpecsData.map(spec => (
+                          <a 
+                            href={`${portfolioBase}/specs/${spec.id}`}
+                            class="group p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:shadow-md transition-all"
+                          >
+                            <h4 class="font-bold text-sm text-slate-900 dark:text-white transition-colors group-hover:text-blue-600 flex items-center justify-between">
+                              {spec.id}
+                              <svg class="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </h4>
+                            {spec.data?.title && <p class="text-slate-500 text-xs mt-1 layout-truncate">{spec.data.title}</p>}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            {index < features.length - 1 && <div class="mt-32 w-1/3 mx-auto h-0.5 bg-slate-100 dark:bg-slate-800"></div>}
+            {index < features.length - 1 && <div class="mt-32 w-full h-px bg-slate-200 dark:bg-slate-800"></div>}
           </section>
         );
       })}
