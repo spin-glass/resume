@@ -16,6 +16,7 @@
 | 18 | Career Knowledge Base (詳細経歴DB) | 🔵 未着手 | 高 | 詳細情報の構造化、数値の推計ロジック |
 | 19 | Portfolio & Agent Showcase | 🔵 未着手 | 高 | エージェント機能のWeb統合 |
 | 20 | Recruiting Advantage Features | 🔵 未着手 | 中 | Tech Radar, CI/CD強化 |
+| 21 | UX Improvements (Navigation) | 🟡 計画中 | 高 | グローバルナビゲーション, パンくずリスト |
 
 ---
 
@@ -114,6 +115,23 @@
     -   `specs/` ディレクトリの整備状況自体を、SPEC駆動開発の実践例としてアピールできるようドキュメント化
 3.  **Automated Quality Gates** (FR-RA03)
     -   CI/CDパイプライン(GitHub Actions)を強化し、MLOps/DevOpsの実践能力を可視化 (Strict Linting, Testing, Auto-Documentation)
+
+### 21. UX Improvements (Navigation)
+
+**優先度**: 高
+**目的**: Astro移行後のナビゲーション欠如を解消し、Webサイトとしての基本的な回遊性を確保する。将来的な複数ページ構成（ポートフォリオ、多言語）への布石とする。
+
+#### 機能要件
+
+1.  **Global Navigation** (FR-UX01)
+    -   サイト共通のヘッダーナビゲーション
+    -   Home, Resume, Portfolio (Stub), Contact へのリンク
+    -   レスポンシブ対応（モバイル用メニュー）
+2.  **Breadcrumbs** (FR-UX02)
+    -   現在のページ位置を示すパンくずリスト
+    -   階層構造の可視化
+3.  **Print Optimization** (FR-UX03)
+    -   PDF出力時（印刷時）にナビゲーション要素を隠す処理
 
 
 
