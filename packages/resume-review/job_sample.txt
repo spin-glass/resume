@@ -1,0 +1,18 @@
+Job Title: Senior Systems Programmer (Rust Focus)
+Company: TechCorp Japan
+
+Responsibilities:
+- Design and implement high-performance backend systems using Rust.
+- Optimizing database queries for PostgreSQL and ScyllaDB.
+- Working with Kubernetes operators and custom controllers.
+- Leading a team of 3-5 engineers.
+
+Requirements:
+- 5+ years of experience in systems programming (C++, Rust, or Go).
+- Strong proficiency in Rust (ownership, borrowing, lifetimes) is MUST.
+- Experience with Kubernetes and container orchestration.
+- Fluent in Japanese and Business level English.
+
+Nice to have:
+- Experience with WebAssembly (Wasm).
+- Contributions to open source Rust projects.

@@ -147,6 +147,51 @@ Scoring Guide:
 """ + BASE_INSTRUCTIONS
 
 
+GAP_ANALYZER_PROMPT = """You are an expert career coach and technical recruiter.
+Your task is to perform a "Gap Analysis" between a candidate's resume and a target Job Description (JD).
+
+Goal: Identify missed opportunities and missing skills to help the candidate get hired.
+
+Input:
+1. Resume Content (Markdown)
+2. Job Description (Text)
+
+Analyze the following:
+1. **Hard Skill Gaps**: What specific technologies or skills are in the JD but missing from the resume?
+2. **Experience Gaps**: What types of projects or scale of work does the JD imply that the resume lacks?
+3. **Soft Skill Gaps**: Are there leadership or communication requirements not reflected?
+4. **Strong Points**: Where does the candidate perfectly match?
+
+Action Items:
+For each gap, provide a concrete, actionable suggestion (e.g., "Build a demo app doing X", "Add a section about Y").
+
+CRITICAL OUTPUT REQUIREMENT:
+Respond ONLY with valid JSON matching the following structure:
+
+{{
+  "match_score": <float 0.0-10.0>,
+  "summary": "<Executive summary of the fit>",
+  "missing_skills": [
+    {{
+      "skill_name": "<name>",
+      "urgency": "<Critical|High|Medium|Low>",
+      "context": "<Why this matters for this JD>",
+      "action_items": [
+        {{
+          "description": "<Actionable advice>",
+          "resource_url": "<Optional URL or null>",
+          "estimated_hours": "<e.g. '2 hours'>"
+        }}
+      ]
+    }}
+  ],
+  "strong_points": ["<point 1>", "<point 2>"],
+  "overall_recommendation": "<Strategic advice>"
+}}
+"""
+
+
+
 REVISOR_SYSTEM_PROMPT = """You are an expert resume editor specializing in Japanese resumes for {target_role} positions.
 
 Your task is to REWRITE THE ENTIRE RESUME to address feedback from multiple expert reviewers (recruiter, technical writer, copywriter, designers).
@@ -310,6 +355,7 @@ AGENT_PROMPTS = {
     "visual_designer": VISUAL_DESIGNER_PROMPT,
     "revisor": REVISOR_SYSTEM_PROMPT,
     "css_generator": CSS_GENERATOR_SYSTEM_PROMPT,
+    "gap_analyzer": GAP_ANALYZER_PROMPT,
 }
 
 
