@@ -14,8 +14,9 @@
 | 17 | データ視覚化 (Timeline/Charts) | 🔵 未着手 | 中 | |
 | 18 | エージェントの信頼性向上・評価基盤 | 🔵 未着手 | 高 | 精度検証、自動テスト、LLM評価 |
 | 18 | Career Knowledge Base (詳細経歴DB) | 🔵 未着手 | 高 | 詳細情報の構造化、数値の推計ロジック |
-| 19 | Portfolio & Agent Showcase | ✅ 実装済 | 高 | Web統合完了 (019-meta-portfolio) |
+| 19 | Portfolio & Agent Showcase | ✅ 完了 (FR-PF01) | 高 | エージェント機能のWeb統合 (Stage 1完了) |
 | 20 | Recruiting Advantage Features | 🔵 未着手 | 中 | Tech Radar, CI/CD強化 |
+| 21 | Automated Portfolio Generation | 🔵 未着手 | 中 | コード解析によるドキュメント/ポートフォリオ自動生成 |
 
 ---
 

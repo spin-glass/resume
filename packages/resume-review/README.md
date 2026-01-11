@@ -1,8 +1,26 @@
 # Resume Review Multi-Agent System
 
-A CLI tool that uses multi-agent AI workflow to automatically review and improve resumes for high-value contract positions.
+## 🎯 Portfolio Showcase
 
+![LangGraph](https://img.shields.io/badge/LangGraph-1.0-0066cc?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEyIDJMMiAyMGgyMEwxMiAyeiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg==)
+![Multi-Model](https://img.shields.io/badge/Multi--Model-Gemini%20%7C%20OpenAI%20%7C%20Claude-00b894)
+![Cost Optimized](https://img.shields.io/badge/Cost-50%25%20Reduction-00b894)
+![Python](https://img.shields.io/badge/Python-3.13+-3776ab?logo=python&logoColor=white)
+![Pydantic](https://img.shields.io/badge/Pydantic-2.0-e92063?logo=pydantic&logoColor=white)
+
+**A production-grade multi-agent AI system showcasing:**
+- ⚡ **LangGraph StateGraph** orchestration with fan-out/fan-in pattern
+- 🧠 **Multi-model hybrid architecture** (Gemini, OpenAI o3-mini, Claude Sonnet 4.5)
+- 💰 **50% cost reduction** and **70% faster execution** vs single-model baseline
+- 🔧 **Type-safe state management** with Pydantic 2.0
+- 🎨 **Advanced tool use**: Screenshot capture, Quarto validation, auto-retry loops
+
+📖 **[Architecture Documentation](docs/architecture.md)** | 🎯 **[Live Demo](https://spin-glass.github.io/resume/portfolio)**
+
+---
 ## Architecture
+
+**For comprehensive architecture documentation, see [docs/architecture.md](docs/architecture.md)**
 
 This system uses [LangGraph](https://github.com/langchain-ai/langgraph) for multi-agent orchestration with a **multi-model hybrid configuration** to optimize cost and performance:
 

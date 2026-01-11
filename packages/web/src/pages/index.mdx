@@ -83,6 +83,39 @@ title: "職務経歴書"
 
 ## ポートフォリオ
 
+### Resume Project: AIエージェント統合型職務経歴書システム
+
+このサイト自体が主要なポートフォリオです。AIエージェントによる自動レビュー、モノレポアーキテクチャ、そしてSpec駆動開発を実践しています。
+
+<div style="text-align: center; margin: 2rem 0;">
+  <img src="/images/diagrams/portfolio_hero.png" alt="Resume Project 概念図" style="max-width: 600px; width: 100%; border-radius: 12px;" />
+</div>
+
+#### 開発プロセス
+
+Spec駆動開発からプロダクションデプロイまでの一貫したワークフロー:
+
+<div style="text-align: center; margin: 2rem 0;">
+  <img src="/images/diagrams/dev_process_flow.png" alt="開発プロセスフロー" style="max-width: 800px; width: 100%; border-radius: 12px;" />
+</div>
+
+#### マルチエージェントアーキテクチャ
+
+LangGraphを用いたFan-out/Fan-inパターンで5つの専門AIエージェントを並列実行し、職務経歴書を自動レビュー・改善:
+
+<div style="text-align: center; margin: 2rem 0;">
+  <img src="/images/diagrams/architecture_flow.png" alt="マルチエージェントアーキテクチャ" style="max-width: 600px; width: 100%; border-radius: 12px;" />
+</div>
+
+**主な技術スタック:**
+- **AIエージェント**: LangGraph, Pydantic, Claude/Gemini/OpenAI
+- **Web**: Astro 5, TypeScript
+- **インフラ**: pnpm Workspace, Vercel
+
+---
+
+### その他のポートフォリオ
+
 - [Agent Tool Development](https://github.com/spin-glass/agent-tools)（公開予定）
   - FastAPI/Pydanticを用いたエージェントツール実装パターン
   - LiteLLMによるマルチプロバイダーLLM統合のサンプル

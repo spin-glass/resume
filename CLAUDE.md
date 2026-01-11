@@ -168,7 +168,7 @@ __start__ → router → [recruiter, tech_writer, copywriter] → aggregator →
 4. **Future Retry Logic**: Per-agent state enables targeted retry (not yet implemented)
 
 ## Recent Changes
-- 020-ux-improvements: Added Global Navigation, Breadcrumbs, and Footer to Astro site
+- 019-portfolio-showcase: Agent architecture documentation and web portfolio pages (FR-PF01)
 - 013-design-auto-fix: Design auto-fix with CSS generation, section reorder, theme recommendations
 - 011-stategraph-node-separation: Fan-out/Fan-in agent node separation for visibility and debugging
 - 010-job-personalization: Added job personalization (file/URL input, match scoring, contextual feedback)

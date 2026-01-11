@@ -1,0 +1,37 @@
+---
+interface Props {
+  graph: string;
+}
+
+const { graph } = Astro.props;
+---
+
+<div class="mermaid-container my-8 flex justify-center bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+  <pre class="mermaid">
+    {graph}
+  </pre>
+</div>
+
+<script>
+  import mermaid from 'mermaid';
+  
+  // Initialize mermaid with some nice default styling
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default', // We can update this based on color scheme later
+    securityLevel: 'loose',
+    fontFamily: 'Inter, system-ui, sans-serif',
+  });
+
+  // Re-run mermaid for client-side navigation (Astro transitions/etc)
+  document.addEventListener('astro:page-load', () => {
+    mermaid.run();
+  });
+</script>
+
+<style is:global>
+  .mermaid svg {
+    max-width: 100%;
+    height: auto;
+  }
+</style>
