@@ -12,6 +12,10 @@
 | 15 | Slidev統合 (プレゼンスライド) | 🔵 未着手 | 低 | |
 | 16 | 多言語対応 (i18n) | 🔵 未着手 | 中 | |
 | 17 | データ視覚化 (Timeline/Charts) | 🔵 未着手 | 中 | |
+| 18 | エージェントの信頼性向上・評価基盤 | 🔵 未着手 | 高 | 精度検証、自動テスト、LLM評価 |
+| 18 | Career Knowledge Base (詳細経歴DB) | 🔵 未着手 | 高 | 詳細情報の構造化、数値の推計ロジック |
+| 19 | Portfolio & Agent Showcase | 🔵 未着手 | 高 | エージェント機能のWeb統合 |
+| 20 | Recruiting Advantage Features | 🔵 未着手 | 中 | Tech Radar, CI/CD強化 |
 
 ---
 
@@ -48,6 +52,70 @@
 1. Shadcn UI / Tremor 等を利用したグラフ表示
 2. インタラクティブな職歴タイムラインの構築
 3. スキルマトリックスのレーダーチャート表示
+
+
+### 18. エージェントの信頼性向上・評価基盤 (Agent Reliability & Evaluation)
+
+**優先度**: 高
+**目的**: 現在のAIエージェントによるレビューや修正が、期待通り適切に行われているかを定量的・客観的に検証する仕組みを構築する。
+
+#### 背景
+現状、エージェントの出力（職務経歴書の修正内容など）が適切であるかの自動テストが存在せず、品質が保証されていない。一般的なNLP/LLM評価手法を導入し、改善サイクルを回せるようにする。
+
+#### 機能要件
+1. **ゴールデンデータセットの作成** (FR-AGE01)
+   - 正解となる修正例やレビューコメントのセットを作成
+2. **LLM評価の導入 (LLM-as-a-Judge)** (FR-AGE02)
+   - Ragas や LangSmith 等を活用し、エージェントの修正内容を別のLLMが客観的に評価する仕組みの構築
+3. **エージェントノードのユニットテスト** (FR-AGE03)
+   - LangGraph の各ノード（State遷移、ツール呼び出し）に対する Jest/Pytest による自動テストの実装
+4. **回帰テストパイプライン** (FR-AGE04)
+   - プロンプト変更時に、全体の出力品質が低下していないかを確認する評価ジョブのCI統合
+
+
+### 15. Career Knowledge Base (詳細職務経歴書)
+
+**優先度**: 高
+**目的**: 職務経歴書(Resume)より詳細な、"情報の引き出し"としての職務経歴詳細データベースを構築する。記憶の曖昧さを補完し、面談時の質疑応答精度を高める。
+
+#### 機能要件
+
+1.  **詳細経歴コンテンツの構造化** (FR-CKB01)
+    -   `resume-ja.qmd` よりも粒度の細かいデータスキーマの定義 (Astro Content Collections想定)
+    -   必須フィールド: `context`, `problem`, `solution`, `tech_stack`, `metrics`, `metrics_estimation_method`
+2.  **個別プロジェクト詳細ページ** (FR-CKB02)
+    -   Webサイト上でプロジェクトごとの詳細ページ (`/career/[projectId]`) を生成
+3.  **指標値の推計・復元ワークフロー** (FR-CKB03)
+    -   過去の数値実績が曖昧な項目について、論理的な推計ロジックを記録するセクションを設ける ("Quantitative Proxy Analysis")
+
+### 16. Portfolio & Agent Showcase
+
+**優先度**: 高
+**目的**: 書類上の経験不足(Agent開発, LLM統合, MLOps)を補完するため、本リポジトリ内のコードそのものをポートフォリオとして機能させる。
+
+#### 機能要件
+
+1.  **Agent Toolsの公式化** (FR-PF01)
+    -   `packages/resume-review` を主要ポートフォリオとして位置づけ
+    -   アーキテクチャ解説ページを作成 (LangGraph, State Management, Tool Use)
+2.  **Living Portfolio (AIチャットボット)** (FR-PF02)
+    -   Webサイト上に `resume-review` エージェントを埋め込み、訪問者が経歴について質問できるインターフェースを提供
+
+### 17. Recruiting Advantage Features
+
+**優先度**: 中
+**目的**: 採用担当者やエンジニアに対して、技術力(設計力、品質管理)をアピールするための機能群を追加する。
+
+#### 機能要件
+
+1.  **Interactive Tech Radar** (FR-RA01)
+    -   スキル一覧をただのリストではなく、クリックして使用プロジェクトを確認できるインタラクティブな可視化として実装
+2.  **Design & Architecture as Code** (FR-RA02)
+    -   `specs/` ディレクトリの整備状況自体を、SPEC駆動開発の実践例としてアピールできるようドキュメント化
+3.  **Automated Quality Gates** (FR-RA03)
+    -   CI/CDパイプライン(GitHub Actions)を強化し、MLOps/DevOpsの実践能力を可視化 (Strict Linting, Testing, Auto-Documentation)
+
+
 
 
 ### 完了済み機能
