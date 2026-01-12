@@ -71,6 +71,7 @@ class BaseLLMClient(ABC):
         user_prompt: str,
         max_tokens: int = 2000,
         temperature: float = 0.7,
+        json_mode: bool = False,
     ) -> LLMResponse:
         """Generate content asynchronously.
 
@@ -79,6 +80,7 @@ class BaseLLMClient(ABC):
             user_prompt: User message (resume content + instructions)
             max_tokens: Maximum tokens to generate (default: 2000)
             temperature: Sampling temperature 0.0-1.0 (default: 0.7)
+            json_mode: Whether to enforce JSON output (default: False)
 
         Returns:
             LLMResponse with generated content and token counts
@@ -125,6 +127,7 @@ class GeminiClient(BaseLLMClient):
         user_prompt: str,
         max_tokens: int = 2000,
         temperature: float = 0.7,
+        json_mode: bool = False,
     ) -> LLMResponse:
         """Generate content using Gemini API.
 
@@ -137,6 +140,7 @@ class GeminiClient(BaseLLMClient):
             user_prompt: User message
             max_tokens: Maximum output tokens
             temperature: Sampling temperature
+            json_mode: Whether to enforce JSON output
 
         Returns:
             LLMResponse with generated content
@@ -152,6 +156,7 @@ class GeminiClient(BaseLLMClient):
             system_instruction=system_prompt,
             max_output_tokens=max_tokens,
             temperature=temperature,
+            response_mime_type="application/json" if json_mode else "text/plain",
         )
 
         response = await self.client.aio.models.generate_content(
@@ -221,6 +226,7 @@ class OpenAIClient(BaseLLMClient):
         user_prompt: str,
         max_tokens: int = 2000,
         temperature: float = 0.7,
+        json_mode: bool = False,
     ) -> LLMResponse:
         """Generate content using OpenAI API.
 
@@ -234,6 +240,7 @@ class OpenAIClient(BaseLLMClient):
             user_prompt: User message
             max_tokens: Maximum output tokens
             temperature: Sampling temperature
+            json_mode: Whether to enforce JSON output
 
         Returns:
             LLMResponse with generated content
@@ -245,16 +252,20 @@ class OpenAIClient(BaseLLMClient):
         if not system_prompt or not user_prompt:
             raise ValueError("Prompts cannot be empty")
 
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            messages=[
+        kwargs = {
+            "model": self.model,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            response_format={"type": "json_object"},
-        )
+        }
+        
+        if json_mode:
+            kwargs["response_format"] = {"type": "json_object"}
+
+        response = await self.client.chat.completions.create(**kwargs)
 
         tokens_in = 0
         tokens_out = 0
@@ -305,7 +316,9 @@ class AnthropicClient(BaseLLMClient):
         user_prompt: str,
         max_tokens: int = 2000,
         temperature: float = 0.7,
+        json_mode: bool = False,
     ) -> LLMResponse:
+
         """Generate content using Anthropic API.
 
         Provider-specific notes:

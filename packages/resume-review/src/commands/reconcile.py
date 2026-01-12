@@ -180,3 +180,91 @@ def run_reconcile_command(
                 break
 
     asyncio.run(_loop())
+
+
+def run_integrate_command(
+    input_file: Path,
+    experiences_dir: Path,
+    verbose: bool,
+    gemini_api_key: Optional[str],
+    openai_api_key: Optional[str],
+    anthropic_api_key: Optional[str],
+    job_posting_file: Optional[Path] = None,
+):
+    """
+    Orchestrates the batch integration of experiences into resume.
+    """
+    from ..reconciliation.integration import ExperienceIntegrator
+    
+    setup_logging(verbose=verbose)
+    config = get_config()
+    
+    gemini_key = gemini_api_key or config.get_gemini_api_key()
+    openai_key = openai_api_key or config.get_openai_api_key()
+    anthropic_key = anthropic_api_key or config.get_anthropic_api_key()
+
+    integrator = ExperienceIntegrator(
+        gemini_api_key=gemini_key,
+        openai_api_key=openai_key,
+        anthropic_api_key=anthropic_key,
+        verbose=verbose
+    )
+    
+    click.echo(f"Starting batch integration from {experiences_dir} into {input_file}...")
+    
+    try:
+        updated_path = asyncio.run(integrator.integrate_all(input_file, experiences_dir))
+        click.echo(f"\nIntegration Complete! Resume saved to: {updated_path}")
+        
+        # Automatically trigger the multi-agent review
+        click.echo("\n" + "="*50)
+        click.echo("Initiating Multi-Agent Review Process...")
+        if job_posting_file:
+             click.echo(f"Targeting Job Posting: {job_posting_file}")
+        click.echo("="*50 + "\n")
+        
+        from ..workflow.runner import ReviewWorkflow
+        from ..models.session import ReviewSession
+        from ..services.qmd_parser import QMDParser
+        
+        # 1. Load the updated resume
+        parser = QMDParser()
+        updated_resume = parser.load_resume(updated_path)
+        
+        # 2. Create ReviewSession
+        session = ReviewSession(
+            resume=updated_resume,
+            target_role="LLM/Multi-Agent Engineer", # Default or context-aware?
+            score_threshold=8.0,
+            max_iterations=3,
+        )
+        
+        # 3. Instantiate and run workflow
+        click.echo("Running ReviewWorkflow...")
+        # Use save_iterations=True to enable standard artifact storage in review_TIMESTAMP/
+        workflow = ReviewWorkflow(
+            save_iterations=True, 
+            gemini_api_key=gemini_key,
+            openai_api_key=openai_key,
+            anthropic_api_key=anthropic_key,
+            job_posting_file=job_posting_file
+        )
+        
+        final_session = workflow.run_review(session)
+        
+        click.echo(f"\nReview Score: {final_session.final_score}/10.0")
+        
+        # Note: ReviewWorkflow now handles saving artifacts to review_TIMESTAMP/iterX directory.
+        # We don't need to manually save to _optimized.qmd anymore as per user request.
+        
+        if final_session.final_score >= 8.0:
+             click.echo(f"Quality Threshold Met! Please check the generated review_... directory for results.")
+        else:
+             click.echo(f"Threshold not met. Please check the generated review_... directory for results.")
+
+    except Exception as e:
+        click.echo(f"Process failed: {e}", err=True)
+        # Detailed traceback
+        import traceback
+        traceback.print_exc()
+

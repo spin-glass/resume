@@ -89,12 +89,12 @@ Return ONLY the JSON object, no additional text."""
 
             # More robust JSON extraction
             # 1. Try to find JSON inside markdown code blocks first
-            code_block_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", content, re.DOTALL)
+            code_block_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", response.content, re.DOTALL)
             if code_block_block := code_block_match:
                 json_str = code_block_block.group(1).strip()
             else:
                 # 2. Fallback to finding the first { and last }
-                json_match = re.search(r"\{.*\}", content, re.DOTALL)
+                json_match = re.search(r"\{.*\}", response.content, re.DOTALL)
                 if not json_match:
                     raise ValueError("No JSON found in response")
                 json_str = json_match.group().strip()

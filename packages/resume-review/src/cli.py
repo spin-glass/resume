@@ -611,6 +611,74 @@ def feedback(
         verbose=verbose,
     )
 
+@reconcile.command()
+@click.option(
+    "--input",
+    "-i",
+    "input_file",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="Path to resume QMD file (target)",
+)
+@click.option(
+    "--experiences",
+    "-e",
+    "experiences_dir",
+    type=click.Path(exists=True, path_type=Path),
+    default=Path("../../resume/experiences"),
+    help="Directory containing experience markdown files",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    default=False,
+    help="Enable verbose logging",
+)
+@click.option(
+    "--gemini-api-key",
+    envvar="GEMINI_API_KEY",
+    help="Google Gemini API key",
+)
+@click.option(
+    "--openai-api-key",
+    envvar="OPENAI_API_KEY",
+    help="OpenAI API key",
+)
+@click.option(
+    "--anthropic-api-key",
+    envvar="ANTHROPIC_API_KEY",
+    help="Anthropic API key",
+)
+@click.option(
+    "--job-posting",
+    type=click.Path(exists=True, path_type=Path),
+    help="Path to job posting file for targeting",
+)
+def integrate(
+    input_file: Path,
+    experiences_dir: Path,
+    verbose: bool,
+    gemini_api_key: Optional[str],
+    openai_api_key: Optional[str],
+    anthropic_api_key: Optional[str],
+    job_posting: Optional[Path],
+) -> None:
+    """
+    Integrate detailed experience files into the main resume.
+    """
+    from .commands.reconcile import run_integrate_command
+    
+    run_integrate_command(
+        input_file=input_file,
+        experiences_dir=experiences_dir,
+        job_posting_file=job_posting,
+        verbose=verbose,
+        gemini_api_key=gemini_api_key,
+        openai_api_key=openai_api_key,
+        anthropic_api_key=anthropic_api_key,
+    )
+
 
 @cli.command()
 def version() -> None:
