@@ -35,34 +35,7 @@ The Resume Review Multi-Agent System is a Python-based CLI tool that leverages *
 
 ### High-Level Flow
 
-<Mermaid graph={`
-graph TB
-    Start([Start]) --> JobParser[Job Parser]
-    JobParser --> Router[Router<br/>Fan-out Coordinator]
-    
-    Router --> Recruiter[Recruiter Agent<br/>Gemini 3.0 Flash]
-    Router --> TechWriter[Technical Writer<br/>OpenAI o3-mini]
-    Router --> Copywriter[Copywriter<br/>Claude Sonnet 4.5]
-    
-    Recruiter --> Aggregator[Aggregator<br/>Collect & Score]
-    TechWriter --> Aggregator
-    Copywriter --> Aggregator
-    
-    Aggregator --> Personalizer[Personalizer<br/>Job-specific feedback]
-    Personalizer --> Decision{Score >= 8.0?}
-    
-    Decision -->|No| Revisor[Revisor<br/>Apply revisions]
-    Decision -->|Yes| Portfolio[Portfolio Analyzer]
-    
-    Revisor --> Router
-    Portfolio --> DesignSupervisor[Design Supervisor]
-    DesignSupervisor --> End([End])
-    
-    style Router fill:#e1f5ff
-    style Aggregator fill:#e1f5ff
-    style Decision fill:#fff4e1
-    style Revisor fill:#ffe1e1
-`} />
+<img src="/resume/images/diagrams/architecture_flow.png" alt="Resume Review Agent System Architecture" class="w-full max-w-4xl mx-auto rounded-lg" />
 
 
 ### Architecture Principles
@@ -113,21 +86,7 @@ class ReviewState(TypedDict):
 
 ### State Transition Flow
 
-<Mermaid graph={`
-stateDiagram-v2
-    [*] --> Initial: qmd_content loaded
-    Initial --> AgentEval: router triggers fan-out
-    AgentEval --> Aggregated: 3 agents complete
-    Aggregated --> Personalized: job context added
-    Personalized --> Scored: weighted score calculated
-    
-    Scored --> Revised: score < threshold
-    Scored --> Portfolio: score >= threshold
-    
-    Revised --> AgentEval: iteration++, loop
-    Portfolio --> Design: optional design review
-    Design --> [*]: workflow complete
-`} />
+<img src="/resume/images/diagrams/state_transition_flow.png" alt="State Transition Flow" class="w-full max-w-3xl mx-auto rounded-lg" />
 
 
 **Key Invariants**:
