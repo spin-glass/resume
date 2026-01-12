@@ -17,6 +17,8 @@ website:
       - href: index.qmd
         text: Home
       - about.qmd
+      - text: Portfolio
+        href: https://resume-blond-nu.vercel.app/portfolio
       - text: Resume
         href: https://resume-blond-nu.vercel.app/
     right:
