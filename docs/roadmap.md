@@ -1,6 +1,6 @@
 # 開発ロードマップ
 
-**最終更新**: 2026-01-11
+**最終更新**: 2026-01-11 (Feature 22 Integrated)
 
 ---
 
@@ -11,13 +11,15 @@
 | 14 | Webサイトのデザイン刷新(Astro移行) | ✅ 完了 | 中 | Astro 5 + TailwindCSS 4 |
 | 20 | UX改善 (Post-Migration) | ✅ 完了 | **最高** | 基盤修復: TOC, ヘッダー, モバイルNav |
 | 19 | Portfolio & Agent Showcase | ✅ 完了 (FR-PF01) | **最高** | エージェント機能のWeb統合, 設計解説 |
-| 21 | Portfolio Planning Agent (提案エージェント) | 🔵 未着手 | **最高** | 不足スキルを分析し、開発案を自動起案する機能 |
+| 21 | Portfolio Planning Agent (提案エージェント) | ✅ Phase 1 | **最高** | Gap Analysis Workflow Spec & UI (Agent pending) |
 | 18 | エージェントの信頼性向上・評価基盤 | 🔵 未着手 | 高 | 品質保証: 精度検証, 自動テスト, LLM評価 |
 | 17 | Visual Reinforcement (ビジュアル強化) | 🔵 未着手 | 中 | 差別化: 視覚表現の強化, 効果検証, デザイン |
 | 16 | 多言語対応 (i18n) | 🔵 未着手 | 低 | 拡張性: 英語対応 |
 | 15 | Slidev統合 (プレゼンスライド) | 🔵 未着手 | 低 | オプション: スライド生成 |
-| 22 | 面接準備・Q&Aナレッジベース | 🔵 未着手 | 高 | 経歴詳細の整理、想定質問対策 |
-| 23 | Experience to Resume Integration | 🔵 未着手 | 高 | 経験ファイルをレジュメに統合・適用 |
+| 22 | 面接準備・Q&Aナレッジベース | ✅ Phase 1 完了 | 高 | Gap Analysis (スキルギャップ分析) 実装 |
+| 23 | 経験再構築エージェント (Recall) | ✅ 完了 | **最高** | draft/feedback ワークフロー実装済み |
+| 24 | Experience to Resume Integration | 🔵 未着手 | 高 | 経験ファイルをレジュメに統合・適用 |
+| 25 | JD特化ポートフォリオ開発 | 🟡 計画中 | **最高** | Resume-Review-Agent (Vertex AI), Rec-Pipeline (Feature Store) |
 
 ---
 
@@ -157,23 +159,9 @@
     -   職務経歴書に記載した技術スタックやプロジェクトについて、「説明できない項目」を自動検出し、準備不足を警告
 
 
-### 23. Experience to Resume Integration (経験ファイルのレジュメ統合)
-
-**優先度**: 高
-**目的**: `resume/experiences/` に生成されたSTAR形式の経験詳細ファイルを、メインレジュメ (`resume-ja.qmd`) に統合・適用するワークフローを構築する。
-
-#### 背景
-`pnpm draft` と `pnpm feedback` で生成された詳細な経験記述は、メインレジュメの該当プロジェクト説明を充実させるための素材として有用。しかし現状は手動コピーが必要であり、効率的な統合手段がない。
-
-#### 機能要件
-1.  **Apply Command** (FR-ERI01)
-    -   `pnpm reconcile apply --project "プロジェクト名"` コマンドで、経験ファイルの内容をレジュメの該当セクションに自動マージまたは差分提示
-2.  **Diff Preview** (FR-ERI02)
-    -   マージ前に変更差分をプレビュー表示し、ユーザー確認後に適用
-3.  **Review Integration** (FR-ERI03)
-    -   `pnpm review` コマンドに `--experiences-dir` オプションを追加し、レビュー時に経験ファイルを参照して改善提案を生成
-4.  **Batch Apply** (FR-ERI04)
-    -   複数の経験ファイルを一括でレジュメに適用するバッチモード
+| 22 | 面接準備・Q&Aナレッジベース | ✅ Phase 1 完了 | 高 | Gap Analysis (スキルギャップ分析) 実装 |
+| 23 | 経験再構築エージェント (Recall) | ✅ 完了 | **最高** | draft/feedback ワークフロー実装済み |
+| 24 | Experience to Resume Integration | 🔵 未着手 | 高 | 経験ファイルをレジュメに統合・適用 |
 
 
 ### 完了済み機能
