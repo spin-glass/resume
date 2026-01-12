@@ -1,6 +1,6 @@
 ---
 title: "Resume Review Agent: LangGraphによるマルチエージェント履歴書最適化システム"
-date: "2026-01-12"
+date: "2025-01-12"
 categories: [portfolio, langgraph, multi-agent]
 description: "LangGraph StateGraphを用いた5つの専門AIエージェントのオーケストレーション設計と実装"
 toc: true
@@ -12,6 +12,36 @@ toc-location: right
 ## はじめに
 
 履歴書の最適化は、採用担当者へのアピールとATS対策の両立が求められる複合的なタスクです。私はこの課題に対して、LangGraph StateGraph を用いたマルチエージェントシステム「Resume Review Agent」を設計・実装しました。
+
+## システムアーキテクチャ
+
+```{mermaid}
+flowchart LR
+    subgraph Input
+        A[Resume QMD] --> B[Router]
+    end
+    
+    subgraph "Parallel Agents"
+        B --> C1[Recruiter]
+        B --> C2[Tech Writer]
+        B --> C3[Copywriter]
+    end
+    
+    subgraph Aggregation
+        C1 --> D[Aggregator]
+        C2 --> D
+        C3 --> D
+        D --> E[Revisor]
+    end
+    
+    subgraph "Design Phase"
+        E --> F[UX Designer]
+        F --> G[Visual Designer]
+        G --> H[CSS Generator]
+    end
+    
+    H --> I[Optimized Resume]
+```
 
 ## システム概要
 
@@ -27,7 +57,7 @@ Resume Review Agent は、以下の5つの専門エージェントで構成さ�
 
 ### Fan-out/Fan-in パターン
 
-各エージェントは独立して並列実行可能なため、LangGraph の Fan-out/Fan-in パターンを採用。処理時間を約70%短縮。
+各エージェントは独立して並列実行可能なため、LangGraph の Fan-out/Fan-in パターンを採用。処理時間を約70%短縮しました。
 
 ### ハイブリッド・マルチモデル構成
 
@@ -37,7 +67,30 @@ Resume Review Agent は、以下の5つの専門エージェントで構成さ�
 | Tech Writer | Gemini 1.5 Pro | 技術コンテンツの理解が深い |
 | Visual Designer | GPT-4V | 視覚的分析が必要 |
 
-この構成により約50%のコスト削減を実現。
+この構成により約50%のコスト削減を実現しました。
+
+### 自動検証リトライループ
+
+Quarto のビルドエラーを自動検出し、最大3回まで自動修正を試みるリトライループを実装。これにより、LLM出力の不安定性を吸収し、安定した出力を保証します。
+
+## 実装のハイライト
+
+```python
+# LangGraph StateGraph の定義
+from langgraph.graph import StateGraph
+
+workflow = StateGraph(ReviewState)
+
+# Fan-out: 並列エージェント実行
+workflow.add_node("router", router_node)
+workflow.add_node("recruiter", recruiter_node)
+workflow.add_node("tech_writer", tech_writer_node)
+workflow.add_node("copywriter", copywriter_node)
+
+# Fan-in: 結果集約
+workflow.add_node("aggregator", aggregator_node)
+workflow.add_node("revisor", revisor_node)
+```
 
 ---
 

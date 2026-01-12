@@ -9,14 +9,19 @@ website:
   title: "Portfolio Blog"
   site-url: https://blog.spin-glass.dev/
   description: "ポートフォリオと経歴に関する技術記事"
+  favicon: favicon.ico
+  open-graph: true
+  twitter-card: true
   navbar:
     left:
       - href: index.qmd
         text: Home
       - about.qmd
+      - text: Resume
+        href: https://spin-glass.dev/
     right:
       - icon: github
-        href: https://github.com/spin-glass
+        href: https://github.com/spin-glass/resume
       - icon: linkedin
         href: https://www.linkedin.com/in/toshihiro-yamaguchi/
   google-analytics:
@@ -28,6 +33,7 @@ format:
     theme: flatly
     css: styles.css
     toc: true
-    toc-title: Contents
+    toc-title: 目次
     toc-location: right
     code-fold: show
+    lang: ja
