@@ -15,7 +15,7 @@ const features = [
     context: '職務経歴書の品質を継続的に改善するため、AIによる自動レビューとデザイン修正の仕組みが必要でした。また、複数のLLMモデルを状況に応じて使い分けることで、コストと品質のバランスを取ることが求められました。',
     solution: 'LangGraph (by LangChain) を使用して5つの専門AIエージェント（Recruiter, Technical Writer, Copywriter, UX/Visual Designer）を調整。Recruiter, Technical Writer, Copywriter, UX/Visual Designerといった異なる視点から職務経歴書を評価。ハイブリッド・マルチモデル・アーキテクチャを通じて、評価にはコスト効率の高いモデル(Gemini Flash)、専門的な推論にはプレミアムモデル(o3-mini, Claude Sonnet)を使い分けることで大幅なコスト削減とパフォーマンス向上を実現しました。',
     techStack: ['LangGraph', 'Python 3.13', 'OpenAI o3-mini', 'Claude Sonnet 4.5', 'Gemini 3.0 Flash', 'Pydantic 2.0', 'Playwright'],
-    architectureImage: '/resume/images/diagrams/architecture_flow.png',
+    architectureImage: '/resume/images/diagrams/architecture_flow.jpg',
     highlights: [
       {
         title: 'StateGraph統合',
@@ -53,7 +53,7 @@ const features = [
     context: '既存のWebサイトは複雑なビルドプロセスとランタイムオーバーヘッドにより、パフォーマンスとメンテナンス性に課題がありました。',
     solution: 'Astro 5のContent Collectionsと静的サイト生成を活用し、ゼロJavaScriptでの高速なWebサイトを実現。Vercelとの統合により、CI/CDも最適化。',
     techStack: ['Astro 5', 'TailwindCSS 4', 'TypeScript', 'Content Collections', 'Vercel', 'MDX'],
-    architectureImage: '/resume/images/diagrams/dev_process_flow.png',
+    architectureImage: '/resume/images/diagrams/dev_process_flow.jpg',
     highlights: [
       {
         title: 'Content Collections',
@@ -76,7 +76,7 @@ const features = [
     context: 'Web (TypeScript) とAgent (Python) が分離しており、開発ワークフローの統一とコード共有が課題でした。',
     solution: 'pnpm Workspaceで全パッケージを統合し、共通のビルド・テストフローを構築。TypeScriptとPythonのツールチェーンを共存させる構成を実現。',
     techStack: ['pnpm', 'TypeScript', 'Python', 'Turborepo', 'Astro', 'LangGraph'],
-    architectureImage: '/resume/images/diagrams/monorepo_architecture.png',
+    architectureImage: '/resume/images/diagrams/monorepo_architecture.jpg',
     highlights: [
       {
         title: 'Workspace統合',

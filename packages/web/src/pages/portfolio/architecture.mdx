@@ -1,7 +1,7 @@
 ---
 layout: ../../layouts/Layout.astro
-title: 'Architecture - Resume Review Agent System'
-description: 'Detailed technical documentation of the multi-agent system architecture, LangGraph orchestration, and cost optimization strategy'
+title: 'アーキテクチャ - Resume Review Agent System'
+description: 'マルチエージェントシステムアーキテクチャ、LangGraphオーケストレーション、コスト最適化戦略の技術ドキュメント'
 ---
 
 import Mermaid from '../../components/Mermaid.astro';
@@ -9,203 +9,203 @@ import Mermaid from '../../components/Mermaid.astro';
 
 import '../../styles/global.css';
 
-# Architecture Documentation
+# アーキテクチャドキュメント
 
-**Project**: Resume Review Multi-Agent System  
-**Version**: 1.0  
-**Last Updated**: 2026-01-11
-
----
-
-## Overview
-
-The Resume Review Multi-Agent System is a Python-based CLI tool that leverages **LangGraph** for orchestrating multiple specialized AI agents to automatically review and improve resumes. The system achieves **50% cost reduction** and **70% faster execution** compared to single-model baselines through a hybrid multi-model architecture.
-
-### Key Technologies
-
-- **Orchestration**: LangGraph StateGraph (fan-out/fan-in pattern)
-- **State Management**: Pydantic 2.0 (type-safe, validated state transitions)
-- **LLM Providers**: Anthropic Claude, Google Gemini, OpenAI (multi-model hybrid)
-- **Tools**: Playwright (screenshot capture), Quarto (document validation)
-- **Language**: Python 3.13+
+**プロジェクト**: Resume Review マルチエージェントシステム  
+**バージョン**: 1.0  
+**最終更新**: 2026-01-11
 
 ---
 
-## System Architecture
+## 概要
 
-### High-Level Flow
+Resume Review マルチエージェントシステムは、**LangGraph** を活用して複数の専門AIエージェントを調整し、職務経歴書を自動的にレビュー・改善するPythonベースのCLIツールです。ハイブリッドマルチモデルアーキテクチャにより、単一モデル構成と比較して **大幅なコスト削減** と **高速な実行** を実現しています。
 
-<img src="/resume/images/diagrams/architecture_flow.png" alt="Resume Review Agent System Architecture" class="w-full max-w-4xl mx-auto rounded-lg" />
+### 主要技術
 
-
-### Architecture Principles
-
-1. **Fan-out/Fan-in Pattern**: Agents execute in parallel for efficiency
-2. **Type-Safe State**: Pydantic models enforce contract across nodes
-3. **Stateless Agents**: Each agent is a pure function of ReviewState
-4. **Cost-Optimized**: Different models for different cognitive tasks
-5. **Graceful Degradation**: Optional features (design review) don't block workflow
+- **オーケストレーション**: LangGraph StateGraph（ファンアウト/ファンインパターン）
+- **状態管理**: Pydantic 2.0（型安全、検証済み状態遷移）
+- **LLMプロバイダー**: Anthropic Claude、Google Gemini、OpenAI（マルチモデルハイブリッド）
+- **ツール**: Playwright（スクリーンショット取得）、Quarto（ドキュメント検証）
+- **言語**: Python 3.13+
 
 ---
 
-## State Management
+## システムアーキテクチャ
 
-### ReviewState Schema
+### ハイレベルフロー
 
-The entire workflow state is managed through a single Pydantic model that flows through all nodes:
+<img src="/resume/images/diagrams/architecture_flow.jpg" alt="Resume Review Agent System Architecture" class="w-full max-w-4xl mx-auto rounded-lg" />
+
+
+### アーキテクチャ原則
+
+1. **ファンアウト/ファンインパターン**: エージェントは効率化のため並列実行
+2. **型安全な状態**: Pydanticモデルがノード間の契約を強制
+3. **ステートレスエージェント**: 各エージェントはReviewStateの純粋関数
+4. **コスト最適化**: 認知タスクに応じて異なるモデルを使用
+5. **グレースフルデグラデーション**: オプション機能（デザインレビュー）がワークフローをブロックしない
+
+---
+
+## 状態管理
+
+### ReviewStateスキーマ
+
+ワークフロー全体の状態は、すべてのノードを流れる単一のPydanticモデルで管理されます：
 
 ```python
 class ReviewState(TypedDict):
-    # Input
+    # 入力
     qmd_content: str
     target_role: str
     screenshot_path: Optional[str]
     job_posting_content: Optional[str]
     
-    # Agent Feedback (individual nodes write to these)
+    # エージェントフィードバック（個々のノードがこれらに書き込み）
     recruiter_feedback: Optional[Feedback]
     tech_writer_feedback: Optional[Feedback]
     copywriter_feedback: Optional[Feedback]
     
-    # Aggregated Results
+    # 集約結果
     current_feedback: List[Feedback]
     current_score: float
     
-    # Iteration Tracking
+    # イテレーション追跡
     iteration: int
     max_iterations: int
     threshold: float
     
-    # Revision
+    # リビジョン
     revised_content: Optional[str]
     
-    # Portfolio & Design
+    # ポートフォリオ & デザイン
     portfolio_items: List[PortfolioItem]
     design_feedback: Optional[DesignFeedback]
 ```
 
-### State Transition Flow
+### 状態遷移フロー
 
-<img src="/resume/images/diagrams/state_transition_flow.png" alt="State Transition Flow" class="w-full max-w-3xl mx-auto rounded-lg" />
+<img src="/resume/images/diagrams/state_transition_flow.jpg" alt="State Transition Flow" class="w-full max-w-3xl mx-auto rounded-lg" />
 
 
-**Key Invariants**:
-- `iteration` never decreases
-- `current_score` is recalculated on every aggregation
-- Individual agent feedbacks are **immutable** once set per iteration
+**主要な不変条件**:
+- `iteration` は減少しない
+- `current_score` は集約のたびに再計算される
+- 個々のエージェントフィードバックはイテレーションごとに一度設定されると**イミュータブル**
 
 ---
 
-## Multi-Agent Orchestration
+## マルチエージェントオーケストレーション
 
-### Fan-Out/Fan-In Pattern
+### ファンアウト/ファンインパターン
 
-The system uses LangGraph's native fan-out/fan-in for parallel agent execution:
+システムはLangGraphのネイティブなファンアウト/ファンインを使用して並列エージェント実行を行います：
 
-**Fan-Out (Router Node)**:
+**ファンアウト（Routerノード）**:
 ```python
-# Router node triggers parallel execution
+# Routerノードが並列実行をトリガー
 workflow.add_edge("router", "recruiter")
 workflow.add_edge("router", "tech_writer")
 workflow.add_edge("router", "copywriter")
 ```
 
-**Fan-In (Aggregator Node)**:
+**ファンイン（Aggregatorノード）**:
 ```python
-# Aggregator waits for all three to complete
+# Aggregatorは3つすべての完了を待機
 workflow.add_edge("recruiter", "aggregator")
 workflow.add_edge("tech_writer", "aggregator")
 workflow.add_edge("copywriter", "aggregator")
 ```
 
-LangGraph automatically handles:
-- Parallel execution of the three agents
-- Synchronization barrier at aggregator
-- State merging from multiple branches
+LangGraphが自動的に処理するもの：
+- 3つのエージェントの並列実行
+- Aggregatorでの同期バリア
+- 複数ブランチからの状態マージ
 
-### Agent Responsibilities
+### エージェントの責務
 
-| Agent | Model | Perspective | Weight |
-|-------|-------|-------------|--------|
-| **Recruiter** | Gemini 3.0 Flash | Contract acquisition, marketability | 30% |
-| **Technical Writer** | OpenAI o3-mini | Technical depth, clarity | 20% |
-| **Copywriter** | Claude Sonnet 4.5 | Marketing effectiveness, impact | 25% |
-| **UX Designer** | Gemini 3.0 Flash | Information hierarchy, scannability | 15% |
-| **Visual Designer** | Gemini 3.0 Flash | Visual presentation (from screenshot) | 10% |
+| エージェント | モデル | 視点 | 重み |
+|-------------|--------|------|------|
+| **リクルーター** | Gemini 3.0 Flash | 契約獲得、市場性 | 30% |
+| **テクニカルライター** | OpenAI o3-mini | 技術的深さ、明瞭性 | 20% |
+| **コピーライター** | Claude Sonnet 4.5 | マーケティング効果、インパクト | 25% |
+| **UXデザイナー** | Gemini 3.0 Flash | 情報階層、スキャナビリティ | 15% |
+| **ビジュアルデザイナー** | Gemini 3.0 Flash | 視覚的プレゼンテーション（スクリーンショットから） | 10% |
 
-**Design Rationale**:
-- **Recruiter (Gemini)**: High-volume evaluation, cost-sensitive
-- **Technical Writer (o3-mini)**: Advanced reasoning for deep technical assessment
-- **Copywriter (Claude)**: Best-in-class for creative/marketing language
-- **Designers (Gemini)**: Fast vision model for screenshot analysis
+**設計根拠**:
+- **リクルーター（Gemini）**: 大量評価、コスト重視
+- **テクニカルライター（o3-mini）**: 深い技術評価のための高度な推論
+- **コピーライター（Claude）**: クリエイティブ/マーケティング言語で最高品質
+- **デザイナー（Gemini）**: スクリーンショット分析用の高速ビジョンモデル
 
 ---
 
-## Cost Optimization
+## コスト最適化
 
-### Hybrid Multi-Model Strategy
+### ハイブリッドマルチモデル戦略
 
-**Baseline (Claude Opus 4.5 for all agents)**:
-- Cost per review: **$1.10**
-- Execution time: **~180 seconds**
+**ベースライン（すべてのエージェントにClaude Opus 4.5）**:
+- レビューあたりのコスト: 高コスト
+- 実行時間: 順次実行のため遅い
 
-**Optimized (Hybrid configuration)**:
-- Cost per review: **&lt;$0.55** (50% reduction)
-- Execution time: **~60 seconds** (70% faster)
+**最適化済み（ハイブリッド構成）**:
+- レビューあたりのコスト: 大幅に削減
+- 実行時間: 並列実行により高速化
 
-### Model Selection Logic
+### モデル選択ロジック
 
 ```python
-# Defined in config/model_config.py
+# config/model_config.pyで定義
 DEFAULT_MODEL_ASSIGNMENTS = {
-    "recruiter": "gemini-3.0-flash",      # High volume, low cost
-    "tech_writer": "o3-mini",             # Advanced reasoning
-    "copywriter": "claude-sonnet-4-5-20250929",  # Creative excellence
-    "ux_designer": "gemini-3.0-flash",    # Fast vision
-    "visual_designer": "gemini-3.0-flash", # Fast vision
-    "revisor": "gemini-3.0-flash",        # Full rewrite, high volume
+    "recruiter": "gemini-3.0-flash",      # 大量処理、低コスト
+    "tech_writer": "o3-mini",             # 高度な推論
+    "copywriter": "claude-sonnet-4-5-20250929",  # クリエイティブ品質
+    "ux_designer": "gemini-3.0-flash",    # 高速ビジョン
+    "visual_designer": "gemini-3.0-flash", # 高速ビジョン
+    "revisor": "gemini-3.0-flash",        # 全文書き換え、大量処理
 }
 ```
 
-**Cost Breakdown** (per iteration):
+**コスト内訳**（イテレーションあたり）：
 
-| Component | Model | Input Tokens | Output Tokens | Cost |
-|-----------|-------|--------------|---------------|------|
-| Recruiter | Gemini 3.0 Flash | ~2K | ~500 | $0.003 |
-| Tech Writer | o3-mini | ~2K | ~500 | $0.15 |
-| Copywriter | Claude Sonnet 4.5 | ~2K | ~500 | $0.20 |
-| UX Designer | Gemini 3.0 Flash | ~2K | ~300 | $0.002 |
-| Visual Designer | Gemini 3.0 Flash | ~1K (image) | ~300 | $0.002 |
-| Revisor | Gemini 3.0 Flash | ~3K | ~2K | $0.008 |
-| **Total** | - | - | - | **~$0.37/iteration** |
+| コンポーネント | モデル | 入力トークン | 出力トークン | コスト |
+|---------------|--------|-------------|-------------|--------|
+| リクルーター | Gemini 3.0 Flash | 約2K | 約500 | $0.003 |
+| テクニカルライター | o3-mini | 約2K | 約500 | $0.15 |
+| コピーライター | Claude Sonnet 4.5 | 約2K | 約500 | $0.20 |
+| UXデザイナー | Gemini 3.0 Flash | 約2K | 約300 | $0.002 |
+| ビジュアルデザイナー | Gemini 3.0 Flash | 約1K（画像） | 約300 | $0.002 |
+| リバイザー | Gemini 3.0 Flash | 約3K | 約2K | $0.008 |
+| **合計** | - | - | - | **約$0.37/イテレーション** |
 
-Typical workflow: 1-2 iterations → **$0.37-$0.74 total**
+通常のワークフロー: 1-2イテレーション → **合計$0.37-$0.74**
 
 ---
 
-## Tool Integration
+## ツール統合
 
-### LLM Client Factory
+### LLMクライアントファクトリ
 
-Abstracts provider differences with a unified interface:
+プロバイダーの違いを統一インターフェースで抽象化：
 
 ```python
 class LLMClient:
     def invoke(self, messages: List[dict], model: str) -> str:
-        """Synchronous invocation"""
+        """同期呼び出し"""
         
     def invoke_with_vision(self, prompt: str, image_path: str, model: str) -> str:
-        """Vision model invocation (Gemini only currently)"""
+        """ビジョンモデル呼び出し（現在Geminiのみ）"""
 ```
 
-**Providers**:
+**プロバイダー**:
 - **Gemini**: `langchain_google_genai.ChatGoogleGenerativeAI`
 - **OpenAI**: `langchain_openai.ChatOpenAI`
 - **Anthropic**: `langchain_anthropic.ChatAnthropic`
 
-### Screenshot Capture (Playwright)
+### スクリーンショット取得（Playwright）
 
-Used for visual design review:
+ビジュアルデザインレビューに使用：
 
 ```python
 def capture_screenshot(url: str, output_path: str) -> str:
@@ -218,128 +218,128 @@ def capture_screenshot(url: str, output_path: str) -> str:
     return output_path
 ```
 
-**Integration Flow**:
-1. CLI flag: `--screenshot-url http://localhost:3000/ja`
-2. Capture screenshot before workflow starts
-3. Pass `screenshot_path` in `ReviewState`
-4. Visual Designer agent uses vision model to analyze
+**統合フロー**:
+1. CLIフラグ: `--screenshot-url http://localhost:3000/ja`
+2. ワークフロー開始前にスクリーンショットを取得
+3. `ReviewState`に`screenshot_path`を渡す
+4. ビジュアルデザイナーエージェントがビジョンモデルで分析
 
-### Quarto Validation
+### Quarto検証
 
-Ensures generated QMD files are syntactically valid:
+生成されたQMDファイルが構文的に有効であることを確認：
 
 ```python
 def validate_quarto(content: str) -> ValidationResult:
-    # Write to temp file
-    # Run: quarto check {temp_file}
-    # Parse errors and return structured feedback
+    # 一時ファイルに書き込み
+    # 実行: quarto check {temp_file}
+    # エラーをパースして構造化フィードバックを返す
 ```
 
-**Auto-Retry Loop** (Feature 009):
-- On validation failure, re-invoke Revisor with error feedback
-- Max retries: 3 (configurable)
-- Logs saved to `iter{N}_validation_retry.md`
+**自動リトライループ**（Feature 009）:
+- 検証失敗時、エラーフィードバックとともにリバイザーを再呼び出し
+- 最大リトライ: 3（設定可能）
+- ログは`iter{N}_validation_retry.md`に保存
 
 ---
 
-## Key Design Decisions
+## 主要な設計判断
 
-### 1. Why LangGraph?
+### 1. なぜLangGraph？
 
-**Alternatives considered**: LangChain LLMChain, custom orchestration
+**検討した代替案**: LangChain LLMChain、カスタムオーケストレーション
 
-**LangGraph advantages**:
-- Native support for fan-out/fan-in (complex DAGs)
-- Built-in state management
-- Visual debugging (LangSmith traces)
-- LangGraph Studio for interactive development
+**LangGraphの利点**:
+- ファンアウト/ファンインのネイティブサポート（複雑なDAG）
+- 組み込みの状態管理
+- ビジュアルデバッグ（LangSmithトレース）
+- インタラクティブ開発用のLangGraph Studio
 
-### 2. Why Pydantic for State?
+### 2. なぜ状態にPydantic？
 
-**Alternatives considered**: Plain dictionaries, dataclasses
+**検討した代替案**: プレーン辞書、dataclasses
 
-**Pydantic advantages**:
-- Runtime validation of state transitions
-- Type safety with mypy
-- Automatic JSON serialization
-- Clear contract for node inputs/outputs
+**Pydanticの利点**:
+- 状態遷移のランタイム検証
+- mypyによる型安全
+- 自動JSONシリアライゼーション
+- ノード入出力の明確な契約
 
-### 3. Why Multi-Model Hybrid?
+### 3. なぜマルチモデルハイブリッド？
 
-**Alternatives considered**: Claude-only, Gemini-only
+**検討した代替案**: Claudeのみ、Geminiのみ
 
-**Hybrid advantages**:
-- Cost optimization (50% savings)
-- Performance optimization (70% faster)
-- Best-of-breed for each task (o3-mini reasoning, Claude creativity)
-- Fallback options if one provider has issues
+**ハイブリッドの利点**:
+- コスト最適化（低コストモデルの活用）
+- パフォーマンス最適化（並列実行）
+- タスクごとの最良のモデル（o3-miniの推論、Claudeのクリエイティビティ）
+- 1つのプロバイダーに問題があった場合のフォールバック
 
-### 4. Why Fan-Out/Fan-In?
+### 4. なぜファンアウト/ファンイン？
 
-**Alternatives considered**: Sequential agent execution
+**検討した代替案**: 順次エージェント実行
 
-**Fan-out/fan-in advantages**:
-- 3x faster than sequential (agents run in parallel)
-- Better LangSmith visibility (individual node traces)
-- Enables future per-agent retry logic
-- Cleaner separation of concerns
-
----
-
-## Performance Metrics
-
-### Execution Time
-
-- **Single iteration**: ~60 seconds (hybrid) vs ~180 seconds (Claude-only)
-- **Parallel speedup**: 3x (from fan-out/fan-in)
-- **Typical workflow** (2 iterations): ~2-3 minutes
-
-### Token Usage
-
-- **Input tokens per iteration**: ~12K tokens
-- **Output tokens per iteration**: ~3K tokens
-- **Total tokens per workflow** (2 iterations): ~30K tokens
-
-### Quality Metrics
-
-- **Average final score**: 8.5/10 (threshold: 8.0)
-- **Improvement per iteration**: +1.2 points average
-- **Convergence rate**: 85% within 2 iterations
+**ファンアウト/ファンインの利点**:
+- 順次より3倍高速（エージェントが並列実行）
+- LangSmithでの可視性向上（個別ノードトレース）
+- 将来のエージェントごとのリトライロジックが可能
+- 関心事のよりクリーンな分離
 
 ---
 
-## Future Enhancements
+## パフォーマンス指標
 
-### Planned Features
-- Streaming output for real-time feedback
-- Per-agent retry logic (if single agent fails)
-- A/B testing framework for prompt optimization
-- LLM-as-a-Judge evaluation (using Ragas or LangSmith)
-- Fine-tuned models for specific agent roles
+### 実行時間
 
-### Research Directions
-- Exploring async/await for even faster execution
-- Investigating smaller models (Gemini Flash 8B) for cost reduction
-- Adding memory/context retention across sessions
+- **単一イテレーション**: 約60秒（ハイブリッド）vs 約180秒（Claudeのみ）
+- **並列高速化**: 3倍（ファンアウト/ファンインより）
+- **通常のワークフロー**（2イテレーション）: 約2-3分
+
+### トークン使用量
+
+- **イテレーションあたりの入力トークン**: 約12Kトークン
+- **イテレーションあたりの出力トークン**: 約3Kトークン
+- **ワークフローあたりの総トークン**（2イテレーション）: 約30Kトークン
+
+### 品質指標
+
+- **平均最終スコア**: 8.5/10（閾値: 8.0）
+- **イテレーションあたりの改善**: 平均+1.2ポイント
+- **収束率**: 2イテレーション以内で85%
 
 ---
 
-## References
+## 今後の拡張
 
-- [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)
-- [Pydantic Documentation](https://docs.pydantic.dev/)
-- [Project README](https://github.com/spin-glass/resume/tree/main/packages/resume-review)
-- [GitHub Repository](https://github.com/spin-glass/resume)
-- [LangSmith Traces](https://smith.langchain.com/)
+### 計画中の機能
+- リアルタイムフィードバック用のストリーミング出力
+- エージェントごとのリトライロジック（単一エージェント失敗時）
+- プロンプト最適化のためのA/Bテストフレームワーク
+- LLM-as-a-Judge評価（RagasまたはLangSmith使用）
+- 特定エージェントロール用のファインチューニングモデル
+
+### 研究方向
+- さらなる高速化のためのasync/await探索
+- コスト削減のための小型モデル（Gemini Flash 8B）調査
+- セッション間のメモリ/コンテキスト保持の追加
+
+---
+
+## 参考資料
+
+- [LangGraph ドキュメント](https://langchain-ai.github.io/langgraph/)
+- [Pydantic ドキュメント](https://docs.pydantic.dev/)
+- [プロジェクト README](https://github.com/spin-glass/resume/tree/main/packages/resume-review)
+- [GitHub リポジトリ](https://github.com/spin-glass/resume)
+- [LangSmith トレース](https://smith.langchain.com/)
 
 ---
 
 <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
 
-**💡 Contributing**
+**💡 コントリビューション**
 
-This system was built iteratively with Claude Opus 4.5 and Gemini Flash as pair programming partners. All design decisions are documented in `specs/` for future reference.
+このシステムはClaude Opus 4.5とGemini Flashをペアプログラミングパートナーとして反復的に構築されました。すべての設計判断は将来の参照のために`specs/`に文書化されています。
 
-For questions or improvements, see the [main repository](https://github.com/spin-glass/resume).
+質問や改善については、[メインリポジトリ](https://github.com/spin-glass/resume)をご覧ください。
 
 </div>
