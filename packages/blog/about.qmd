@@ -1,8 +1,8 @@
 ---
 title: "About"
-image: profile.jpg
 about:
-  template: jolla
+  template: solana
+  image-width: 10em
   links:
     - icon: github
       text: GitHub
@@ -15,25 +15,36 @@ about:
       href: mailto:toshihiro.engineer@gmail.com
 ---
 
-## Toshihiro Yamaguchi
-
 データサイエンティスト・機械学習エンジニアとして10年以上のキャリアを持ち、推薦システム、MLOps、LLM/マルチエージェント開発を専門としています。
 
-このブログでは、ポートフォリオプロジェクトの技術詳細や、キャリアを通じて得た実務知見を共有しています。
+## 専門分野
 
----
+::: {.grid}
 
-### 専門分野
+::: {.g-col-12 .g-col-md-4}
+### 🎯 推薦システム
+Two-Tower モデル、リアルタイム推薦パイプライン、Feature Store 設計
+:::
 
-- **推薦システム**: Two-Tower モデル、リアルタイム推薦パイプライン
-- **MLOps**: SageMaker、Vertex AI、Feature Store 設計
-- **LLM/エージェント**: LangGraph、マルチエージェントオーケストレーション
+::: {.g-col-12 .g-col-md-4}
+### ⚙️ MLOps
+SageMaker、Vertex AI、CI/CD パイプライン構築
+:::
 
-### 主なプロジェクト
+::: {.g-col-12 .g-col-md-4}
+### 🤖 LLM/エージェント
+LangGraph、マルチエージェントオーケストレーション
+:::
 
-- **[Resume Review Agent](https://github.com/spin-glass/resume)**: LangGraph を用いたマルチエージェント履歴書レビューシステム
-- **[shisapost](https://www.shisapost.com/)**: LLMを活用したパーソナライズ型ニュースキュレーションサービス
+:::
 
-### 職務経歴書
+## 主なプロジェクト
 
-詳細な経歴は [Resume サイト](https://resume-blond-nu.vercel.app/) をご覧ください。
+| プロジェクト | 説明 | 技術 |
+|-------------|------|------|
+| [Resume Review Agent](https://github.com/spin-glass/resume) | マルチエージェント履歴書レビューシステム | LangGraph, Claude, Gemini |
+| [shisapost](https://www.shisapost.com/) | パーソナライズ型ニュースキュレーション | LLM, RAG |
+
+## 詳細な経歴
+
+職務経歴書は [Resume サイト](https://resume-blond-nu.vercel.app/) をご覧ください。
