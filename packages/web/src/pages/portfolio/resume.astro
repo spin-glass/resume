@@ -15,31 +15,7 @@ const features = [
     context: '職務経歴書の品質を継続的に改善するため、AIによる自動レビューとデザイン修正の仕組みが必要でした。また、複数のLLMモデルを状況に応じて使い分けることで、コストと品質のバランスを取ることが求められました。',
     solution: 'LangGraph (by LangChain) を使用して5つの専門AIエージェント（Recruiter, Technical Writer, Copywriter, UX/Visual Designer）を調整。Recruiter, Technical Writer, Copywriter, UX/Visual Designerといった異なる視点から職務経歴書を評価。ハイブリッド・マルチモデル・アーキテクチャを通じて、評価にはコスト効率の高いモデル(Gemini Flash)、専門的な推論にはプレミアムモデル(o3-mini, Claude Sonnet)を使い分けることで大幅なコスト削減とパフォーマンス向上を実現しました。',
     techStack: ['LangGraph', 'Python 3.13', 'OpenAI o3-mini', 'Claude Sonnet 4.5', 'Gemini 3.0 Flash', 'Pydantic 2.0', 'Playwright'],
-    architecture: `graph TB
-    Start([User Input]) --> JobParser[Job Parser]
-    JobParser --> Router[Router<br/>Fan-out Coordinator]
-    
-    Router -.parallel.-> Recruiter[Recruiter<br/>Gemini Flash]
-    Router -.parallel.-> TechWriter[Tech Writer<br/>o3-mini]
-    Router -.parallel.-> Copywriter[Copywriter<br/>Claude Sonnet]
-    
-    Recruiter --> Aggregator[Aggregator<br/>Weighted Scoring]
-    TechWriter --> Aggregator
-    Copywriter --> Aggregator
-    
-    Aggregator --> Personalizer[Personalizer]
-    Personalizer --> Decision{Score >= 8.0?}
-    
-    Decision -->|No| Revisor[Revisor<br/>Apply Changes]
-    Decision -->|Yes| Portfolio[Portfolio<br/>Analysis]
-    
-    Revisor --> Router
-    Portfolio --> Design[Design Review]
-    Design --> End([Complete])
-    
-    style Router fill:#e1f5ff
-    style Aggregator fill:#e1f5ff
-    style Decision fill:#fff4e1`,
+    architectureImage: '/resume/images/diagrams/architecture_flow.png',
     highlights: [
       {
         title: 'StateGraph統合',
@@ -57,14 +33,14 @@ const features = [
       },
       {
         title: 'マルチモデルハイブリッド',
-        description: '異なる認知タスクに対して異なるLLMプロバイダーを使用。コストを50%削減し、実行速度を70%向上させました。',
+        description: '異なる認知タスクに対して異なるLLMプロバイダーを使用。タスクに応じた最適なモデル選択により、コスト効率と応答速度を改善。',
       },
       {
         title: '型安全な状態管理',
-        description: 'Pydantic 2.0モデルにより、エージェント間の状態遷移をランタイムで検証し、100%の型カバレッジを実現。',
+        description: 'Pydantic 2.0モデルにより、エージェント間の状態遷移をランタイムで検証。型安全性を確保。',
       }
     ],
-    outcomes: ['シングルモデル比で50%のコスト削減 ($1.10 -> $0.50)', '実行速度を70%高速化 (180秒 -> 60秒)', '職務経歴書の平均スコア 8.5/10 を達成'],
+    outcomes: ['マルチモデル構成によるコスト効率の改善', '並列実行による処理時間の短縮', '複数視点からの網羅的なレビューを実現'],
     relatedSpecs: ['011-stategraph-node-separation', '003-multi-model-hybrid', '013-design-auto-fix'],
     detailLink: `${portfolioBase}/architecture`
   },
@@ -77,11 +53,7 @@ const features = [
     context: '既存のWebサイトは複雑なビルドプロセスとランタイムオーバーヘッドにより、パフォーマンスとメンテナンス性に課題がありました。',
     solution: 'Astro 5のContent Collectionsと静的サイト生成を活用し、ゼロJavaScriptでの高速なWebサイトを実現。Vercelとの統合により、CI/CDも最適化。',
     techStack: ['Astro 5', 'TailwindCSS 4', 'TypeScript', 'Content Collections', 'Vercel', 'MDX'],
-    architecture: `graph LR
-    A[Markdown Content] --> B[Content Collections]
-    B --> C[Astro Build]
-    C --> D[Static HTML]
-    D --> E[Vercel Deploy]`,
+    architectureImage: '/resume/images/diagrams/dev_process_flow.png',
     highlights: [
       {
         title: 'Content Collections',
@@ -89,10 +61,10 @@ const features = [
       },
       {
         title: 'ゼロJavaScript',
-        description: 'Astroの静的サイト生成により、クライアントサイドJavaScriptをほぼゼロに削減。Lighthouse Score 100点を達成。',
+        description: 'Astroの静的サイト生成により、クライアントサイドJavaScriptを最小化。高速なページ表示を実現。',
       }
     ],
-    outcomes: ['ページロード時間を70%短縮', 'Lighthouse Score 100点達成', 'ビルド時間を50%削減'],
+    outcomes: ['静的サイト生成による高速なページ表示', 'SEO・アクセシビリティの向上', 'シンプルなビルドプロセスの実現'],
     relatedSpecs: ['014-astro-migration']
   },
   {
@@ -104,17 +76,14 @@ const features = [
     context: 'Web (TypeScript) とAgent (Python) が分離しており、開発ワークフローの統一とコード共有が課題でした。',
     solution: 'pnpm Workspaceで全パッケージを統合し、共通のビルド・テストフローを構築。TypeScriptとPythonのツールチェーンを共存させる構成を実現。',
     techStack: ['pnpm', 'TypeScript', 'Python', 'Turborepo', 'Astro', 'LangGraph'],
-    architecture: `graph TB
-    A[Root pnpm workspace] --> B[packages/web]
-    A --> C[packages/resume-review]
-    A --> D[resume/]`,
+    architectureImage: '/resume/images/diagrams/monorepo_architecture.png',
     highlights: [
       {
         title: 'Workspace統合',
         description: 'pnpm Workspaceにより、TypeScriptとPythonのパッケージを統一的に管理。タスクランナーで横断的なビルド・テストを実行。',
       }
     ],
-    outcomes: ['モノレポ化により開発効率30%向上', '共通タスクの一元管理を実現'],
+    outcomes: ['TypeScript/Python の統合管理を実現', '共通タスクの一元管理により開発体験を改善'],
     relatedSpecs: ['002-monorepo-refactor']
   }
 ];
@@ -164,7 +133,11 @@ const allSpecs = await getCollection('specs');
                   <span class="text-3xl">🏗️</span> Architecture Diagram
                 </h3>
                 <div class="bg-white dark:bg-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700 overflow-y-auto max-h-[600px] mb-8 shadow-sm scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600">
-                  <pre class="mermaid text-center">{feature.architecture}</pre>
+                  {feature.architectureImage ? (
+                    <img src={feature.architectureImage} alt={`${feature.title} Architecture`} class="w-full max-w-4xl mx-auto rounded-lg" />
+                  ) : (
+                    <pre class="mermaid text-center">{feature.architecture}</pre>
+                  )}
                 </div>
                 {feature.detailLink && (
                   <div class="text-center">

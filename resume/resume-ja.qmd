@@ -37,11 +37,11 @@ mainfont: Hiragino Mincho Pro
 
 ### 技術スタック
 
-- **LLM/AI**: LangChain, CrewAI, Amazon Bedrock, LiteLLM, Dify, Ragas, LangFuse, DSPy
+- **LLM/AI**: LangChain, LangGraph, Amazon Bedrock, LiteLLM, Ragas, LangFuse, DSPy
 - **ML/DL**: Python, PyTorch, TensorFlow, scikit-learn, Pandas, PySpark, XGBoost
 - **Backend**: Python (FastAPI, Flask), Go, Node.js (NestJS), Prisma, tRPC
 - **Frontend**: TypeScript, Next.js, React, Tailwind CSS
-- **Infrastructure/Data**: AWS, GCP, Azure, Databricks, BigQuery, Pinecone, Weaviate, Terraform, Docker, Kubernetes
+- **Infrastructure/Data**: AWS, GCP, Azure, Databricks, BigQuery, Terraform, Docker
 
 ### 資格
 
@@ -75,7 +75,7 @@ mainfont: Hiragino Mincho Pro
 ## ポートフォリオ
 
 - **[Resume-Review-Agent](https://github.com/spin-glass/resume-review)** | [詳細ページ](https://toshify.github.io/resume/portfolio/resume)
-  - LangGraph StateGraph による5つの専門AIエージェント（Recruiter, TechWriter, Copywriter, UX/Visual Designer）のオーケストレーション。Fan-out/Fan-in パターンで並列実行し、ハイブリッド・マルチモデル構成（Gemini/OpenAI/Claude）により 50%のコスト削減と70%の速度向上を実現。
+  - LangGraph StateGraph による5つの専門AIエージェント（Recruiter, TechWriter, Copywriter, UX/Visual Designer）のオーケストレーション。Fan-out/Fan-in パターンで並列実行し、ハイブリッド・マルチモデル構成（Gemini/OpenAI/Claude）によりコスト効率と処理速度を改善。
 - **[Recommendation-Pipeline-Agent](https://github.com/spin-glass/rec-pipeline-agent)**
   - LangGraph + Vertex AI Agent Engine を用いた推薦システム構築エージェント。Feature Store / BigQuery / Dataflow を活用したTwo-Tower推薦モデルの学習・サービングパイプラインを自動構築。リアルタイム特徴量管理とオンライン推論基盤の設計を支援。
 
