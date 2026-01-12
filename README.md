@@ -1,113 +1,107 @@
-# Resume Monorepo
+# Resume & Portfolio
 
-This is the monorepo for my [resume](https://resume.spin-glass.dev/).
+[![CI](https://github.com/spin-glass/resume/actions/workflows/ci.yml/badge.svg)](https://github.com/spin-glass/resume/actions/workflows/ci.yml)
 
-## Repository Structure
+職務経歴書とポートフォリオを管理するモノレポです。
+
+## 🔗 Live Site
+
+- **🌐 Resume (職務経歴書)**: [resume.spin-glass.dev](https://resume.spin-glass.dev/)
+- **📁 Portfolio**: [resume.spin-glass.dev/portfolio](https://resume.spin-glass.dev/portfolio)
+
+## ✨ Features
+
+- **AI-Powered Resume Review**: LLMを活用した職務経歴書の自動レビュー・最適化
+- **Multi-Format Export**: Quarto によるPDF/HTML生成
+- **Automated PDF Generation**: GitHub Actions でPDFを自動生成・アーティファクト保存
+- **Portfolio Showcase**: プロジェクト・技術スタックの可視化
+
+## 📦 Repository Structure
 
 ```text
-resume/                      # Monorepo root
+resume/                       # Monorepo root
 ├── packages/
-│   ├── web/                # Next.js/Nextra web application
-│   └── resume-review/      # Python AI review tool
-├── resume/                 # Resume source files
-│   ├── resume-ja.qmd      # Canonical resume source
-│   └── output/            # Generated PDF/HTML
-└── scripts/               # Build and sync scripts
+│   ├── web/                 # Astro web application
+│   │   └── src/pages/
+│   │       ├── index.mdx    # 職務経歴書ページ
+│   │       └── portfolio/   # ポートフォリオページ
+│   └── resume-review/       # Python AI review tool (LangGraph)
+├── resume/                  # Resume source files
+│   ├── resume-ja.qmd       # Canonical resume source (Quarto)
+│   └── output/             # Generated PDF/HTML
+├── scripts/                 # Build and sync scripts
+└── specs/                   # Feature specifications
 ```
 
-## Resume更新フロー
+## 🛠 Tech Stack
 
-### 1. QMDファイルを編集
+| Layer | Technology |
+|-------|------------|
+| **Web Framework** | Astro 5 |
+| **Resume Source** | Quarto (QMD) |
+| **PDF Generation** | LuaLaTeX / Puppeteer |
+| **AI Review** | LangGraph + OpenAI GPT-4o |
+| **Deployment** | Vercel |
+| **CI/CD** | GitHub Actions |
+| **Package Manager** | pnpm (Monorepo) |
 
-`resume/resume-ja.qmd` を編集します。
-
-### 2. プレビューで確認
+## 🚀 Quick Start
 
 ```bash
-# HTMLプレビュー（推奨）
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm dev
+
+# Preview resume (with hot reload)
 pnpm quarto:preview:html
-
-# PDFプレビュー
-pnpm quarto:preview
 ```
 
-ブラウザが開き、ファイル保存時に自動更新されます。
+## 📋 Resume Update Workflow
 
-### 3. ビルド（PDF/HTML/MDX生成）
+1. **Edit**: `resume/resume-ja.qmd` を編集
+2. **Preview**: `pnpm quarto:preview:html` でリアルタイムプレビュー
+3. **Build**: `pnpm resume:build` でPDF/HTML/MDXを生成
+4. **Review** (optional): `pnpm review` でAIレビューを実行
+5. **Deploy**: `git push` → Vercelが自動デプロイ
 
-```bash
-pnpm resume:build
-```
+## 📄 Commands
 
-以下が実行されます：
-- `resume/resume-ja.qmd` → `resume/output/resume-ja.pdf`
-- `resume/resume-ja.qmd` → `resume/output/resume-ja.html`
-- `resume/resume-ja.qmd` → `packages/web/pages/ja/index.mdx`
-
-### 4. AIレビュー（オプション）
-
-```bash
-# ドライラン（変更プレビューのみ）
-pnpm review:dry
-
-# フルレビュー（変更適用）
-pnpm review
-
-# スクリーンショット付きフルレビュー
-pnpm review:full
-```
-
-### 5. デプロイ
-
-```bash
-git add .
-git commit -m "職務経歴を更新"
-git push
-```
-
-Vercelが自動でデプロイします。
-
-## コマンド一覧
-
-すべてのコマンドはリポジトリルートから実行します。
-
-| コマンド | 説明 |
-|---------|------|
-| `pnpm dev` | Next.js開発サーバー起動 |
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Astro開発サーバー起動 |
 | `pnpm build` | Webアプリビルド |
-| `pnpm quarto:preview` | PDFプレビュー（自動更新） |
 | `pnpm quarto:preview:html` | HTMLプレビュー（自動更新） |
 | `pnpm quarto:pdf` | PDF生成 |
-| `pnpm quarto:html` | HTML生成 |
-| `pnpm sync` | QMD → MDX同期 |
 | `pnpm resume:build` | 全て生成（PDF/HTML/MDX） |
-| `pnpm review:dry` | AIレビュー（ドライラン） |
 | `pnpm review` | AIレビュー実行 |
-| `pnpm test:python` | Pythonテスト実行 |
-| `pnpm lint:python` | Pythonリント実行 |
+| `pnpm review:dry` | AIレビュー（ドライラン） |
 
-## 新規パッケージの追加
+## 🤖 AI Resume Review
+
+`packages/resume-review` は LangGraph ベースのマルチエージェントシステムです：
+
+- **Gap Analysis**: 求人要件と職務経歴のギャップ分析
+- **Experience Reconciliation**: STAR形式での経験抽出・整理
+- **Multi-Agent Optimization**: 複数エージェントによる最適化
 
 ```bash
-# 1. packages/ディレクトリにパッケージを作成
-mkdir packages/new-package
-cd packages/new-package
+# Run AI review with dry-run
+pnpm review:dry
 
-# 2. package.jsonを初期化
-pnpm init
-
-# 3. ルートからpnpm installを実行
-cd ../..
-pnpm install
+# Run full review with changes applied
+pnpm review
 ```
 
-pnpm-workspace.yamlは`packages/*`パターンを使用しているため、新規パッケージは自動的に認識されます。
+## 📖 Requirements
 
-## Requirements
-
-- Node.js 22.x
+- Node.js 22+
 - pnpm 9+
 - Python 3.13+
 - Quarto CLI
 - LuaLaTeX (TeX Live)
-- Japanese fonts (Hiragino Mincho Pro)
+
+## 📝 License
+
+MIT License - see [LICENSE](LICENSE)
