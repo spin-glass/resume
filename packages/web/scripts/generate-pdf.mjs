@@ -187,8 +187,10 @@ async function main() {
         // サーバーを停止
         if (server) {
             console.log('🛑 開発サーバーを停止中...');
-            server.kill();
+            server.kill('SIGKILL');
         }
+        // プロセスを確実に終了
+        process.exit(0);
     }
 }
 
