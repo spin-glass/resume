@@ -1,0 +1,14 @@
+/* Portfolio Blog Styles */
+
+body {
+    font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+}
+
+pre {
+    border-radius: 8px;
+}
+
+.quarto-listing-default .list-group-item:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    transition: background-color 0.2s ease;
+}

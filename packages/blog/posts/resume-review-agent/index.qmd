@@ -1,0 +1,44 @@
+---
+title: "Resume Review Agent: LangGraphによるマルチエージェント履歴書最適化システム"
+date: "2026-01-12"
+categories: [portfolio, langgraph, multi-agent]
+description: "LangGraph StateGraphを用いた5つの専門AIエージェントのオーケストレーション設計と実装"
+toc: true
+toc-expand: 2
+toc-title: 目次
+toc-location: right
+---
+
+## はじめに
+
+履歴書の最適化は、採用担当者へのアピールとATS対策の両立が求められる複合的なタスクです。私はこの課題に対して、LangGraph StateGraph を用いたマルチエージェントシステム「Resume Review Agent」を設計・実装しました。
+
+## システム概要
+
+Resume Review Agent は、以下の5つの専門エージェントで構成されています：
+
+1. **Recruiter Agent**: 採用担当者視点でのコンテンツ評価
+2. **Tech Writer Agent**: 技術コンテンツの正確性・明確性
+3. **Copywriter Agent**: 読みやすさとインパクト
+4. **UX Designer Agent**: 視覚的レイアウトと情報階層
+5. **Visual Designer Agent**: 美的要素とブランディング
+
+## 主要な設計判断
+
+### Fan-out/Fan-in パターン
+
+各エージェントは独立して並列実行可能なため、LangGraph の Fan-out/Fan-in パターンを採用。処理時間を約70%短縮。
+
+### ハイブリッド・マルチモデル構成
+
+| Agent | Model | 理由 |
+|-------|-------|------|
+| Recruiter | Claude 3.5 Sonnet | 汎用的な評価に優れる |
+| Tech Writer | Gemini 1.5 Pro | 技術コンテンツの理解が深い |
+| Visual Designer | GPT-4V | 視覚的分析が必要 |
+
+この構成により約50%のコスト削減を実現。
+
+---
+
+> 詳細なコードは [GitHub リポジトリ](https://github.com/spin-glass/resume) で公開しています。

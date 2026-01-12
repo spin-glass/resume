@@ -1,0 +1,33 @@
+project:
+  type: website
+  output-dir: _site
+
+execute:
+  freeze: auto
+
+website:
+  title: "Portfolio Blog"
+  site-url: https://blog.spin-glass.dev/
+  description: "ポートフォリオと経歴に関する技術記事"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - about.qmd
+    right:
+      - icon: github
+        href: https://github.com/spin-glass
+      - icon: linkedin
+        href: https://www.linkedin.com/in/toshihiro-yamaguchi/
+  google-analytics:
+    tracking-id: GTM-N9X6ZMF
+    anonymize-ip: true
+
+format:
+  html:
+    theme: flatly
+    css: styles.css
+    toc: true
+    toc-title: Contents
+    toc-location: right
+    code-fold: show

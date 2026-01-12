@@ -1,0 +1,5 @@
+{
+    "buildCommand": "quarto render",
+    "outputDirectory": "_site",
+    "installCommand": "curl -LO https://quarto.org/download/latest/quarto-linux-amd64.deb && dpkg -x quarto-linux-amd64.deb . && export PATH=$PWD/usr/local/bin:$PATH && quarto --version"
+}

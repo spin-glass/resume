@@ -1,0 +1,23 @@
+---
+title: "About"
+about:
+  template: jolla
+  links:
+    - icon: github
+      text: GitHub
+      href: https://github.com/spin-glass
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/toshihiro-yamaguchi/
+---
+
+## Toshihiro Yamaguchi
+
+データサイエンティスト・機械学習エンジニアとして10年のキャリアを持ち、推薦システム、MLOps、LLM/マルチエージェント開発を専門としています。
+
+このブログでは、ポートフォリオプロジェクトの技術詳細や、キャリアを通じて得た実務知見を共有しています。
+
+### 主なプロジェクト
+
+- **[Resume Review Agent](https://github.com/spin-glass/resume)**: LangGraph を用いたマルチエージェント履歴書レビューシステム
+- **[shisapost](https://www.shisapost.com/)**: LLMを活用したパーソナライズ型ニュースキュレーションサービス
