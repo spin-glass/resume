@@ -17,6 +17,9 @@
     "review": "cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --save-iterations --verbose",
     "review:dry": "cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --dry-run --verbose",
     "review:full": "cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --screenshot-url http://localhost:4321/resume/ --save-iterations --verbose",
+    "reconcile": "cd packages/resume-review && python3 -m src.cli reconcile interview --input ../../resume/resume-ja.qmd --project \"TVODサービスの推薦システム構築\" --year 2024 --verbose",
+    "draft": "cd packages/resume-review && python3 -m src.cli reconcile draft",
+    "feedback": "cd packages/resume-review && python3 -m src.cli reconcile feedback",
     "review:design": "bash scripts/run-with-server.sh 'cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --screenshot-url http://localhost:4321/resume/ --save-iterations --verbose --auto-design'",
     "review:design-preview": "bash scripts/run-with-server.sh 'cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --screenshot-url http://localhost:4321/resume/ --save-iterations --verbose --design-preview'",
     "review:recommendation": "bash scripts/run-python-server.sh 'cd packages/resume-review && python3 -m src.cli review --input ../../resume/resume-ja.qmd --target-role \"Recommendation Engineer\" --design-preview --auto-design --screenshot-url http://localhost:8080/resume-ja.html --save-iterations --verbose'",
@@ -37,7 +40,7 @@
   },
   "homepage": "https://github.com/spin-glass/resume#README.md",
   "engines": {
-    "node": "22.x"
+    "node": ">=22.0.0"
   },
   "devDependencies": {
     "glob": "^13.0.0",

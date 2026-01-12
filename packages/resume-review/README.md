@@ -149,6 +149,32 @@ python -m src.cli review \
   --save-iterations
 ```
 
+### Experience Reconciliation (File-Based Workflow)
+
+The system also supports a file-based workflow for generating and refining STAR-formatted experience descriptions.
+
+**1. Generate Draft**
+Create a detailed STAR draft from your resume context:
+```bash
+# Generate draft for a specific project based on resume-ja.qmd
+pnpm draft --project "TVODサービスの推薦システム構築" --year 2024 --verbose
+```
+*Output: `resume/experiences/2024-TVODサービスの推薦システム構築.md`*
+
+**2. Manual Editing**
+Open the generated markdown file and refine the STAR content (Situation, Task, Action, Result) with specific metrics and technical details.
+
+**3. Get Feedback**
+Request an AI critique (Senior Recruiter persona) on your draft:
+```bash
+# Generate feedback for the edited file
+pnpm feedback --input resume/experiences/2024-TVODサービスの推薦システム構築.md
+```
+*Output: `resume/experiences/2024-TVODサービスの推薦システム構築_feedback.md`*
+
+**4. Iterate**
+Update the draft based on the feedback and repeat step 3 until satisfied.
+
 ### Model Override (Testing & Troubleshooting)
 
 The `--model` flag allows you to override the hybrid configuration and use a single model for all agents:

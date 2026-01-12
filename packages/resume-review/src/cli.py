@@ -448,6 +448,170 @@ def review(
         sys.exit(6)
 
 
+@cli.group()
+def reconcile() -> None:
+    """Experience reconciliation commands."""
+    pass
+
+@reconcile.command()
+@click.option(
+    "--input",
+    "-i",
+    "input_file",
+    type=click.Path(exists=True, path_type=Path),
+    required=True,
+    help="Path to resume QMD file",
+)
+@click.option(
+    "--project",
+    "-p",
+    "project_name",
+    required=True,
+    help="Name of the project to focus on",
+)
+@click.option(
+    "--year",
+    "-y",
+    "target_year",
+    type=int,
+    default=None,
+    help="Target year of the project (for fact checking)",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    default=False,
+    help="Enable verbose logging",
+)
+@click.option(
+    "--gemini-api-key",
+    envvar="GEMINI_API_KEY",
+    help="Google Gemini API key",
+)
+@click.option(
+    "--openai-api-key",
+    envvar="OPENAI_API_KEY",
+    help="OpenAI API key",
+)
+@click.option(
+    "--anthropic-api-key",
+    envvar="ANTHROPIC_API_KEY",
+    help="Anthropic API key",
+)
+def interview(
+    input_file: Path,
+    project_name: str,
+    target_year: Optional[int],
+    verbose: bool,
+    gemini_api_key: Optional[str],
+    openai_api_key: Optional[str],
+    anthropic_api_key: Optional[str],
+) -> None:
+    """
+    Run interactive experience reconciliation interview (STAR extraction).
+    """
+    from .commands.reconcile import run_reconcile_command
+    
+    run_reconcile_command(
+        input_file=input_file,
+        project_name=project_name,
+        target_year=target_year,
+        gemini_api_key=gemini_api_key,
+        openai_api_key=openai_api_key,
+        anthropic_api_key=anthropic_api_key,
+        verbose=verbose,
+    )
+
+@reconcile.command()
+@click.option(
+    "--input",
+    "-i",
+    "input_file",
+    type=click.Path(exists=True, path_type=Path),
+    default=Path("../../resume/resume-ja.qmd"),
+    help="Path to resume QMD file (default: ../../resume/resume-ja.qmd)",
+)
+@click.option(
+    "--project",
+    "-p",
+    "project_name",
+    required=True,
+    help="Name of the project to generate draft for",
+)
+@click.option(
+    "--year",
+    "-y",
+    "target_year",
+    type=int,
+    default=None,
+    help="Target year of the project",
+)
+@click.option(
+    "--output-dir",
+    "-o",
+    type=click.Path(path_type=Path),
+    default=Path("../../resume/experiences"),
+    help="Directory to save the draft file",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    default=False,
+    help="Enable verbose logging",
+)
+def draft(
+    input_file: Path,
+    project_name: str,
+    target_year: Optional[int],
+    output_dir: Path,
+    verbose: bool,
+) -> None:
+    """
+    Generate a STAR draft file from resume context.
+    """
+    from .commands.draft import run_draft_command
+    
+    run_draft_command(
+        input_file=input_file,
+        project_name=project_name,
+        year=target_year,
+        output_dir=output_dir,
+        verbose=verbose,
+    )
+
+@reconcile.command()
+@click.option(
+    "--input",
+    "-i",
+    "input_file",
+    type=click.Path(exists=False, path_type=Path),
+    required=True,
+    help="Path to the experience draft file",
+)
+@click.option(
+    "--verbose",
+    "-v",
+    is_flag=True,
+    default=False,
+    help="Enable verbose logging",
+)
+def feedback(
+    input_file: Path,
+    verbose: bool,
+) -> None:
+    """
+    Generate feedback for an experience draft.
+    """
+    from .commands.feedback import run_feedback_command
+    
+    run_feedback_command(
+        input_file=input_file,
+        verbose=verbose,
+    )
+
+
 @cli.command()
 def version() -> None:
     """Display version information."""
