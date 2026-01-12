@@ -46,3 +46,10 @@ jobs:
         # Puppeteer用のChromeブラウザをインストール
         npx puppeteer browsers install chrome
         pnpm pdf
+
+    - name: Upload PDF Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: resume-pdf
+        path: packages/web/output/resume.pdf
+        retention-days: 30
