@@ -6,7 +6,7 @@ execute:
   freeze: auto
 
 website:
-  title: "Portfolio Blog"
+  title: "Blog"
   site-url: https://blog.spin-glass.dev/
   description: "ポートフォリオと経歴に関する技術記事"
   favicon: favicon.ico
