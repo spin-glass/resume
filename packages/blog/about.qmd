@@ -36,4 +36,4 @@ about:
 
 ### 職務経歴書
 
-詳細な経歴は [Resume サイト](https://spin-glass.dev/) をご覧ください。
+詳細な経歴は [Resume サイト](https://resume-blond-nu.vercel.app/) をご覧ください。

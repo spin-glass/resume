@@ -18,7 +18,7 @@ website:
         text: Home
       - about.qmd
       - text: Resume
-        href: https://spin-glass.dev/
+        href: https://resume-blond-nu.vercel.app/
     right:
       - icon: github
         href: https://github.com/spin-glass/resume
