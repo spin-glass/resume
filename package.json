@@ -4,6 +4,9 @@
   "private": true,
   "description": "Resume monorepo with web app, AI review tool, and resume source",
   "scripts": {
+    "blog:dev": "cd packages/blog && quarto preview",
+    "blog:build": "cd packages/blog && quarto render",
+    "blog:publish": "cd packages/blog && quarto publish gh-pages --no-prompt",
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
     "preview": "pnpm --filter web preview",
