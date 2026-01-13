@@ -18,7 +18,7 @@ format:
     code-summary: "コードを表示"
 execute:
   echo: true
-jupyter: blog
+jupyter: python3
 ---
 
 
@@ -552,7 +552,7 @@ print(f"タイトル: {problematic_sample['title']}")
 print(f"文脈: {problematic_sample['user_context']}")
 print("-" * 60)
 # 最適化前 (Baseline)
-print("\n🔴 Before (Baseline):")
+print("\nBefore (Baseline):")
 try:
     res_base = writer_baseline(
         title=problematic_sample['title'],
@@ -565,7 +565,7 @@ try:
 except Exception as e:
     print(f"Error: {e}")
 # 最適化後 (MIPRO)
-print("\n🟢 After (MIPRO Optimized):")
+print("\nAfter (MIPRO Optimized):")
 try:
     res_opt = mipro_optimized_writer(
         title=problematic_sample['title'],
@@ -583,15 +583,15 @@ print("-" * 60)
 
 ### 結果分析: 「スコア」以上の品質改善
 
-上記の結果、Impact Score自体はどちらも「1」や「2」で変わらない場合でも、**出力の「質」に決定的な差**が生まれました。
+上記の結果、Impact Score自体はどちらも「1」や「2」で変わらない場合でも、**出力の品質に差異**が生まれました。
 
 1.  **具体性 (Specific Action)**
-    *   🔴 **Before:** 「情報収集する」「導入を検討する」といった、誰にでも言える抽象的なアクション。
-    *   🟢 **After:** 「**外販予定がないか確認する**」「**セキュリティリスクとなるため、類似ツール導入時は○○を確認する**」といった、記事の文脈（社内ツールであること）を踏まえた具体的な行動指針。
+    *   **Before:** 「情報収集する」「導入を検討する」といった、誰にでも言える抽象的なアクション。
+    *   **After:** 「**外販予定がないか確認する**」「**セキュリティリスクとなるため、類似ツール導入時は○○を確認する**」といった、記事の文脈（社内ツールであること）を踏まえた具体的な行動指針。
 
 2.  **幻覚の抑制 (Faithfulness)**
-    *   🔴 **Before:** 記事に書かれていない「将来的な外販の可能性」を勝手に示唆してしまう。
-    *   🟢 **After:** 「記事に書かれていない事実は推測で断定しない」という指示が効いており、**「現時点では社内利用に留まるため、直接的な影響は限定的」**と正確に評価。
+    *   **Before:** 記事に書かれていない「将来的な外販の可能性」を勝手に示唆してしまう。
+    *   **After:** 「記事に書かれていない事実は推測で断定しない」という指示が効いており、**「現時点では社内利用に留まるため、直接的な影響は限定的」**と正確に評価。
 
 3.  **文脈理解 (Relevance)**
     *   ユーザーの「メディア・エンタメ」という文脈に対し、単なる技術ニュースとしてではなく、「制作フローへの適用可能性」という視点でフィルタリングできている。

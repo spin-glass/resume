@@ -1,0 +1,67 @@
+/*-- scss:defaults --*/
+
+// Match Astro Navigation header color (#2c3e50)
+$navbar-bg: #2c3e50;
+$navbar-fg: #ffffff;
+$navbar-hl: #d4d4d4;
+
+// Primary color to match
+$primary: #2c3e50;
+$link-color: #2c3e50;
+
+// Font to match Astro site
+$font-family-sans-serif: "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
+
+// Navbar height to match Astro (h-12 = 48px)
+$navbar-padding-y: 0.25rem;
+
+/*-- scss:rules --*/
+
+// Navbar styling to match Astro Navigation
+.navbar {
+  min-height: 48px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  
+  .navbar-brand {
+    font-weight: 600;
+    font-size: 1.125rem;
+    letter-spacing: -0.025em;
+  }
+  
+  .nav-link {
+    font-size: 0.875rem;
+    transition: color 0.2s ease;
+    
+    &:hover {
+      color: #d1d5db !important;
+    }
+  }
+  
+  // Social icons styling
+  .navbar-nav .nav-item .nav-link .bi {
+    font-size: 1.125rem;
+  }
+}
+
+// Hide print for navbar (match Astro's no-print)
+@media print {
+  .navbar {
+    display: none !important;
+  }
+}
+
+// Body font
+body {
+  font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
+}
+
+// Code block styling
+pre {
+  border-radius: 8px;
+}
+
+// Listing hover effect
+.quarto-listing-default .list-group-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+  transition: background-color 0.2s ease;
+}
