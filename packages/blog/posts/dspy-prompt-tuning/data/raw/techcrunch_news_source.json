@@ -1,0 +1,14 @@
+[
+    {
+        "title": "OpenAI、GPT-4のファインチューニングAPIを一般公開",
+        "url": "https://example.com/tech/openai-gpt4-finetune",
+        "data": "OpenAIは、GPT-4のファインチューニングAPIを一般公開した。企業は独自のデータセットを使ってモデルをカスタマイズでき、特定のタスクでの性能を向上させられる。料金は従量制で、トレーニングデータの量に応じて変動する。",
+        "user_industry": "メディア・エンターテインメント"
+    },
+    {
+        "title": "Runway、Gen-3 Alphaで動画編集の自動化を実現",
+        "url": "https://example.com/tech/runway-gen3-alpha",
+        "data": "Runwayは、最新のGen-3 Alphaモデルで動画編集の自動化機能を強化した。テキスト指示だけで動画のカット、トランジション、カラーグレーディングが可能になり、編集時間を大幅に短縮できる。",
+        "user_industry": "メディア・エンターテインメント"
+    }
+]

@@ -1,0 +1,14 @@
+[
+    {
+        "title": "Adobe、Firefly 3でビデオ生成機能を強化",
+        "url": "https://example.com/tech/adobe-firefly-3-video",
+        "data": "Adobeは、生成AIツール「Firefly 3」において、テキストからビデオを生成する機能を大幅に強化した。解像度が4Kに対応し、生成速度も前バージョンの2倍に向上。Adobe Creative Cloudとの統合により、Premiere ProやAfter Effectsで直接利用できる。",
+        "user_industry": "メディア・エンターテインメント"
+    },
+    {
+        "title": "ElevenLabs、音声クローニング技術の精度を向上",
+        "url": "https://example.com/tech/elevenlabs-voice-cloning",
+        "data": "ElevenLabsは、音声クローニング技術の精度を向上させた最新版をリリースした。わずか1分の音声サンプルから高品質なクローンを生成でき、多言語対応も強化されている。",
+        "user_industry": "メディア・エンターテインメント"
+    }
+]

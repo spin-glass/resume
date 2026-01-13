@@ -1,0 +1,14 @@
+[
+    {
+        "title": "Google、Gemini Nanoのコンテキストウィンドウを100万トークンに拡大",
+        "url": "https://example.com/tech/google-gemini-nano-1m-context",
+        "data": "Googleは最新のGemini Nanoモデルにおいて、コンテキストウィンドウを100万トークンまで拡大したと発表した。これにより、長編の脚本や小説全体を一度に処理できるようになる。モデルはHugging Faceで公開され、開発者が自由に利用できる。エッジデバイスでの動作も可能で、プライバシーを重視したコンテンツ生成が実現できる。",
+        "user_industry": "メディア・エンターテインメント"
+    },
+    {
+        "title": "Meta、Llama 3.1のマルチモーダル版をリリース",
+        "url": "https://example.com/tech/meta-llama-multimodal",
+        "data": "Metaは、Llama 3.1のマルチモーダル版をリリースした。テキストだけでなく、画像や音声も処理できるようになり、オープンソースで提供される。商用利用も可能で、ライセンス制限が緩和されている。",
+        "user_industry": "メディア・エンターテインメント"
+    }
+]
