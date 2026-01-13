@@ -13,29 +13,34 @@ website:
   open-graph: true
   twitter-card: true
   navbar:
+    background: "#2c3e50"
+    foreground: light
     left:
-      - href: index.qmd
-        text: Home
-      - about.qmd
-      - text: Portfolio
-        href: https://resume-blond-nu.vercel.app/portfolio
+      - text: Blog
+        href: index.qmd
       - text: Resume
         href: https://resume-blond-nu.vercel.app/
+      - text: Work
+        href: https://resume-blond-nu.vercel.app/portfolio/resume
     right:
       - icon: github
         href: https://github.com/spin-glass/resume
+        aria-label: GitHub
       - icon: linkedin
         href: https://www.linkedin.com/in/toshihiro-yamaguchi/
+        aria-label: LinkedIn
   google-analytics:
     tracking-id: GTM-N9X6ZMF
     anonymize-ip: true
 
 format:
   html:
-    theme: flatly
-    css: styles.css
+    theme:
+      - flatly
+      - custom.scss
     toc: true
     toc-title: 目次
     toc-location: right
     code-fold: show
     lang: ja
+

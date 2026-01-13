@@ -10,13 +10,13 @@ const { base = '' } = Astro.props;
     <!-- Logo / Home Link -->
     <div class="flex items-center gap-6">
       <a href={base || '/'} class="font-semibold text-lg tracking-tight hover:text-gray-300 transition-colors">
-        Resume
+        Blog
       </a>
       <!-- Desktop Navigation -->
       <nav class="hidden md:flex gap-4 items-center text-sm">
-        <a href={base || '/'} class="hover:text-gray-300 transition-colors">Home</a>
-        <a href={`${base}/portfolio/resume`} class="hover:text-gray-300 transition-colors">Portfolio</a>
         <a href="https://blog.spin-glass.dev/" class="hover:text-gray-300 transition-colors">Blog</a>
+        <a href={base || '/'} class="hover:text-gray-300 transition-colors">Resume</a>
+        <a href={`${base}/portfolio/resume`} class="hover:text-gray-300 transition-colors">Work</a>
       </nav>
     </div>
 
@@ -39,9 +39,9 @@ const { base = '' } = Astro.props;
   <!-- Mobile Menu -->
   <div id="mobile-menu" class="hidden md:hidden bg-[#2c3e50] border-t border-gray-600">
     <nav class="flex flex-col p-4 space-y-3 text-sm">
-      <a href={base || '/'} class="block hover:bg-gray-700 px-3 py-2 rounded transition-colors">Home</a>
-      <a href={`${base}/portfolio/resume`} class="block hover:bg-gray-700 px-3 py-2 rounded transition-colors">Portfolio</a>
       <a href="https://blog.spin-glass.dev/" class="block hover:bg-gray-700 px-3 py-2 rounded transition-colors">Blog</a>
+      <a href={base || '/'} class="block hover:bg-gray-700 px-3 py-2 rounded transition-colors">Resume</a>
+      <a href={`${base}/portfolio/resume`} class="block hover:bg-gray-700 px-3 py-2 rounded transition-colors">Work</a>
       <a href="https://github.com/spin-glass/resume" target="_blank" rel="noopener noreferrer" class="block hover:bg-gray-700 px-3 py-2 rounded transition-colors">GitHub</a>
       <a href="https://www.linkedin.com/in/toshihiro-yamaguchi/" target="_blank" rel="noopener noreferrer" class="block hover:bg-gray-700 px-3 py-2 rounded transition-colors">LinkedIn</a>
     </nav>
