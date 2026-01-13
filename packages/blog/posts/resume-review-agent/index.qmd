@@ -15,33 +15,7 @@ toc-location: right
 
 ## システムアーキテクチャ
 
-```{mermaid}
-flowchart LR
-    subgraph Input
-        A[Resume QMD] --> B[Router]
-    end
-    
-    subgraph "Parallel Agents"
-        B --> C1[Recruiter]
-        B --> C2[Tech Writer]
-        B --> C3[Copywriter]
-    end
-    
-    subgraph Aggregation
-        C1 --> D[Aggregator]
-        C2 --> D
-        C3 --> D
-        D --> E[Revisor]
-    end
-    
-    subgraph "Design Phase"
-        E --> F[UX Designer]
-        F --> G[Visual Designer]
-        G --> H[CSS Generator]
-    end
-    
-    H --> I[Optimized Resume]
-```
+![Multi-Agent AI System Flow](images/system_architecture.jpg){fig-alt="Resume Review Agent System Architecture showing parallel agents flow"}
 
 ## システム概要
 
