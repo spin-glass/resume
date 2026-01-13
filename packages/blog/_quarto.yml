@@ -16,12 +16,10 @@ website:
     background: "#2c3e50"
     foreground: light
     left:
-      - text: Blog
-        href: index.qmd
       - text: Resume
         href: https://resume-blond-nu.vercel.app/
       - text: Work
-        href: https://resume-blond-nu.vercel.app/portfolio/resume
+        href: https://resume-blond-nu.vercel.app/portfolio
     right:
       - icon: github
         href: https://github.com/spin-glass/resume
