@@ -1,0 +1,4 @@
+jupyter
+pyyaml
+dspy-ai
+openai

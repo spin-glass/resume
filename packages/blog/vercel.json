@@ -1,5 +1,5 @@
 {
     "buildCommand": "/tmp/quarto/bin/quarto render",
     "outputDirectory": "_site",
-    "installCommand": "curl -LO https://quarto.org/download/latest/quarto-linux-amd64.tar.gz && mkdir -p /tmp/quarto && tar -xzf quarto-linux-amd64.tar.gz -C /tmp/quarto --strip-components=1"
+    "installCommand": "curl -LO https://quarto.org/download/latest/quarto-linux-amd64.tar.gz && mkdir -p /tmp/quarto && tar -xzf quarto-linux-amd64.tar.gz -C /tmp/quarto --strip-components=1 && python3 -m pip install -r requirements.txt"
 }
