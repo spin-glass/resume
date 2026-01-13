@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css'
-import Navigation from '../components/Navigation.astro';
+import Navigation from '@resume/shared-ui/src/components/Navigation.astro';
 import Footer from '../components/Footer.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 
@@ -9,6 +9,7 @@ interface Props {
 }
 
 const { title } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <!doctype html>
@@ -24,7 +25,7 @@ const { title } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <Navigation />
+    <Navigation base={base} />
     <Breadcrumbs />
     <main class="resume-container p-8 md:p-12 shadow-lg min-h-screen my-8">
       <article class="prose prose-slate max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h2:border-l-4 prose-h2:border-accent prose-h2:pl-3 prose-h2:mt-8 prose-p:leading-relaxed">

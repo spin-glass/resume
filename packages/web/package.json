@@ -17,6 +17,7 @@
   "dependencies": {
     "@astrojs/mdx": "^4.3.13",
     "@astrojs/vercel": "^9.0.3",
+    "@resume/shared-ui": "workspace:*",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.18",
     "astro": "^5.16.6",
