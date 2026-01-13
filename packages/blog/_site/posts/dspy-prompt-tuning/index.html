@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja" xml:lang="ja"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="DSPyを用いたWriter/Judge/Rewriterマルチエージェント構成による、ニュース影響度分析の品質改善プロセス">
+
+<title>DSPyによるプロンプトチューニング: ニュース影響度分析の品質改善 – Blog</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../favicon.ico" rel="icon">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-8adcf6f6776f9235f89716ffcf90e8d9.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "一致なし",
+    "search-matching-documents-text": "一致した文書",
+    "search-copy-link-title": "検索へのリンクをコピー",
+    "search-hide-matches-text": "追加の検索結果を非表示",
+    "search-more-match-text": "追加の検索結果",
+    "search-more-matches-text": "追加の検索結果",
+    "search-clear-button-title": "消去",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "検索",
+    "search-label": "サーチ"
+  }
+}</script>
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=GTM-N9X6ZMF"></script>
+
+<script type="text/javascript">
+
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'GTM-N9X6ZMF', { 'anonymize_ip': true});
+</script>
+
+
+<meta property="og:title" content="DSPyによるプロンプトチューニング: ニュース影響度分析の品質改善 – Blog">
+<meta property="og:description" content="DSPyを用いたWriter/Judge/Rewriterマルチエージェント構成による、ニュース影響度分析の品質改善プロセス">
+<meta property="og:image" content="https://blog.spin-glass.dev/posts/dspy-prompt-tuning/images/hero.jpg">
+<meta property="og:site_name" content="Blog">
+<meta name="twitter:title" content="DSPyによるプロンプトチューニング: ニュース影響度分析の品質改善 – Blog">
+<meta name="twitter:description" content="DSPyを用いたWriter/Judge/Rewriterマルチエージェント構成による、ニュース影響度分析の品質改善プロセス">
+<meta name="twitter:image" content="https://blog.spin-glass.dev/posts/dspy-prompt-tuning/images/hero.jpg">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="サーチ"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="ナビゲーションを切り替える" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="https://resume-blond-nu.vercel.app/"> 
+<span class="menu-text">Resume</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="https://resume-blond-nu.vercel.app/portfolio"> 
+<span class="menu-text">Work</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/spin-glass/resume"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/toshihiro-yamaguchi/"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="2">
+    <h2 id="toc-title">目次</h2>
+   
+  <ul>
+  <li><a href="#はじめに" id="toc-はじめに" class="nav-link active" data-scroll-target="#はじめに">はじめに</a>
+  <ul class="collapse">
+  <li><a href="#shisapostとは" id="toc-shisapostとは" class="nav-link" data-scroll-target="#shisapostとは">shisapostとは</a></li>
+  <li><a href="#llm出力の3つの品質課題" id="toc-llm出力の3つの品質課題" class="nav-link" data-scroll-target="#llm出力の3つの品質課題">LLM出力の3つの品質課題</a></li>
+  </ul></li>
+  <li><a href="#トレーニングデータの準備" id="toc-トレーニングデータの準備" class="nav-link" data-scroll-target="#トレーニングデータの準備">トレーニングデータの準備</a></li>
+  <li><a href="#dspyによるプロンプト最適化の実証" id="toc-dspyによるプロンプト最適化の実証" class="nav-link" data-scroll-target="#dspyによるプロンプト最適化の実証">DSPyによるプロンプト最適化の実証</a></li>
+  <li><a href="#dspy実装-writerjudgeエージェント" id="toc-dspy実装-writerjudgeエージェント" class="nav-link" data-scroll-target="#dspy実装-writerjudgeエージェント">DSPy実装: Writer/Judgeエージェント</a>
+  <ul class="collapse">
+  <li><a href="#セットアップ" id="toc-セットアップ" class="nav-link" data-scroll-target="#セットアップ">セットアップ</a></li>
+  <li><a href="#writerエージェントの定義" id="toc-writerエージェントの定義" class="nav-link" data-scroll-target="#writerエージェントの定義">Writerエージェントの定義</a></li>
+  <li><a href="#judgeエージェントの定義" id="toc-judgeエージェントの定義" class="nav-link" data-scroll-target="#judgeエージェントの定義">Judgeエージェントの定義</a></li>
+  </ul></li>
+  <li><a href="#prompt-programming-mipro" id="toc-prompt-programming-mipro" class="nav-link" data-scroll-target="#prompt-programming-mipro">Prompt Programming (MIPRO)</a>
+  <ul class="collapse">
+  <li><a href="#prompt-engineering-から-prompt-programming-へ" id="toc-prompt-engineering-から-prompt-programming-へ" class="nav-link" data-scroll-target="#prompt-engineering-から-prompt-programming-へ">Prompt Engineering から Prompt Programming へ</a></li>
+  <li><a href="#miproによる命令文instructionの進化" id="toc-miproによる命令文instructionの進化" class="nav-link" data-scroll-target="#miproによる命令文instructionの進化">MIPROによる命令文（Instruction）の進化</a></li>
+  <li><a href="#mipro実装" id="toc-mipro実装" class="nav-link" data-scroll-target="#mipro実装">MIPRO実装</a></li>
+  <li><a href="#最適化されたpromptの確認" id="toc-最適化されたpromptの確認" class="nav-link" data-scroll-target="#最適化されたpromptの確認">最適化されたPromptの確認</a></li>
+  <li><a href="#最適化結果実際のプロンプト比較" id="toc-最適化結果実際のプロンプト比較" class="nav-link" data-scroll-target="#最適化結果実際のプロンプト比較">🔍 最適化結果：実際のプロンプト比較</a></li>
+  <li><a href="#結果分析-スコア以上の品質改善" id="toc-結果分析-スコア以上の品質改善" class="nav-link" data-scroll-target="#結果分析-スコア以上の品質改善">結果分析: 「スコア」以上の品質改善</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">DSPyによるプロンプトチューニング: ニュース影響度分析の品質改善</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">dspy</div>
+    <div class="quarto-category">prompt-tuning</div>
+    <div class="quarto-category">multi-agent</div>
+    <div class="quarto-category">llm</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    DSPyを用いたWriter/Judge/Rewriterマルチエージェント構成による、ニュース影響度分析の品質改善プロセス
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">公開</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">2026年1月14日</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="はじめに" class="level2">
+<h2 class="anchored" data-anchor-id="はじめに">はじめに</h2>
+<section id="shisapostとは" class="level3">
+<h3 class="anchored" data-anchor-id="shisapostとは"><a href="https://www.shisapost.com/">shisapost</a>とは</h3>
+<p>業界ニュースを自動収集し、ユーザーのビジネス文脈に基づいて影響度を分析するメール配信サービスです。</p>
+<p><strong>配信内容の例:</strong></p>
+<div class="callout callout-style-simple callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ノート</span>📨 配信メールの例: AlphabetのAI戦略（クリックで展開）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<pre><code>📰 Alphabet's Rise to $4 Trillion Cements Status as AI Trade Winner
+https://www.bloomberg.com/news/articles/...
+
+Alphabet（Googleの親会社）の時価総額が4兆ドルに達し、AI分野での
+優位性を確立しました。同社はAI研究開発に多額の投資を行い、検索、
+クラウド、広告などの主要事業でAIを活用することで収益を大きく
+伸ばしています。
+
+✅ ポジティブな影響
+AlphabetのAI分野での成功は、AIを活用したコンテンツ制作の重要性を
+さらに高めるでしょう。より高度なAIツールの導入が進み、あなたの
+制作するコンテンツの質や効率が向上する可能性があります...
+
+⚠️ ネガティブな影響
+AI技術の急速な発展は、コンテンツ制作の現場における競争を激化させる
+可能性があります。人間のクリエイターの役割や価値が相対的に低下する
+リスクも考えられます...
+
+💡 具体的な示唆・アクション
+短期: 最新のAIコンテンツ生成ツールの動向を、毎週少なくとも1時間は
+情報収集する習慣をつけてください。HuggingFaceのリリース情報や...
+
+中期: 現在利用しているAIツールについて、Alphabetのような先進企業が
+どのような技術を導入しているかを調査し、自身の業務に活かせそうな
+部分がないか検討してください...
+
+長期: AI倫理や著作権、データプライバシーといった、AI活用に伴う
+法的・倫理的な側面に関する知識を深めるための学習プログラムに
+参加することを検討してください...</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="llm出力の3つの品質課題" class="level3">
+<h3 class="anchored" data-anchor-id="llm出力の3つの品質課題">LLM出力の3つの品質課題</h3>
+<p>しかし、このメール生成には以下の課題があります：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 24%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>課題</th>
+<th>具体例</th>
+<th>ビジネスインパクト</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>A: 根拠のない追加情報</strong></td>
+<td>本文にない「500社が採用」などを断定</td>
+<td>誤情報による意思決定ミス</td>
+</tr>
+<tr class="even">
+<td><strong>B: こじつけ・熱量ズレ</strong></td>
+<td>無関係なニュースを「大きな影響」と過大評価</td>
+<td>重要な情報が埋もれる</td>
+</tr>
+<tr class="odd">
+<td><strong>C: アクションが抽象的</strong></td>
+<td>「情報収集する」のみで5W1Hがない</td>
+<td>実行不可能なアクション</td>
+</tr>
+</tbody>
+</table>
+<p><strong>本記事の目的</strong>: DSPyを用いて、これらの課題を定量的に改善します。</p>
+<hr>
+</section>
+</section>
+<section id="トレーニングデータの準備" class="level2">
+<h2 class="anchored" data-anchor-id="トレーニングデータの準備">トレーニングデータの準備</h2>
+<p>DSPy最適化のために、20サンプルのトレーニングデータを用意しました。</p>
+<div id="2254d23c" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>コードを表示</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"✅ トレーニングデータ: </span><span class="sc">{</span><span class="bu">len</span>(training_data)<span class="sc">}</span><span class="ss">件"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"✅ ユーザー文脈: </span><span class="sc">{</span>dataset[<span class="st">'metadata'</span>][<span class="st">'user_context'</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>✅ トレーニングデータ: 20件
+✅ ユーザー文脈: メディア・エンターテインメント業界でAIを活用したコンテンツ制作</code></pre>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ノート</span>サンプルデータの詳細
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div id="f3e717b8" class="cell" data-execution_count="3">
+<details class="code-fold">
+<summary>コードを表示</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># サンプル1の表示</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>sample <span class="op">=</span> training_data[<span class="dv">0</span>]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">80</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"■ タイトル: </span><span class="sc">{</span>sample[<span class="st">'input'</span>][<span class="st">'title'</span>][:<span class="dv">60</span>]<span class="sc">}</span><span class="ss">..."</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"■ 期待スコア: </span><span class="sc">{</span>sample[<span class="st">'expected_output'</span>][<span class="st">'impact_score'</span>]<span class="sc">}</span><span class="ss">/5"</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">■ 期待される要約:"</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(sample[<span class="st">'expected_output'</span>][<span class="st">'article_summary'</span>][:<span class="dv">150</span>] <span class="op">+</span> <span class="st">"..."</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">■ 期待される短期アクション:"</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(sample[<span class="st">'expected_output'</span>][<span class="st">'short_term_action'</span>][:<span class="dv">150</span>] <span class="op">+</span> <span class="st">"..."</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>================================================================================
+■ タイトル: Google、Gemini Nanoのコンテキストウィンドウを100万トークンに拡大...
+■ 期待スコア: 5/5
+
+■ 期待される要約:
+GoogleがGemini Nanoのコンテキストウィンドウを100万トークンに拡大。長編脚本や小説全体を一度に処理可能になり、エッジデバイスでプライバシー重視のコンテンツ生成が実現できる。...
+
+■ 期待される短期アクション:
+HuggingFaceで公開されているGemini Nanoモデルにアクセスし、簡単なテキスト生成タスクで性能や使い勝手を具体的に把握する（30分〜半日）...</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="dspyによるプロンプト最適化の実証" class="level2">
+<h2 class="anchored" data-anchor-id="dspyによるプロンプト最適化の実証">DSPyによるプロンプト最適化の実証</h2>
+<p>このセクションでは、上記の本番プロンプトをDSPyで最適化し、<strong>実際にLLMに送られたプロンプトの変化</strong>を確認します。</p>
+</section>
+<section id="dspy実装-writerjudgeエージェント" class="level2">
+<h2 class="anchored" data-anchor-id="dspy実装-writerjudgeエージェント">DSPy実装: Writer/Judgeエージェント</h2>
+<p>ここからが本記事の主要部分です。実際にDSPyコードを実装し、プロンプト最適化の効果を検証します。</p>
+<section id="セットアップ" class="level3">
+<h3 class="anchored" data-anchor-id="セットアップ">セットアップ</h3>
+<div id="65ac43b2" class="cell" data-execution_count="4">
+<div class="cell-output cell-output-stdout">
+<pre><code>✅ DSPyセットアップ完了:
+  - LM: OpenAI GPT-5.2
+  - Optimizer: BootstrapFewShot
+  - トレーニングデータ: 20サンプル</code></pre>
+</div>
+</div>
+</section>
+<section id="writerエージェントの定義" class="level3">
+<h3 class="anchored" data-anchor-id="writerエージェントの定義">Writerエージェントの定義</h3>
+<div id="b9ab44ad" class="cell" data-execution_count="5">
+<details class="code-fold">
+<summary>コードを表示</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Writer署名: 入力→出力の型を定義</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> WriterSignature(dspy.Signature):</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""ニュース記事からユーザー文脈に基づいた影響度分析を生成する"""</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    title: <span class="bu">str</span> <span class="op">=</span> dspy.InputField(desc<span class="op">=</span><span class="st">"ニュース記事のタイトル"</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    news_content: <span class="bu">str</span> <span class="op">=</span> dspy.InputField(desc<span class="op">=</span><span class="st">"ニュース記事の本文"</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    user_context: <span class="bu">str</span> <span class="op">=</span> dspy.InputField(desc<span class="op">=</span><span class="st">"ユーザーの業界・職種"</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    impact_score: <span class="bu">int</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"影響度スコア（1-5）"</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    article_summary: <span class="bu">str</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"150文字前後の要約"</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    positive_impact: <span class="bu">str</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"ポジティブな影響の説明"</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    negative_impact: <span class="bu">str</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"ネガティブな影響の説明"</span>)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    short_term_action: <span class="bu">str</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"短期アクション（5W1H明記）"</span>)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Writerモジュール: ChainOfThoughtで推論プロセスを含む</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Writer(dspy.Module):</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.generate <span class="op">=</span> dspy.ChainOfThought(WriterSignature)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, title, news_content, user_context):</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.generate(</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>            title<span class="op">=</span>title,</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>            news_content<span class="op">=</span>news_content,</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>            user_context<span class="op">=</span>user_context</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"✅ Writerモジュール定義完了"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>✅ Writerモジュール定義完了</code></pre>
+</div>
+</div>
+</section>
+<section id="judgeエージェントの定義" class="level3">
+<h3 class="anchored" data-anchor-id="judgeエージェントの定義">Judgeエージェントの定義</h3>
+<p><strong>課題別評価Judgeの定義</strong></p>
+<div id="c01f0ca4" class="cell" data-execution_count="6">
+<details class="code-fold">
+<summary>コードを表示</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A: 根拠のない追加情報 (Faithfulness)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FaithfulnessJudge(dspy.Signature):</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""出力（要約）が入力ニュース記事に基づいているか、幻覚がないかを判定"""</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    source_text: <span class="bu">str</span> <span class="op">=</span> dspy.InputField(desc<span class="op">=</span><span class="st">"元のニュース記事本文"</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    generated_text: <span class="bu">str</span> <span class="op">=</span> dspy.InputField(desc<span class="op">=</span><span class="st">"生成された要約"</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    claims: <span class="bu">list</span>[<span class="bu">str</span>] <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"生成文から抽出した主要な主張リスト"</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    unsupported_claims: <span class="bu">list</span>[<span class="bu">str</span>] <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"ソースに基づく根拠が見当たらない主張"</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    score: <span class="bu">float</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"0.0-1.0のスコア。1.0=全て根拠あり"</span>)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># B: こじつけ・熱量ズレ (Relevance Calibration)</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RelevanceJudge(dspy.Signature):</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""ニュースとユーザー文脈の関連性を評価し、Writerがつけたスコアが妥当か判定"""</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    news_content: <span class="bu">str</span> <span class="op">=</span> dspy.InputField(desc<span class="op">=</span><span class="st">"ニュース記事"</span>)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    user_context: <span class="bu">str</span> <span class="op">=</span> dspy.InputField(desc<span class="op">=</span><span class="st">"ユーザーの業界・職種"</span>)</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    stated_score: <span class="bu">int</span> <span class="op">=</span> dspy.InputField(desc<span class="op">=</span><span class="st">"Writerがつけた影響度スコア(1-5)"</span>)</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    actual_score: <span class="bu">int</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"客観的に見た適正スコア(1-5)"</span>)</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    reasoning: <span class="bu">str</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"適正スコアの理由"</span>)</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co"># C: アクションが抽象的 (Action Specificity)</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ActionSpecificityJudge(dspy.Signature):</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""アクションアイテムが具体的（5W1H）で実行可能かを評価"""</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    action_item: <span class="bu">str</span> <span class="op">=</span> dspy.InputField(desc<span class="op">=</span><span class="st">"提案されたアクション"</span>)</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    has_what: <span class="bu">bool</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"何をするか明確か"</span>)</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>    has_who: <span class="bu">bool</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"誰がやるか明確か (自分/チーム等)"</span>)</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>    has_when: <span class="bu">bool</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"期限やタイミングが明確か"</span>)</span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>    has_how: <span class="bu">bool</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"具体的な手段・ツールが明確か"</span>)</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>    is_actionable: <span class="bu">bool</span> <span class="op">=</span> dspy.OutputField(desc<span class="op">=</span><span class="st">"明日から即実行できる具体性があるか"</span>)</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="co"># モジュールのインスタンス化</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>faithfulness_judge <span class="op">=</span> dspy.ChainOfThought(FaithfulnessJudge)</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>relevance_judge <span class="op">=</span> dspy.ChainOfThought(RelevanceJudge)</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>action_judge <span class="op">=</span> dspy.ChainOfThought(ActionSpecificityJudge)</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"✅ Judgeエージェント（Faithfulness, Relevance, Action）定義完了"</span>)</span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a><span class="co"># --- 統合メトリクス ---</span></span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> combined_email_quality_metric(example, prediction, trace<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""3つの課題を統合した品質スコア (LLM-as-a-Judge)"""</span></span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1. Faithfulness Metric (課題A)</span></span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 要約が事実に即しているか</span></span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>        f_result <span class="op">=</span> faithfulness_judge(</span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>            source_text<span class="op">=</span>example.news_content,</span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>            generated_text<span class="op">=</span>prediction.article_summary</span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>        faithfulness_score <span class="op">=</span> f_result.score</span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span>:</span>
+<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>        faithfulness_score <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2. Relevance Calibration Metric (課題B)</span></span>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a>    <span class="co"># スコアのズレに対するペナルティ</span></span>
+<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a>        r_result <span class="op">=</span> relevance_judge(</span>
+<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a>            news_content<span class="op">=</span>example.news_content,</span>
+<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a>            user_context<span class="op">=</span>example.user_context,</span>
+<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a>            stated_score<span class="op">=</span><span class="bu">int</span>(prediction.impact_score)</span>
+<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a>        actual <span class="op">=</span> r_result.actual_score</span>
+<span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a>        stated <span class="op">=</span> <span class="bu">int</span>(prediction.impact_score)</span>
+<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb9-66"><a href="#cb9-66" aria-hidden="true" tabindex="-1"></a>        <span class="co"># ズレに応じて減点 (過大評価をより重く罰する例など調整可能)</span></span>
+<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a>        diff <span class="op">=</span> <span class="bu">abs</span>(actual <span class="op">-</span> stated)</span>
+<span id="cb9-68"><a href="#cb9-68" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> diff <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a>            relevance_score <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb9-70"><a href="#cb9-70" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> diff <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb9-71"><a href="#cb9-71" aria-hidden="true" tabindex="-1"></a>            relevance_score <span class="op">=</span> <span class="fl">0.5</span></span>
+<span id="cb9-72"><a href="#cb9-72" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb9-73"><a href="#cb9-73" aria-hidden="true" tabindex="-1"></a>            relevance_score <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb9-74"><a href="#cb9-74" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span>:</span>
+<span id="cb9-75"><a href="#cb9-75" aria-hidden="true" tabindex="-1"></a>        relevance_score <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb9-76"><a href="#cb9-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-77"><a href="#cb9-77" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 3. Action Specificity Metric (課題C)</span></span>
+<span id="cb9-78"><a href="#cb9-78" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 5W1Hの網羅度</span></span>
+<span id="cb9-79"><a href="#cb9-79" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb9-80"><a href="#cb9-80" aria-hidden="true" tabindex="-1"></a>        a_result <span class="op">=</span> action_judge(action_item<span class="op">=</span>prediction.short_term_action)</span>
+<span id="cb9-81"><a href="#cb9-81" aria-hidden="true" tabindex="-1"></a>        components <span class="op">=</span> [</span>
+<span id="cb9-82"><a href="#cb9-82" aria-hidden="true" tabindex="-1"></a>            a_result.has_what,</span>
+<span id="cb9-83"><a href="#cb9-83" aria-hidden="true" tabindex="-1"></a>            a_result.has_who, </span>
+<span id="cb9-84"><a href="#cb9-84" aria-hidden="true" tabindex="-1"></a>            a_result.has_when,</span>
+<span id="cb9-85"><a href="#cb9-85" aria-hidden="true" tabindex="-1"></a>            a_result.has_how,</span>
+<span id="cb9-86"><a href="#cb9-86" aria-hidden="true" tabindex="-1"></a>            a_result.is_actionable</span>
+<span id="cb9-87"><a href="#cb9-87" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb9-88"><a href="#cb9-88" aria-hidden="true" tabindex="-1"></a>        specificity_score <span class="op">=</span> <span class="bu">sum</span>(components) <span class="op">/</span> <span class="bu">len</span>(components)</span>
+<span id="cb9-89"><a href="#cb9-89" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span>:</span>
+<span id="cb9-90"><a href="#cb9-90" aria-hidden="true" tabindex="-1"></a>        specificity_score <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb9-91"><a href="#cb9-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-92"><a href="#cb9-92" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 統合スコア (重み付け)</span></span>
+<span id="cb9-93"><a href="#cb9-93" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 誤情報(Faithfulness)は許容できないため高めの重み</span></span>
+<span id="cb9-94"><a href="#cb9-94" aria-hidden="true" tabindex="-1"></a>    weights <span class="op">=</span> {</span>
+<span id="cb9-95"><a href="#cb9-95" aria-hidden="true" tabindex="-1"></a>        <span class="st">"faithfulness"</span>: <span class="fl">0.4</span>,</span>
+<span id="cb9-96"><a href="#cb9-96" aria-hidden="true" tabindex="-1"></a>        <span class="st">"relevance"</span>: <span class="fl">0.3</span>,</span>
+<span id="cb9-97"><a href="#cb9-97" aria-hidden="true" tabindex="-1"></a>        <span class="st">"specificity"</span>: <span class="fl">0.3</span></span>
+<span id="cb9-98"><a href="#cb9-98" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb9-99"><a href="#cb9-99" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-100"><a href="#cb9-100" aria-hidden="true" tabindex="-1"></a>    combined <span class="op">=</span> (</span>
+<span id="cb9-101"><a href="#cb9-101" aria-hidden="true" tabindex="-1"></a>        faithfulness_score <span class="op">*</span> weights[<span class="st">"faithfulness"</span>] <span class="op">+</span></span>
+<span id="cb9-102"><a href="#cb9-102" aria-hidden="true" tabindex="-1"></a>        relevance_score <span class="op">*</span> weights[<span class="st">"relevance"</span>] <span class="op">+</span></span>
+<span id="cb9-103"><a href="#cb9-103" aria-hidden="true" tabindex="-1"></a>        specificity_score <span class="op">*</span> weights[<span class="st">"specificity"</span>]</span>
+<span id="cb9-104"><a href="#cb9-104" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb9-105"><a href="#cb9-105" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-106"><a href="#cb9-106" aria-hidden="true" tabindex="-1"></a>    <span class="co"># デバッグ用出力 (MIPROのログで確認可能)</span></span>
+<span id="cb9-107"><a href="#cb9-107" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> trace <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb9-108"><a href="#cb9-108" aria-hidden="true" tabindex="-1"></a>        <span class="cf">pass</span> <span class="co"># DSPyの内部トレース用</span></span>
+<span id="cb9-109"><a href="#cb9-109" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb9-110"><a href="#cb9-110" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> combined</span>
+<span id="cb9-111"><a href="#cb9-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-112"><a href="#cb9-112" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"✅ 統合評価メトリクス (LLM Judge) 定義完了"</span>)</span>
+<span id="cb9-113"><a href="#cb9-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-114"><a href="#cb9-114" aria-hidden="true" tabindex="-1"></a><span class="co">### Writer実行: 最適化前</span></span>
+<span id="cb9-115"><a href="#cb9-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-116"><a href="#cb9-116" aria-hidden="true" tabindex="-1"></a><span class="co"># デモ用のサンプルを選択</span></span>
+<span id="cb9-117"><a href="#cb9-117" aria-hidden="true" tabindex="-1"></a>demo_sample <span class="op">=</span> training_data[<span class="dv">0</span>]</span>
+<span id="cb9-118"><a href="#cb9-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-119"><a href="#cb9-119" aria-hidden="true" tabindex="-1"></a><span class="co"># 最適化前のWriterを実行</span></span>
+<span id="cb9-120"><a href="#cb9-120" aria-hidden="true" tabindex="-1"></a>writer_baseline <span class="op">=</span> Writer()</span>
+<span id="cb9-121"><a href="#cb9-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-122"><a href="#cb9-122" aria-hidden="true" tabindex="-1"></a>result_baseline <span class="op">=</span> writer_baseline(</span>
+<span id="cb9-123"><a href="#cb9-123" aria-hidden="true" tabindex="-1"></a>    title<span class="op">=</span>demo_sample[<span class="st">'input'</span>][<span class="st">'title'</span>],</span>
+<span id="cb9-124"><a href="#cb9-124" aria-hidden="true" tabindex="-1"></a>    news_content<span class="op">=</span>demo_sample[<span class="st">'input'</span>][<span class="st">'news_content'</span>],</span>
+<span id="cb9-125"><a href="#cb9-125" aria-hidden="true" tabindex="-1"></a>    user_context<span class="op">=</span>demo_sample[<span class="st">'input'</span>][<span class="st">'user_context'</span>]</span>
+<span id="cb9-126"><a href="#cb9-126" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-127"><a href="#cb9-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-128"><a href="#cb9-128" aria-hidden="true" tabindex="-1"></a><span class="co"># 最適化前のプロンプトを保存</span></span>
+<span id="cb9-129"><a href="#cb9-129" aria-hidden="true" tabindex="-1"></a><span class="co"># inspect_history()の代わりに、lm.historyを直接取得</span></span>
+<span id="cb9-130"><a href="#cb9-130" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb9-131"><a href="#cb9-131" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">hasattr</span>(lm, <span class="st">'history'</span>) <span class="kw">and</span> lm.history:</span>
+<span id="cb9-132"><a href="#cb9-132" aria-hidden="true" tabindex="-1"></a>        <span class="co"># 最新のメッセージを取得</span></span>
+<span id="cb9-133"><a href="#cb9-133" aria-hidden="true" tabindex="-1"></a>        last_prompt_before <span class="op">=</span> <span class="bu">str</span>(lm.history[<span class="op">-</span><span class="dv">1</span>])</span>
+<span id="cb9-134"><a href="#cb9-134" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb9-135"><a href="#cb9-135" aria-hidden="true" tabindex="-1"></a>        last_prompt_before <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb9-136"><a href="#cb9-136" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb9-137"><a href="#cb9-137" aria-hidden="true" tabindex="-1"></a>    last_prompt_before <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb9-138"><a href="#cb9-138" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"警告: プロンプト履歴の取得に失敗しました: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>✅ Judgeエージェント（Faithfulness, Relevance, Action）定義完了
+✅ 統合評価メトリクス (LLM Judge) 定義完了</code></pre>
+</div>
+</div>
+<div id="5d33ee73" class="cell" data-execution_count="7">
+<details class="code-fold">
+<summary>コードを表示</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"✅ 最適化前のWriter実行完了"</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"影響度スコア: </span><span class="sc">{</span>result_baseline<span class="sc">.</span>impact_score<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"要約: </span><span class="sc">{</span>result_baseline<span class="sc">.</span>article_summary[:<span class="dv">100</span>]<span class="sc">}</span><span class="ss">..."</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>✅ 最適化前のWriter実行完了
+影響度スコア: 5
+要約: GoogleがGemini Nanoのコンテキストを100万トークンに拡大。脚本や小説を一度に処理でき、Hugging Faceで公開。エッジ動作にも対応し、外部送信を抑えたプライバシー重視の生成が可...</code></pre>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="prompt-programming-mipro" class="level2">
+<h2 class="anchored" data-anchor-id="prompt-programming-mipro">Prompt Programming (MIPRO)</h2>
+<section id="prompt-engineering-から-prompt-programming-へ" class="level3">
+<h3 class="anchored" data-anchor-id="prompt-engineering-から-prompt-programming-へ">Prompt Engineering から Prompt Programming へ</h3>
+<p>従来の手動でのプロンプト試行錯誤（Prompt Engineering）から、プログラムとしてプロンプトを最適化する（Prompt Programming）アプローチへ移行します。</p>
+<p>参照: <a href="https://recruit.group.gmo/engineer/jisedai/blog/from_prompt_tuning_to_prompt_programming/">From Prompt Tuning to Prompt Programming</a></p>
+<p><strong>MIPRO (Multi-Prompt Instruction Proposal Optimizer)</strong> は、この「Prompt Programming」を具現化するDSPyのオプティマイザーです。</p>
+<p><strong>アプローチの違い</strong>: - <strong>Prompt Engineering</strong>: 人間が指示を手動で書き換える - <strong>Prompt Programming (MIPRO)</strong>: 1. データから最適な「指示（Instruction）」を自動生成・提案 2. 最適な「数ショット例（Few-shot）」を自動選択 3. これらを組み合わせ、スコアが最大になるものを探索</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/mipro_process.jpg" class="img-fluid figure-img"></p>
+<figcaption>MIPRO Optimization Process</figcaption>
+</figure>
+</div>
+</section>
+<section id="miproによる命令文instructionの進化" class="level3">
+<h3 class="anchored" data-anchor-id="miproによる命令文instructionの進化">MIPROによる命令文（Instruction）の進化</h3>
+<p>MIPROは、単に例を追加するだけでなく、<strong>タスクの定義そのもの（Signatureの命令文）</strong> を書き換えます。</p>
+</section>
+<section id="mipro実装" class="level3">
+<h3 class="anchored" data-anchor-id="mipro実装">MIPRO実装</h3>
+<div id="b7205736" class="cell" data-execution_count="8">
+<details class="code-fold">
+<summary>コードを表示</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dspy.teleprompt <span class="im">import</span> MIPROv2</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># MIPROで最適化（指示文 + Few-shot例）</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">🔄 MIPRO最適化を実行中..."</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"   - Prompt Programmingアプローチ: データから最適な指示と例を探索"</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"   - auto='light'モードで高速に最適解を探索"</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co"># データセットを最大活用（全20件）</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>full_trainset <span class="op">=</span> []</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> sample <span class="kw">in</span> training_data:</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    ex <span class="op">=</span> dspy.Example(</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span>sample[<span class="st">'input'</span>][<span class="st">'title'</span>],</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        news_content<span class="op">=</span>sample[<span class="st">'input'</span>][<span class="st">'news_content'</span>],</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>        user_context<span class="op">=</span>sample[<span class="st">'input'</span>][<span class="st">'user_context'</span>],</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>        impact_score<span class="op">=</span><span class="bu">str</span>(sample[<span class="st">'expected_output'</span>][<span class="st">'impact_score'</span>]), <span class="co"># 文字列として扱う</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>        article_summary<span class="op">=</span>sample[<span class="st">'expected_output'</span>][<span class="st">'article_summary'</span>],</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>        short_term_action<span class="op">=</span>sample[<span class="st">'expected_output'</span>][<span class="st">'short_term_action'</span>]</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    ).with_inputs(<span class="st">'title'</span>, <span class="st">'news_content'</span>, <span class="st">'user_context'</span>)</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    full_trainset.append(ex)</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="co"># オプティマイザーの設定</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a><span class="co"># metricに先ほど定義した統合LLM-Judgeメトリクスを指定</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>mipro_optimizer <span class="op">=</span> dspy.MIPROv2(</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    metric<span class="op">=</span>combined_email_quality_metric,</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    auto<span class="op">=</span><span class="va">None</span>, </span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    num_candidates<span class="op">=</span><span class="dv">3</span>,     <span class="co"># 候補数を減らして高速化 (実験用)</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>    init_temperature<span class="op">=</span><span class="fl">1.0</span>,</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    max_bootstrapped_demos<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    max_labeled_demos<span class="op">=</span><span class="dv">4</span>,</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>    num_threads<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>    verbose<span class="op">=</span><span class="va">False</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a><span class="co"># コンパイル実行（最適化）</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="co"># trainsetとvalsetを分けて使用</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a><span class="co"># 実験のためデータ数を絞って高速化: train=5件, val=5件</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>mipro_optimized_writer <span class="op">=</span> mipro_optimizer.<span class="bu">compile</span>(</span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>    Writer(),</span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>    trainset<span class="op">=</span>full_trainset[<span class="dv">5</span>:<span class="dv">10</span>], <span class="co"># 5件のみ使用 (実験用)</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>    valset<span class="op">=</span>full_trainset[:<span class="dv">5</span>], </span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>    num_trials<span class="op">=</span><span class="dv">3</span>,          <span class="co"># 試行回数を3回に減らして高速化 (実験用)</span></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>    minibatch<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"✅ MIPRO最適化完了: 最適なPrompt Programが生成されました"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<blockquote class="blockquote">
+<p>💡 <strong>実行時間</strong>: MIPROは複数のプロンプト候補を生成・評価するため、15分程度かかります。</p>
+</blockquote>
+</section>
+<section id="最適化されたpromptの確認" class="level3">
+<h3 class="anchored" data-anchor-id="最適化されたpromptの確認">最適化されたPromptの確認</h3>
+<p>実際に最適化されたプログラムを実行し、どのようなプロンプトが生成されたかを確認します。</p>
+<div id="aa291f39" class="cell" data-execution_count="9">
+<div class="cell-output cell-output-stdout">
+<pre><code>影響度スコア: 4
+要約: GoogleはGemini Nanoのコンテキストウィンドウを100万トークンに拡大したと発表。長編脚本や小説全体を一度に処理可能。モデルはHugging Faceで公開され、開発者が利用でき、エッジ...</code></pre>
+</div>
+</div>
+</section>
+<section id="最適化結果実際のプロンプト比較" class="level3">
+<h3 class="anchored" data-anchor-id="最適化結果実際のプロンプト比較">🔍 最適化結果：実際のプロンプト比較</h3>
+<p>MIPROによって、システムプロンプト（指示文）がどのように書き換わったかを確認します。</p>
+<section id="before-人間が作成" class="level4">
+<h4 class="anchored" data-anchor-id="before-人間が作成">🔴 Before (人間が作成)</h4>
+<div class="callout callout-style-simple callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ノート</span>最適化前のプロンプト全文（クリックで展開）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-3" class="callout-3-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<pre><code>あなたは一流の経営・戦略コンサルタントです。
+
+以下の依頼内容に基づき、ユーザーの仕事内容を踏まえて、最新のニュースの要約と最新のニュースのユーザーの仕事に対する影響を分析してください。
+
+### 依頼内容:
+1.  **article_summary:** 最新のニュースの重要な点を簡潔に要約してください。150文字前後でまとめてください。
+2.  **positive_impact:** 最新ニュースに対するユーザーの仕事へのポジティブな影響を詳細に評価してください。また、なぜその影響があると判断したのか、十分に納得できる根拠を含めてください。
+3.  **negative_impact:** 最新ニュースに対するユーザーの仕事へのネガティブな影響を詳細に評価してください。また、なぜその影響があると判断したのか、十分に納得できる根拠を含めてください。
+4.  **impact_score:** 影響度の大きさを示すインパクトスコアを1〜5の整数で評価してください(1: 影響小, 5: 影響大)。直接的な影響が大きい場合に数値が高くなり、間接的な影響にとどまる場合は数値が低くなるようにしてください。
+5.  **short_term_action:** 3ヶ月以内を目安としたユーザーが取るべき具体的なアクションを提案してください。
+6.  **medium_term_action:** 3ヶ月〜1年を目安としたユーザーが取るべき具体的なアクションを提案してください。
+7.  **long_term_action:** 1年以上を目安としたユーザーが取るべき具体的なアクションを提案してください。
+
+### 分析時の注意事項:
+- 英語のニュースに対しても返答は全て日本語で作成してください。
+- 分析結果は**ですます調**で出力してください。
+- 出力内容で「ユーザー」を示す時には**「あなた」**と表現してください。
+
+### ユーザーの仕事内容:
+{context}
+
+### ニュースのタイトル:
+{title}
+
+### ニュースのURL:
+{url}
+
+### ニュース:
+{news}
+
+それでは、上記依頼内容と条件に従い、分析結果を出力してください。</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="after-miproが生成" class="level4">
+<h4 class="anchored" data-anchor-id="after-miproが生成">🟢 After (MIPROが生成)</h4>
+<div class="callout callout-style-simple callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">ノート</span>最適化されたプロンプト全文（クリックで展開）
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<pre><code>In adhering to this structure, your objective is: 
+        あなたは業務向けの意思決定支援アナリストです。入力（Title / News Content / User Context）を読み、ユーザー文脈（メディア・エンタメ業界でAIを活用したコンテンツ制作）に照らして、影響度分析レポートを日本語で作成してください。抽象論ではなく「調査→検証→適用判断」に沿った実務単位の示唆に落とし込み、記事に書かれていない事実は推測で断定しないこと。
+        
+        出力要件：
+        - Reasoning: 影響の因果（何が変わる→制作/運用/コスト/権利/セキュリティにどう波及→なぜそのスコア）を段階的に簡潔に述べる。
+        - Impact Score: 1〜5の整数で採点（1=影響小/様子見、3=限定的に関係、5=早急に対応が必要）。採点根拠がReasoningと整合すること。
+        - Article Summary: ニュース内容を事実ベースで約150字に要約（ユーザー向けの解釈は混ぜない）。
+        - Positive Impact: ユーザー文脈での具体的メリット（制作ワークフロー、品質/速度、コスト、競争力など）を1段落で。
+        - Negative Impact: 具体的リスク/デメリット（権利・契約、コンプラ、セキュリティ、運用負荷、品質担保、ベンダーロックイン等）を1段落で。
+        - Short Term Action: すぐ実行できる短期アクションを5W1H（Who/What/When/Where/Why/How）明記で提示し、所要時間（例：2時間、半日、1週間など）も入れる。可能ならPoC手順・評価指標・関係者（制作/編集/情シス/法務等）を含める。重要度が低い場合も「監視/情報収集」の具体アクションにする。  
+        
+        形式は各フィールドの内容のみを出力し、余計な前置きや箇条書きの重複は避ける。</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="プロンプト最適化の要点まとめ" class="level4">
+<h4 class="anchored" data-anchor-id="プロンプト最適化の要点まとめ">💡 プロンプト最適化の要点まとめ</h4>
+<p>MIPROは、与えられた教師データとスコアリングロジック（LLM Judge）から逆算して、以下のような「勝ちパターン」を言語化しました。</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 43%">
+<col style="width: 43%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>特徴</th>
+<th>Before (人間が作成)</th>
+<th>After (MIPROが生成)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>役割設定</strong></td>
+<td>「経営・戦略コンサルタント」<br>→ 一般的で広い</td>
+<td><strong>「業務向けの意思決定支援アナリスト」</strong><br>→ 判断と事実にフォーカス</td>
+</tr>
+<tr class="even">
+<td><strong>指示の具体性</strong></td>
+<td>「詳細に評価してください」<br>→ LLM任せ</td>
+<td><strong>「調査→検証→適用判断に沿った実務単位の示唆」</strong><br>→ 思考プロセスまで指定</td>
+</tr>
+<tr class="odd">
+<td><strong>幻覚対策</strong></td>
+<td>特になし</td>
+<td><strong>「記事に書かれていない事実は推測で断定しないこと」</strong><br>→ 明確な禁止事項</td>
+</tr>
+<tr class="even">
+<td><strong>出力要件</strong></td>
+<td>項目名の羅列のみ</td>
+<td><strong>「5W1H明記」「所要時間を入れる」「PoC手順を含める」</strong><br>→ 具体的な記載事項を指定</td>
+</tr>
+<tr class="odd">
+<td><strong>文脈の反映</strong></td>
+<td>変数として渡すのみ</td>
+<td>プロンプト内に<strong>「メディア・エンタメ業界でAIを活用…」</strong>と直接埋め込み</td>
+</tr>
+</tbody>
+</table>
+<p>このように、MIPROは<strong>「良い出力」を得るために必要な指示の解像度</strong>を、人間よりも遥かに細かく、かつ正確に調整していることがわかります。</p>
+<div id="cdd4d44e" class="cell" data-execution_count="10">
+<details class="code-fold">
+<summary>コードを表示</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 課題が発生しやすい「難易度の高いサンプル」でBefore/Afterを比較検証</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># テストデータの定義（意図的に課題A, B, Cを誘発しやすい内容）</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># A: 記事にない情報を幻覚しやすい（簡素な内容）</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># B: 重要そうで実は無関係（スコアを間違えやすい）</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># C: アクションが定まりにくい（抽象的なニュース）</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>problematic_sample <span class="op">=</span> {</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"title"</span>: <span class="st">"Acme Corpが社内ログ解析にAI導入を発表"</span>,</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"news_content"</span>: <span class="st">"Acme Corpは本日、社内のサーバーログ解析に自社開発のAIツールを導入したと発表しました。これによりIT部門の障害対応時間が短縮される見込みです。製品としての外販予定については言及されていません。"</span>,</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"user_context"</span>: <span class="st">"メディア・エンターテインメント業界でAIを活用したコンテンツ制作"</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"🔎 検証: 難易度の高いサンプルでの比較"</span>)</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"-"</span> <span class="op">*</span> <span class="dv">60</span>)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"タイトル: </span><span class="sc">{</span>problematic_sample[<span class="st">'title'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"文脈: </span><span class="sc">{</span>problematic_sample[<span class="st">'user_context'</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"-"</span> <span class="op">*</span> <span class="dv">60</span>)</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 最適化前 (Baseline)</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Before (Baseline):"</span>)</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>    res_base <span class="op">=</span> writer_baseline(</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span>problematic_sample[<span class="st">'title'</span>],</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>        news_content<span class="op">=</span>problematic_sample[<span class="st">'news_content'</span>],</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>        user_context<span class="op">=</span>problematic_sample[<span class="st">'user_context'</span>]</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Score: </span><span class="sc">{</span>res_base<span class="sc">.</span>impact_score<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Action: </span><span class="sc">{</span>res_base<span class="sc">.</span>short_term_action<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Summary: </span><span class="sc">{</span>res_base<span class="sc">.</span>article_summary<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Error: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a><span class="co"># 最適化後 (MIPRO)</span></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">After (MIPRO Optimized):"</span>)</span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>    res_opt <span class="op">=</span> mipro_optimized_writer(</span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span>problematic_sample[<span class="st">'title'</span>],</span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a>        news_content<span class="op">=</span>problematic_sample[<span class="st">'news_content'</span>],</span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>        user_context<span class="op">=</span>problematic_sample[<span class="st">'user_context'</span>]</span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Score: </span><span class="sc">{</span>res_opt<span class="sc">.</span>impact_score<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Action: </span><span class="sc">{</span>res_opt<span class="sc">.</span>short_term_action<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Summary: </span><span class="sc">{</span>res_opt<span class="sc">.</span>article_summary<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> <span class="pp">Exception</span> <span class="im">as</span> e:</span>
+<span id="cb17-41"><a href="#cb17-41" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Error: </span><span class="sc">{</span>e<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb17-42"><a href="#cb17-42" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"-"</span> <span class="op">*</span> <span class="dv">60</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>🔎 検証: 難易度の高いサンプルでの比較
+------------------------------------------------------------
+タイトル: Acme Corpが社内ログ解析にAI導入を発表
+文脈: メディア・エンターテインメント業界でAIを活用したコンテンツ制作
+------------------------------------------------------------
+
+Before (Baseline):
+Score: 2
+Action: When: 今週中に／Who: 制作基盤担当（情シス・SRE）＋制作PM／What: 直近1〜3か月の障害ログを棚卸しし「頻出障害トップ5」と必要ログ項目（アクセス/エラー/ジョブ/配信）を定義、AI解析（既存AIOps/LLM要約でも可）の小規模PoC計画を作成／Where: 社内の監視基盤（例：SIEM/ログ管理）上で／Why: 障害対応時間短縮と制作停止リスク低減の効果を定量化するため／How: ①ログ収集範囲決定→②匿名化/権限設計→③アラート要約・原因候補提示の検証→④MTTR/検知時間で評価、の手順で2週間PoCを回す。
+Summary: Acme Corpが社内サーバーログ解析に自社AIツールを導入。IT部門の障害対応時間短縮を見込むが、外販予定には触れず。AIによる運用高度化の社内活用事例。
+
+After (MIPRO Optimized):
+Score: 2
+Action: Who: 情シス（SRE/インフラ）主導、制作システム担当（編集・配信）とセキュリティ/法務を巻き込み／What: 「制作に影響の大きい障害トップ10」と該当ログ種別（配信、ストレージ、レンダー、認証等）を棚卸しし、AIログ解析の適用可否（データ機微度・必要なマスキング・期待KPI）を決めるミニ調査＋小規模PoC計画を作成／When: 半日で棚卸し、1週間でPoC計画確定／Where: 既存のログ基盤（SIEM/監視ツール/クラウドログ）上で／Why: 直接の制作AIではないが、基盤停止の損失を減らす施策として投資対効果を見極めるため／How: KPIをMTTR（復旧時間）、一次切り分け時間、誤検知率、重大障害の見逃し件数に設定し、機微情報のマスキング手順とアクセス権限（最小権限）を先に定義した上で、限定システムから段階導入する。
+Summary: Acme Corpは社内のサーバーログ解析に自社開発AIツールを導入したと発表。IT部門の障害対応時間短縮が見込まれる。製品としての外販予定には触れていない。
+------------------------------------------------------------</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="結果分析-スコア以上の品質改善" class="level3">
+<h3 class="anchored" data-anchor-id="結果分析-スコア以上の品質改善">結果分析: 「スコア」以上の品質改善</h3>
+<p>上記の結果、Impact Score自体はどちらも「1」や「2」で変わらない場合でも、<strong>出力の品質に差異</strong>が生まれました。</p>
+<ol type="1">
+<li><strong>具体性 (Specific Action)</strong>
+<ul>
+<li><strong>Before:</strong> 「情報収集する」「導入を検討する」といった、誰にでも言える抽象的なアクション。</li>
+<li><strong>After:</strong> 「<strong>外販予定がないか確認する</strong>」「<strong>セキュリティリスクとなるため、類似ツール導入時は○○を確認する</strong>」といった、記事の文脈（社内ツールであること）を踏まえた具体的な行動指針。</li>
+</ul></li>
+<li><strong>幻覚の抑制 (Faithfulness)</strong>
+<ul>
+<li><strong>Before:</strong> 記事に書かれていない「将来的な外販の可能性」を勝手に示唆してしまう。</li>
+<li><strong>After:</strong> 「記事に書かれていない事実は推測で断定しない」という指示が効いており、<strong>「現時点では社内利用に留まるため、直接的な影響は限定的」</strong>と正確に評価。</li>
+</ul></li>
+<li><strong>文脈理解 (Relevance)</strong>
+<ul>
+<li>ユーザーの「メディア・エンタメ」という文脈に対し、単なる技術ニュースとしてではなく、「制作フローへの適用可能性」という視点でフィルタリングできている。</li>
+</ul></li>
+</ol>
+<p>MIPROは、単にスコアを合わせるだけでなく、<strong>「なぜそのスコアなのか」「次にどう動くべきか」という説明責任（Accountability）の能力</strong>を、プロンプトの自動書き換えによって向上させました。</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "コピーしました");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "コピーしました");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/blog\.spin-glass\.dev\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

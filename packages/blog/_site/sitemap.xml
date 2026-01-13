@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://blog.spin-glass.dev/about.html</loc>
+    <lastmod>2026-01-12T14:59:36.715Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.spin-glass.dev/posts/resume-review-agent/index.html</loc>
+    <lastmod>2026-01-13T11:52:38.575Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.spin-glass.dev/index.html</loc>
+    <lastmod>2026-01-12T14:58:53.752Z</lastmod>
+  </url>
+  <url>
+    <loc>https://blog.spin-glass.dev/posts/dspy-prompt-tuning/index.html</loc>
+    <lastmod>2026-01-13T21:29:07.103Z</lastmod>
+  </url>
+</urlset>

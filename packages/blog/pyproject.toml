@@ -1,0 +1,10 @@
+[project]
+name = "blog"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13.2"
+dependencies = [
+    "dspy>=3.1.0",
+    "jupyterlab>=4.5.2",
+]
