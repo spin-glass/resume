@@ -66,6 +66,9 @@ pnpm quarto:preview:html
 4. **Review** (optional): `pnpm review` でAIレビューを実行
 5. **Deploy**: `git push` → Vercelが自動デプロイ
 
+> **Note**: `pnpm resume:build` 実行時に `scripts/sync_qmd_to_astro.py` が動作し、PDF専用の記述（Callout等）はWeb版からは自動的に除外されます。
+
+
 ## 📄 Commands
 
 | Command | Description |
