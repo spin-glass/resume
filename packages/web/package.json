@@ -5,11 +5,12 @@
   "private": true,
   "description": "Resume web application using Astro and Tailwind CSS",
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
+    "dev": "pnpm sync && astro dev",
+    "build": "pnpm sync && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "pdf": "node scripts/generate-pdf.mjs"
+    "pdf": "node scripts/generate-pdf.mjs",
+    "sync": "node scripts/sync-content.mjs"
   },
   "engines": {
     "node": "22.x"
