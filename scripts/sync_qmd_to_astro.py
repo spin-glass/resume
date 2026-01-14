@@ -35,6 +35,11 @@ def extract_content_from_qmd(qmd_path: Path) -> str:
     # 最初の---から次の---までを削除
     pattern = r"^---\n.*?\n---\n"
     content = re.sub(pattern, "", content, count=1, flags=re.DOTALL)
+
+    # Remove Quarto callout blocks (e.g. for PDF links which are redundant on web and break MDX)
+    # ::: {.callout-note ...} ... :::
+    pattern_callout = r"::: \{\.callout-note.*?\}\n.*?\n:::\n"
+    content = re.sub(pattern_callout, "", content, flags=re.DOTALL)
     
     return content.strip()
 
