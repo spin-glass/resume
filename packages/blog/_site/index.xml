@@ -111,7 +111,7 @@ AI技術の急速な発展は、コンテンツ制作の現場における競争
 <section id="トレーニングデータの準備" class="level2">
 <h2 class="anchored" data-anchor-id="トレーニングデータの準備">トレーニングデータの準備</h2>
 <p>DSPy最適化のために、20サンプルのトレーニングデータを用意しました。</p>
-<div id="2254d23c" class="cell" data-execution_count="2">
+<div id="fa5303a9" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>コードを表示</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><span class="bu" style="color: null;
@@ -160,7 +160,7 @@ font-style: inherit;">"</span>)</span></code></pre></div></div>
 </div>
 <div id="callout-2" class="callout-2-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
-<div id="f3e717b8" class="cell" data-execution_count="3">
+<div id="9011bb7f" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>コードを表示</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><span class="co" style="color: #5E5E5E;
@@ -283,7 +283,7 @@ HuggingFaceで公開されているGemini Nanoモデルにアクセスし、簡�
 <p>ここからが本記事の主要部分です。実際にDSPyコードを実装し、プロンプト最適化の効果を検証します。</p>
 <section id="セットアップ" class="level3">
 <h3 class="anchored" data-anchor-id="セットアップ">セットアップ</h3>
-<div id="65ac43b2" class="cell" data-execution_count="4">
+<div id="9332a95e" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-stdout">
 <pre><code>✅ DSPyセットアップ完了:
   - LM: OpenAI GPT-5.2
@@ -294,7 +294,7 @@ HuggingFaceで公開されているGemini Nanoモデルにアクセスし、簡�
 </section>
 <section id="writerエージェントの定義" class="level3">
 <h3 class="anchored" data-anchor-id="writerエージェントの定義">Writerエージェントの定義</h3>
-<div id="b9ab44ad" class="cell" data-execution_count="5">
+<div id="a9f8fea3" class="cell" data-execution_count="5">
 <details class="code-fold">
 <summary>コードを表示</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><span class="co" style="color: #5E5E5E;
@@ -445,7 +445,7 @@ font-style: inherit;">"✅ Writerモジュール定義完了"</span>)</span></co
 <section id="judgeエージェントの定義" class="level3">
 <h3 class="anchored" data-anchor-id="judgeエージェントの定義">Judgeエージェントの定義</h3>
 <p><strong>課題別評価Judgeの定義</strong></p>
-<div id="c01f0ca4" class="cell" data-execution_count="6">
+<div id="37d7f1b1" class="cell" data-execution_count="6">
 <details class="code-fold">
 <summary>コードを表示</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><span class="co" style="color: #5E5E5E;
@@ -1033,7 +1033,7 @@ font-style: inherit;">"</span>)</span></code></pre></div></div>
 ✅ 統合評価メトリクス (LLM Judge) 定義完了</code></pre>
 </div>
 </div>
-<div id="5d33ee73" class="cell" data-execution_count="7">
+<div id="0fa42f19" class="cell" data-execution_count="7">
 <details class="code-fold">
 <summary>コードを表示</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><span class="bu" style="color: null;
@@ -1100,7 +1100,7 @@ font-style: inherit;">..."</span>)</span></code></pre></div></div>
 </section>
 <section id="mipro実装" class="level3">
 <h3 class="anchored" data-anchor-id="mipro実装">MIPRO実装</h3>
-<div id="b7205736" class="cell" data-execution_count="8">
+<div id="826095d3" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>コードを表示</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><span class="im" style="color: #00769E;
@@ -1311,7 +1311,7 @@ font-style: inherit;">"✅ MIPRO最適化完了: 最適なPrompt Programが生�
 <section id="最適化されたpromptの確認" class="level3">
 <h3 class="anchored" data-anchor-id="最適化されたpromptの確認">最適化されたPromptの確認</h3>
 <p>実際に最適化されたプログラムを実行し、どのようなプロンプトが生成されたかを確認します。</p>
-<div id="aa291f39" class="cell" data-execution_count="9">
+<div id="1e397ee9" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-stdout">
 <pre><code>影響度スコア: 4
 要約: GoogleはGemini Nanoのコンテキストウィンドウを100万トークンに拡大したと発表。長編脚本や小説全体を一度に処理可能。モデルはHugging Faceで公開され、開発者が利用でき、エッジ...</code></pre>
@@ -1445,7 +1445,7 @@ font-style: inherit;">"✅ MIPRO最適化完了: 最適なPrompt Programが生�
 </tbody>
 </table>
 <p>このように、MIPROは<strong>「良い出力」を得るために必要な指示の解像度</strong>を、人間よりも遥かに細かく、かつ正確に調整していることがわかります。</p>
-<div id="cdd4d44e" class="cell" data-execution_count="10">
+<div id="0a4ad85d" class="cell" data-execution_count="10">
 <details class="code-fold">
 <summary>コードを表示</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17" style="background: #f1f3f5;"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><span class="co" style="color: #5E5E5E;
